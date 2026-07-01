@@ -22,6 +22,8 @@ sequencing in the project plan.
   player's rating (desirable difficulty). The seam where a future ML selector plugs in.
 - `TrainingSession` — the loop: `Next()` picks a pattern and a level-matched scenario,
   `Submit(move, thinkingTime)` grades it, updates the schedule, and adjusts the player rating.
+- `Play/AdaptiveOpponent` + `Play/GameSession` — play a full game against the engine capped to
+  the player's level; the result updates the player's rating. The other half of "play, not study".
 
 ## Try it
 
@@ -31,6 +33,9 @@ dotnet run --project src/Kaissa.Training.Cli -- --simulate
 
 # Play the loop yourself (SAN or UCI moves; 'solution' reveals, 'quit' saves and exits)
 dotnet run --project src/Kaissa.Training.Cli
+
+# Play a full game against the adaptive bot (needs KAISSA_STOCKFISH_PATH set)
+dotnet run --project src/Kaissa.Training.Cli -- --play
 ```
 
 ## Content status

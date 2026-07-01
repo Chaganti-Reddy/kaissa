@@ -19,12 +19,18 @@ public static class RatingEstimator
     public static double ExpectedScore(double playerRating, int puzzleRating) =>
         1.0 / (1.0 + Math.Pow(10, (puzzleRating - playerRating) / 400.0));
 
-    /// <summary>Returns the updated player rating after an attempt.</summary>
-    public static double Update(double playerRating, int puzzleRating, bool solved)
+    /// <summary>Returns the updated player rating after a puzzle attempt.</summary>
+    public static double Update(double playerRating, int puzzleRating, bool solved) =>
+        Update(playerRating, puzzleRating, solved ? 1.0 : 0.0);
+
+    /// <summary>
+    /// Returns the updated player rating after a result against an opponent of the given rating.
+    /// <paramref name="score"/> is 1 for a win, 0.5 for a draw, 0 for a loss.
+    /// </summary>
+    public static double Update(double playerRating, int opponentRating, double score)
     {
-        double expected = ExpectedScore(playerRating, puzzleRating);
-        double actual = solved ? 1.0 : 0.0;
-        double updated = playerRating + K * (actual - expected);
+        double expected = ExpectedScore(playerRating, opponentRating);
+        double updated = playerRating + K * (score - expected);
         return Math.Clamp(updated, Min, Max);
     }
 }

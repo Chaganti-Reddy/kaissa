@@ -1,5 +1,8 @@
 using System.Diagnostics;
+using Kaissa.Chess.Engine;
+using Kaissa.Chess.Rules;
 using Kaissa.Training;
+using Kaissa.Training.Play;
 
 // Phase 1 headless training loop, playable in a console.
 //   dotnet run --project src/Kaissa.Training.Cli               # interactive
@@ -15,8 +18,77 @@ if (args.Contains("--simulate"))
     return 0;
 }
 
+if (args.Contains("--play"))
+    return await PlayGame(progressPath);
+
 RunInteractive(library, progressPath);
 return 0;
+
+async Task<int> PlayGame(string savePath)
+{
+    var enginePath = Environment.GetEnvironmentVariable("KAISSA_STOCKFISH_PATH");
+    if (string.IsNullOrWhiteSpace(enginePath) || !File.Exists(enginePath))
+    {
+        Console.Error.WriteLine("Set KAISSA_STOCKFISH_PATH to a Stockfish binary to play a game.");
+        return 1;
+    }
+
+    var model = File.Exists(savePath) ? SkillModel.FromJson(File.ReadAllText(savePath)) : new SkillModel();
+
+    await using var engine = UciChessEngine.LaunchProcess(enginePath);
+    await engine.HandshakeAsync();
+    await engine.NewGameAsync();
+
+    var opponent = new AdaptiveOpponent(engine, TimeSpan.FromMilliseconds(200));
+    var game = new GameSession(engine, Side.White, model.RatingEstimate, opponent: opponent);
+
+    Console.WriteLine($"You are White. Opponent Elo: {game.OpponentElo} (your rating {model.RatingEstimate:0}).");
+    Console.WriteLine("Enter moves as SAN or UCI. Commands: 'resign', 'quit'.\n");
+
+    while (!game.IsGameOver)
+    {
+        PrintBoard(game.Fen);
+
+        if (game.SideToMove == Side.White)
+        {
+            Console.Write("Your move: ");
+            var input = Console.ReadLine()?.Trim() ?? "quit";
+
+            if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
+            {
+                File.WriteAllText(savePath, model.ToJson());
+                Console.WriteLine("Saved. Game abandoned.");
+                return 0;
+            }
+
+            if (input.Equals("resign", StringComparison.OrdinalIgnoreCase))
+            {
+                model.RatingEstimate = RatingEstimator.Update(model.RatingEstimate, game.OpponentElo, 0.0);
+                Console.WriteLine($"You resigned. New rating: {model.RatingEstimate:0}");
+                File.WriteAllText(savePath, model.ToJson());
+                return 0;
+            }
+
+            if (!game.TryPlayerMove(input))
+            {
+                Console.WriteLine("Illegal move, try again.\n");
+                continue;
+            }
+        }
+        else
+        {
+            var move = await game.EngineReplyAsync();
+            Console.WriteLine($"Bot plays {move}\n");
+        }
+    }
+
+    PrintBoard(game.Fen);
+    game.FinalizeRating();
+    model.RatingEstimate = game.PlayerRating;
+    Console.WriteLine($"Game over: {game.Result}. Your new rating: {model.RatingEstimate:0}");
+    File.WriteAllText(savePath, model.ToJson());
+    return 0;
+}
 
 static void RunInteractive(ScenarioLibrary library, string progressPath)
 {
