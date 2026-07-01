@@ -18,6 +18,8 @@ public static class GamePractice
 
     private static readonly PatternId ForkPattern = new("tactic.fork");
     private static readonly PatternId HangingPattern = new("tactic.hanging_piece");
+    private static readonly PatternId PinPattern = new("tactic.pin");
+    private static readonly PatternId SkewerPattern = new("tactic.skewer");
 
     /// <summary>The full pattern (with metadata) for a game-practice scenario's pattern id.</summary>
     public static Pattern PatternFor(PatternId id) =>
@@ -45,6 +47,8 @@ public static class GamePractice
     private static PatternId PatternForMotif(Motif motif) => motif switch
     {
         Motif.Fork => ForkPattern,
+        Motif.Pin => PinPattern,
+        Motif.Skewer => SkewerPattern,
         Motif.HangingPiece => HangingPattern,
         _ => FromYourGames.Id,
     };

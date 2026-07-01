@@ -140,7 +140,7 @@ public sealed class TrainingLoopTests
         var session = new TrainingSession(library, model, clock);
 
         // Steady study: one item at a time, a few days apart, always answered correctly.
-        for (int i = 0; i < 40; i++)
+        for (int i = 0; i < 120; i++)
         {
             var scenario = session.Next();
             Assert.NotNull(scenario);

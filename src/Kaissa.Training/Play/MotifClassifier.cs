@@ -7,6 +7,8 @@ public enum Motif
 {
     Checkmate,
     Fork,
+    Skewer,
+    Pin,
     HangingPiece,
     Unclassified,
 }
@@ -40,11 +42,51 @@ public static class MotifClassifier
         if (CountForkTargets(after, to, moverWhite) >= 2)
             return Motif.Fork;
 
+        if (PinOrSkewer(after, to, moved, moverWhite) is { } lineMotif)
+            return lineMotif;
+
         if (IsWinningUndefendedPiece(before, to, moverWhite))
             return Motif.HangingPiece;
 
         return Motif.Unclassified;
     }
+
+    private static Motif? PinOrSkewer(AttackBoard board, (int file, int rank) from, char slider, bool moverWhite)
+    {
+        foreach (var (df, dr) in AttackBoard.SliderDirections(slider))
+        {
+            var line = board.RayPieces(from.file, from.rank, df, dr).Take(2).ToList();
+            if (line.Count < 2)
+                continue;
+
+            var (_, _, front) = line[0];
+            var (_, _, back) = line[1];
+            // Both pieces beyond the slider must be the opponent's for a pin/skewer.
+            if (board.IsWhite(front) == moverWhite || board.IsWhite(back) == moverWhite)
+                continue;
+
+            int frontValue = Value(front);
+            int backValue = Value(back);
+
+            if (backValue > frontValue)
+                return Motif.Pin; // lesser piece pinned against a more valuable one behind it
+            if (frontValue > backValue && frontValue >= 5)
+                return Motif.Skewer; // valuable piece in front, lesser exposed behind
+        }
+
+        return null;
+    }
+
+    private static int Value(char piece) => char.ToUpperInvariant(piece) switch
+    {
+        'P' => 1,
+        'N' => 3,
+        'B' => 3,
+        'R' => 5,
+        'Q' => 9,
+        'K' => 100,
+        _ => 0,
+    };
 
     private static int CountForkTargets(AttackBoard board, (int file, int rank) from, bool moverWhite)
     {

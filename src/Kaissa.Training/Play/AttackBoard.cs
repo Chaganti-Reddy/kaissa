@@ -99,6 +99,29 @@ public sealed class AttackBoard
         return false;
     }
 
+    /// <summary>The pieces met, in order, walking from (file, rank) along a direction (empties skipped).</summary>
+    public IEnumerable<(int file, int rank, char piece)> RayPieces(int file, int rank, int df, int dr)
+    {
+        int f = file + df, r = rank + dr;
+        while (OnBoard(f, r))
+        {
+            char piece = _pieces[f, r];
+            if (piece != '\0')
+                yield return (f, r, piece);
+            f += df;
+            r += dr;
+        }
+    }
+
+    /// <summary>Sliding directions for a piece letter (bishop/rook/queen); empty for others.</summary>
+    public static IReadOnlyList<(int df, int dr)> SliderDirections(char piece) => char.ToUpperInvariant(piece) switch
+    {
+        'B' => BishopDirs,
+        'R' => RookDirs,
+        'Q' => BishopDirs.Concat(RookDirs).ToArray(),
+        _ => Array.Empty<(int, int)>(),
+    };
+
     private IEnumerable<(int, int)> Slide(int file, int rank, (int df, int dr)[] dirs)
     {
         foreach (var (df, dr) in dirs)

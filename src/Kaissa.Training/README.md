@@ -34,6 +34,19 @@ sequencing in the project plan.
   training library, so a player's own blunders come back as spaced, scheduled practice under the
   right skill. This is where playing and learning meet.
 
+## Using it from a UI (the Unity client)
+
+`Api/KaissaTrainer` is the single entry point a UI drives. It speaks only in plain DTOs
+(`TrainingCard`, `AnswerResult`, `ProgressRow`, `BoardView`) — no engine or rules types cross the
+boundary — so the Unity client can render and drive the loop without depending on the internals.
+
+```csharp
+var trainer = KaissaTrainer.CreateDefault(savedProgressJson);
+TrainingCard? card = trainer.NextCard();          // pattern, prompt, board view, ratings
+AnswerResult result = trainer.Answer(move, think); // correct?, grade, next review, rating change
+string save = trainer.ExportProgress();            // persist however the platform prefers
+```
+
 ## Try it
 
 ```powershell
