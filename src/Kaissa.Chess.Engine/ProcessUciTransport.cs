@@ -70,8 +70,10 @@ public sealed class ProcessUciTransport : IUciTransport
     public async ValueTask SendLineAsync(string line, CancellationToken cancellationToken = default)
     {
         var process = _process ?? throw new InvalidOperationException("Transport not started.");
-        await process.StandardInput.WriteLineAsync(line.AsMemory(), cancellationToken).ConfigureAwait(false);
-        await process.StandardInput.FlushAsync(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        // Use the overloads available on both net9 and .NET Standard 2.1 (Unity).
+        await process.StandardInput.WriteLineAsync(line).ConfigureAwait(false);
+        await process.StandardInput.FlushAsync().ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync()
@@ -94,7 +96,7 @@ public sealed class ProcessUciTransport : IUciTransport
                 }
 
                 if (!_process.WaitForExit(1000))
-                    _process.Kill(entireProcessTree: true);
+                    _process.Kill();
             }
         }
         catch (InvalidOperationException)

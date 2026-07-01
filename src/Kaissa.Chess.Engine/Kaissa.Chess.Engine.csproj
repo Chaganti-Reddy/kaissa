@@ -1,13 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>netstandard2.1;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Kaissa.Chess.Engine.Tests" />
+  </ItemGroup>
+
+  <!-- Channels is in-box on net9 but a package on .NET Standard 2.1 (Unity). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
   </ItemGroup>
 
 </Project>

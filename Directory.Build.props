@@ -11,4 +11,9 @@
     <Product>Kaissa</Product>
   </PropertyGroup>
 
+  <!-- Polyfill records/init for the .NET Standard 2.1 (Unity) build only. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <Compile Include="$(MSBuildThisFileDirectory)build\IsExternalInit.cs" />
+  </ItemGroup>
+
 </Project>

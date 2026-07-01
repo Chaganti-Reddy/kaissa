@@ -1,13 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>netstandard2.1;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Vendored Gera.Chess source is compiled only for the .NET Standard 2.1 (Unity) build. -->
   <ItemGroup>
+    <Compile Remove="Vendor\**\*.cs" />
+  </ItemGroup>
+
+  <!-- net9 (CLI, tests): use the trusted NuGet package. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Gera.Chess" Version="1.2.0" />
   </ItemGroup>
+
+  <!-- netstandard2.1 (Unity): compile the vendored source, since the package is net8-only. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <Compile Include="Vendor\**\*.cs" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <!-- Vendored third-party source is not held to our warnings-as-errors bar. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
 
 </Project>

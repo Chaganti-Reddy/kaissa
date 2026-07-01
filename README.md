@@ -46,3 +46,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - [`docs/research.md`](docs/research.md) — the research and prior art the design rests on
 - [`docs/architecture.md`](docs/architecture.md) — system structure and data flow
 - [`docs/learning-engine.md`](docs/learning-engine.md) — how the training loop works
+- [`docs/client.md`](docs/client.md) — the Unity client and UI design, and how to set up to build it
