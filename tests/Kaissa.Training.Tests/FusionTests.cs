@@ -10,16 +10,16 @@ public sealed class FusionTests
     private const string BackRankFen = "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1";
 
     private static Scenario GamePracticeScenario(string id, string fen) =>
-        new(id, GamePractice.Pattern.Id, fen, new[] { "a1a8" }, "You went wrong here.", 1200);
+        new(id, GamePractice.FromYourGames.Id, fen, new[] { "a1a8" }, "You went wrong here.", 1200);
 
     [Fact]
     public void Library_add_registers_a_new_pattern_and_its_scenarios()
     {
         var library = ScenarioLibrary.LoadDefault();
-        library.Add(GamePractice.Pattern, new[] { GamePracticeScenario("yourgame-1", BackRankFen) });
+        library.Add(GamePractice.FromYourGames, new[] { GamePracticeScenario("yourgame-1", BackRankFen) });
 
-        Assert.Contains(GamePractice.Pattern.Id, library.Patterns);
-        Assert.Single(library.ForPattern(GamePractice.Pattern.Id));
+        Assert.Contains(GamePractice.FromYourGames.Id, library.Patterns);
+        Assert.Single(library.ForPattern(GamePractice.FromYourGames.Id));
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class FusionTests
     public void A_game_derived_position_is_served_and_scheduled_in_the_training_loop()
     {
         var library = ScenarioLibrary.LoadDefault();
-        library.Add(GamePractice.Pattern, new[] { GamePracticeScenario("yourgame-1", BackRankFen) });
+        library.Add(GamePractice.FromYourGames, new[] { GamePracticeScenario("yourgame-1", BackRankFen) });
 
         var model = new SkillModel();
         var session = new TrainingSession(library, model, new ManualClock(Origin));
@@ -62,7 +62,7 @@ public sealed class FusionTests
         for (int i = 0; i < library.Patterns.Count + 2 && served is null; i++)
         {
             var scenario = session.Next()!;
-            if (scenario.Pattern == GamePractice.Pattern.Id)
+            if (scenario.Pattern == GamePractice.FromYourGames.Id)
                 served = scenario;
             else
                 session.Submit(scenario.Solutions[0], TimeSpan.FromSeconds(5));
@@ -71,6 +71,6 @@ public sealed class FusionTests
         Assert.NotNull(served);
         var outcome = session.Submit(served!.Solutions[0], TimeSpan.FromSeconds(5));
         Assert.True(outcome.Correct);
-        Assert.True(model.Has(GamePractice.Pattern.Id));
+        Assert.True(model.Has(GamePractice.FromYourGames.Id));
     }
 }

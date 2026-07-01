@@ -15,8 +15,8 @@ var library = ScenarioLibrary.LoadDefault();
 
 // Fold in practice positions saved from the player's own games, so they get scheduled too.
 var savedPractice = PlayerPracticeStore.Load(practicePath);
-if (savedPractice.Count > 0)
-    library.Add(GamePractice.Pattern, savedPractice.Scenarios);
+foreach (var group in savedPractice.Scenarios.GroupBy(s => s.Pattern))
+    library.Add(GamePractice.PatternFor(group.Key), group);
 
 if (args.Contains("--simulate"))
 {

@@ -26,10 +26,13 @@ sequencing in the project plan.
   the player's level; the result updates the player's rating. The other half of "play, not study".
 - `Play/MoveClassifier` + `Play/GameAnalyzer` — grade each of the player's moves against the
   engine's best (best/good/inaccuracy/mistake/blunder) from the evaluation swing.
+- `Play/AttackBoard` + `Play/MotifClassifier` — recognise a move's motif from the board
+  (checkmate, fork, winning an undefended piece; pins/skewers fall back to unclassified).
 - `Play/GamePractice` — turn the mistakes from a game into practice scenarios (the missed move is
-  the solution). `Play/PlayerPracticeStore` persists them and `ScenarioLibrary.Add` folds them into
-  the training library, so a player's own blunders come back as spaced, scheduled practice. This is
-  where playing and learning meet.
+  the solution), routing each to the pattern for its motif so a missed fork trains the *fork*
+  pattern. `Play/PlayerPracticeStore` persists them and `ScenarioLibrary.Add` folds them into the
+  training library, so a player's own blunders come back as spaced, scheduled practice under the
+  right skill. This is where playing and learning meet.
 
 ## Try it
 

@@ -34,7 +34,7 @@ public sealed class PlayerPracticeStore
 
         var dtos = JsonSerializer.Deserialize<List<ScenarioDto>>(text) ?? new List<ScenarioDto>();
         store.AddRange(dtos.Select(d => new Scenario(
-            d.Id, GamePractice.Pattern.Id, d.Fen, d.Solutions, d.Prompt, d.Rating)));
+            d.Id, new PatternId(d.Pattern), d.Fen, d.Solutions, d.Prompt, d.Rating)));
         return store;
     }
 
@@ -43,6 +43,7 @@ public sealed class PlayerPracticeStore
         var dtos = _byFen.Values.Select(s => new ScenarioDto
         {
             Id = s.Id,
+            Pattern = s.Pattern.Value,
             Fen = s.Fen,
             Solutions = s.Solutions.ToList(),
             Prompt = s.Prompt,
@@ -55,6 +56,7 @@ public sealed class PlayerPracticeStore
     private sealed class ScenarioDto
     {
         [JsonPropertyName("id")] public string Id { get; init; } = "";
+        [JsonPropertyName("pattern")] public string Pattern { get; init; } = "";
         [JsonPropertyName("fen")] public string Fen { get; init; } = "";
         [JsonPropertyName("solutions")] public List<string> Solutions { get; init; } = new();
         [JsonPropertyName("prompt")] public string Prompt { get; init; } = "";
