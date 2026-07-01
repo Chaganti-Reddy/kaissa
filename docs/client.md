@@ -55,9 +55,9 @@ Unity client (MonoBehaviour / UI)
 - One thin adapter (`KaissaBindings`) in the Unity project holds a `KaissaTrainer` and exposes
   simple methods/events for the UI. Persistence uses `ExportProgress()` saved via Unity's
   `Application.persistentDataPath`.
-- Play-vs-bot and post-game review need the engine (async). Add a small async façade
-  (`KaissaGame`) mirroring `KaissaTrainer` for those; keep it off the mobile path until the engine
-  is embedded.
+- Play-vs-bot and post-game review use `Kaissa.Training.Api.KaissaGame`, the async façade that
+  mirrors `KaissaTrainer` (start a game, `PlayAsync` a move to get the bot's reply, `ReviewAsync`
+  for mistakes + generated practice). Keep it off the mobile path until the engine is embedded.
 
 ## Screens (first version)
 
