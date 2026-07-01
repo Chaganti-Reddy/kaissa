@@ -1,1 +1,35 @@
+# Claude working area (private, not part of the public repo)
 .claude/
+
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# .NET / Rider / VS
+*.user
+.vs/
+.idea/
+*.suo
+
+# Test results
+[Tt]est[Rr]esults/
+*.trx
+coverage*.json
+coverage*.xml
+
+# Downloaded engine binaries (fetched via scripts/fetch-stockfish.ps1, not committed)
+third_party/stockfish/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unity (added later when the client project lands)
+[Ll]ibrary/
+[Tt]emp/
+[Ll]ogs/
+[Uu]serSettings/
+*.csproj.meta
