@@ -64,6 +64,12 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private void Update()
     {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+            return;
+        }
+
         var mouse = Mouse.current;
         if (_busy || _game == null || mouse == null || !mouse.leftButton.wasPressedThisFrame)
             return;
