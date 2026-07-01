@@ -23,10 +23,12 @@ public sealed class MainMenuController : MonoBehaviour
         }
 
         var canvas = BuildCanvas();
-        MakeText(canvas, "Kaissa", 72, new Vector2(0f, 150f), new Vector2(800f, 100f));
-        MakeText(canvas, "Train. Play. Improve.", 26, new Vector2(0f, 90f), new Vector2(800f, 50f));
-        MakeButton(canvas, "Train", new Vector2(0f, 0f), () => SceneManager.LoadScene("SampleScene"));
-        MakeButton(canvas, "Play vs Bot", new Vector2(0f, -80f), () => SceneManager.LoadScene("Play"));
+        MakeText(canvas, "Kaissa", 72, new Vector2(0f, 210f), new Vector2(800f, 100f));
+        MakeText(canvas, "Train. Play. Improve.", 26, new Vector2(0f, 150f), new Vector2(800f, 50f));
+        MakeButton(canvas, "Train", new Vector2(0f, 70f), () => SceneManager.LoadScene("SampleScene"));
+        MakeButton(canvas, "Puzzle Rush", new Vector2(0f, -10f), () => SceneManager.LoadScene("Rush"));
+        MakeButton(canvas, "Play vs Bot", new Vector2(0f, -90f), () => SceneManager.LoadScene("Play"));
+        MakeButton(canvas, "Progress", new Vector2(0f, -170f), () => SceneManager.LoadScene("Stats"));
     }
 
     private static void EnsureEventSystem()

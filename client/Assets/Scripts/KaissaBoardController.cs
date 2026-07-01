@@ -41,7 +41,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     private void Start()
     {
         _font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
-        _trainer = KaissaTrainer.CreateDefault();
+        _trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
         SetUpCameraAndLight();
         BuildPostProcessing();
         BuildAudio();
@@ -123,6 +123,7 @@ public sealed class KaissaBoardController : MonoBehaviour
 
         var thinkTime = TimeSpan.FromSeconds(Time.time - _cardShownTime);
         var result = _trainer.Answer(move, thinkTime);
+        KaissaProgress.Save(_trainer.ExportProgress());
 
         var color = result.Correct ? CorrectColor : WrongColor;
         HighlightSolution(result.Solutions.Count > 0 ? result.Solutions[0] : null, color);

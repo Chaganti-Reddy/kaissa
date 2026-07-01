@@ -11,5 +11,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Play.unity
+    guid: 3b0f5b8b05f41a64e96a110805aefdde
+  - enabled: 1
+    path: Assets/Scenes/Rush.unity
+    guid: 17a5b02fd61b9304b9028cd2b4b70e8e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
