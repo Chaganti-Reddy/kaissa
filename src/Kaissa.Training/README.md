@@ -27,8 +27,9 @@ sequencing in the project plan.
 - `Play/MoveClassifier` + `Play/GameAnalyzer` — grade each of the player's moves against the
   engine's best (best/good/inaccuracy/mistake/blunder) from the evaluation swing.
 - `Play/GamePractice` — turn the mistakes from a game into practice scenarios (the missed move is
-  the solution), so a player's own blunders come back as spaced practice. This is where playing
-  and learning meet.
+  the solution). `Play/PlayerPracticeStore` persists them and `ScenarioLibrary.Add` folds them into
+  the training library, so a player's own blunders come back as spaced, scheduled practice. This is
+  where playing and learning meet.
 
 ## Try it
 

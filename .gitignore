@@ -32,8 +32,9 @@ lichess_db_puzzle.csv
 # Importer output before it is curated into Content/. Not committed.
 generated-scenarios.json
 
-# Local training progress written by the CLI
+# Local training progress and game-derived practice written by the CLI
 kaissa-progress.json
+kaissa-practice.json
 
 # OS
 .DS_Store

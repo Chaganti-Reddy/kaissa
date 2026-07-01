@@ -39,6 +39,24 @@ public sealed class ScenarioLibrary
 
     public IEnumerable<Scenario> AllScenarios => _byPattern.Values.SelectMany(s => s);
 
+    /// <summary>
+    /// Adds scenarios (and their pattern, if new) at runtime. Used to fold in player-specific
+    /// content such as positions generated from the player's own games.
+    /// </summary>
+    public void Add(Pattern pattern, IEnumerable<Scenario> scenarios)
+    {
+        _patterns[pattern.Id] = pattern;
+        if (!_byPattern.TryGetValue(pattern.Id, out var list))
+            _byPattern[pattern.Id] = list = new List<Scenario>();
+
+        foreach (var scenario in scenarios)
+        {
+            if (scenario.Pattern != pattern.Id)
+                throw new InvalidOperationException($"Scenario '{scenario.Id}' does not belong to pattern '{pattern.Id}'.");
+            list.Add(scenario);
+        }
+    }
+
     /// <summary>Loads the bundled default content shipped as an embedded resource.</summary>
     public static ScenarioLibrary LoadDefault()
     {

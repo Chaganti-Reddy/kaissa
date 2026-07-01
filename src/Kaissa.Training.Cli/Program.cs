@@ -9,8 +9,14 @@ using Kaissa.Training.Play;
 //   dotnet run --project src/Kaissa.Training.Cli -- --simulate # auto-run a diligent learner
 
 const string progressPath = "kaissa-progress.json";
+const string practicePath = "kaissa-practice.json";
 
 var library = ScenarioLibrary.LoadDefault();
+
+// Fold in practice positions saved from the player's own games, so they get scheduled too.
+var savedPractice = PlayerPracticeStore.Load(practicePath);
+if (savedPractice.Count > 0)
+    library.Add(GamePractice.Pattern, savedPractice.Scenarios);
 
 if (args.Contains("--simulate"))
 {
@@ -98,7 +104,12 @@ async Task<int> PlayGame(string savePath)
 
     var practice = GamePractice.FromAssessments(assessments);
     if (practice.Count > 0)
-        Console.WriteLine($"\n{practice.Count} position(s) from this game added to your practice queue.");
+    {
+        var store = PlayerPracticeStore.Load(practicePath);
+        store.AddRange(practice);
+        store.Save(practicePath);
+        Console.WriteLine($"\n{practice.Count} position(s) saved to your practice queue ({store.Count} total). They'll show up in training.");
+    }
 
     File.WriteAllText(savePath, model.ToJson());
     return 0;
