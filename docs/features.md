@@ -11,10 +11,10 @@ Legend: ✅ built (core) · 🎨 needs client UI · ⏳ planned · 🚫 out of s
 
 - ✅🎨 Adaptive spaced puzzle trainer (FSRS, per-pattern, difficulty-matched) — *our core edge*
 - ✅🎨 Puzzle Rush (timed / lives, escalating difficulty) — `RushSession`
-- ⏳ Daily puzzle (deterministic by date)
-- ⏳ Themed practice (drill one pattern/theme on demand)
+- ✅ Daily puzzle (deterministic by date) — `DailyPuzzle`
+- ✅🎨 Themed practice (drill one pattern on demand) — `ThemedSession`
 - ⏳ Puzzle by rating range / custom sets
-- ⏳ "Weakness report" → auto-generated practice set (uses the skill model; beyond chess.com)
+- ✅🎨 "Weakness report" → auto-generated practice set (uses the skill model; beyond chess.com) — `WeaknessReport`
 
 ## Playing
 
@@ -27,25 +27,25 @@ Legend: ✅ built (core) · 🎨 needs client UI · ⏳ planned · 🚫 out of s
 
 - ✅🎨 Post-game review (best move, mistake grading) — `GameAnalyzer`
 - ✅🎨 Mistakes → spaced practice, tagged by motif — *fusion, beyond chess.com* — `GamePractice`
-- ⏳ Full analysis board (free exploration + engine eval)
+- ✅🎨 Position/line analysis (engine eval + best line) — `KaissaAnalysis`
 - ⏳ Accuracy / insights per game
 
 ## Learning content
 
-- ⏳ Endgame trainer (Lucena, Philidor, K+P, etc.) — content + play-out mode
+- ✅🎨 Endgame trainer (K+Q, K+R, K+P opposition, promotion) — play out vs engine — `EndgameLibrary`
 - ⏳ Opening trainer (learn lines by spaced repetition, not rote)
 - ⏳ Pattern library browser (see/learn each motif)
 
 ## Stats and motivation
 
-- ⏳ Progress / mastery map (per-pattern) — `KaissaTrainer.Progress()` exists; needs a screen
-- ⏳ Player stats + rating history, streaks, accuracy
+- ✅🎨 Progress / mastery map (per-pattern) — `KaissaTrainer.Progress()`
+- ✅🎨 Player stats + rating history, streaks, accuracy — `KaissaTrainer.GetStats()`
 - ⏳ Goals / daily streak / reminders
 
 ## Vision and drills
 
-- ⏳ Board-vision trainer (name the square, square colour, knight paths)
-- ⏳ Coordinate trainer
+- ✅🎨 Board-vision trainer (light/dark square drill) — `BoardVision` / `VisionSession`
+- ⏳ Coordinate trainer (name the square, knight paths)
 
 ## Platform / meta
 
