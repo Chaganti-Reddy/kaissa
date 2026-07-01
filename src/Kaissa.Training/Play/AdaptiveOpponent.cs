@@ -17,17 +17,22 @@ public sealed class AdaptiveOpponent
     private readonly IChessEngine _engine;
     private readonly TimeSpan _thinkTime;
     private readonly int _ratingOffset;
+    private readonly int? _fixedElo;
 
-    public AdaptiveOpponent(IChessEngine engine, TimeSpan? thinkTime = null, int ratingOffset = 0)
+    public AdaptiveOpponent(IChessEngine engine, TimeSpan? thinkTime = null, int ratingOffset = 0, int? fixedElo = null)
     {
         _engine = engine;
         _thinkTime = thinkTime ?? TimeSpan.FromMilliseconds(100);
         _ratingOffset = ratingOffset;
+        _fixedElo = fixedElo;
     }
 
-    /// <summary>The engine Elo this opponent will play at for a given player rating.</summary>
+    /// <summary>
+    /// The engine Elo this opponent plays at. Fixed when a fixed Elo was set (a roster bot),
+    /// otherwise tracked to the player's rating.
+    /// </summary>
     public int TargetElo(double playerRating) =>
-        (int)Math.Clamp(Math.Round(playerRating + _ratingOffset), MinElo, MaxElo);
+        (int)Math.Clamp(_fixedElo ?? Math.Round(playerRating + _ratingOffset), MinElo, MaxElo);
 
     /// <summary>Returns the opponent's move (UCI) for the given position at the target strength.</summary>
     public async Task<string> ChooseMoveAsync(string fen, double playerRating, CancellationToken cancellationToken = default)

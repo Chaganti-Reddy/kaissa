@@ -13,14 +13,14 @@ Legend: ✅ built (core) · 🎨 needs client UI · ⏳ planned · 🚫 out of s
 - ✅🎨 Puzzle Rush (timed / lives, escalating difficulty) — `RushSession`
 - ✅ Daily puzzle (deterministic by date) — `DailyPuzzle`
 - ✅🎨 Themed practice (drill one pattern on demand) — `ThemedSession`
-- ⏳ Puzzle by rating range / custom sets
+- ✅🎨 Puzzle by rating range / custom sets — `ScenarioLibrary.ByRatingRange` + `PuzzleSetSession`
 - ✅🎨 "Weakness report" → auto-generated practice set (uses the skill model; beyond chess.com) — `WeaknessReport`
 
 ## Playing
 
 - ✅🎨 Play vs adaptive bot (Stockfish capped to your level) — `KaissaGame`
-- ⏳ Bot personalities / fixed-Elo opponents
-- ⏳ Play from a position / scenario, play out endgames vs engine
+- ✅🎨 Bot personalities / fixed-Elo opponents — `BotRoster` + `KaissaGame` fixed Elo
+- ✅🎨 Play from a position / play out endgames vs engine — `KaissaGame(fen)` + `EndgameLibrary`
 - 🚫 Live online multiplayer (out of scope by design)
 
 ## Analysis and improvement
@@ -33,7 +33,7 @@ Legend: ✅ built (core) · 🎨 needs client UI · ⏳ planned · 🚫 out of s
 ## Learning content
 
 - ✅🎨 Endgame trainer (K+Q, K+R, K+P opposition, promotion) — play out vs engine — `EndgameLibrary`
-- ⏳ Opening trainer (learn lines by spaced repetition, not rote)
+- ✅🎨 Opening trainer (learn lines move by move) — `OpeningLibrary` / `OpeningTrainer`
 - ⏳ Pattern library browser (see/learn each motif)
 
 ## Stats and motivation
@@ -45,7 +45,7 @@ Legend: ✅ built (core) · 🎨 needs client UI · ⏳ planned · 🚫 out of s
 ## Vision and drills
 
 - ✅🎨 Board-vision trainer (light/dark square drill) — `BoardVision` / `VisionSession`
-- ⏳ Coordinate trainer (name the square, knight paths)
+- ✅🎨 Coordinate trainer (find the named square) — `Coordinates` / `CoordinateSession`
 
 ## Platform / meta
 

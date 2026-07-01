@@ -39,6 +39,10 @@ public sealed class ScenarioLibrary
 
     public IEnumerable<Scenario> AllScenarios => _byPattern.Values.SelectMany(s => s);
 
+    /// <summary>Scenarios whose difficulty rating falls within [min, max], for rating-range practice.</summary>
+    public IReadOnlyList<Scenario> ByRatingRange(int minRating, int maxRating) =>
+        AllScenarios.Where(s => s.Rating >= minRating && s.Rating <= maxRating).ToList();
+
     /// <summary>
     /// Adds scenarios (and their pattern, if new) at runtime. Used to fold in player-specific
     /// content such as positions generated from the player's own games.

@@ -29,13 +29,14 @@ public sealed class KaissaGame : IAsyncDisposable
         double playerRating,
         string? fen = null,
         TimeSpan? botThinkTime = null,
+        int? fixedOpponentElo = null,
         CancellationToken cancellationToken = default)
     {
         var engine = UciChessEngine.LaunchProcess(enginePath);
         await engine.HandshakeAsync(cancellationToken).ConfigureAwait(false);
         await engine.NewGameAsync(cancellationToken).ConfigureAwait(false);
 
-        var opponent = new AdaptiveOpponent(engine, botThinkTime ?? TimeSpan.FromMilliseconds(200));
+        var opponent = new AdaptiveOpponent(engine, botThinkTime ?? TimeSpan.FromMilliseconds(200), fixedElo: fixedOpponentElo);
         var session = new GameSession(engine, playerSide, playerRating, fen, opponent);
         var game = new KaissaGame(engine, session, playerSide);
 
