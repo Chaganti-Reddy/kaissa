@@ -41,3 +41,16 @@ foreach ($dll in $wanted) {
 
 Write-Host ""
 Write-Host "Unity plugins updated in $pluginDir"
+
+# Stage Stockfish into StreamingAssets for the play-vs-bot screen (desktop). Fetched by
+# scripts/fetch-stockfish.ps1; not committed. iOS will need an embedded engine instead.
+$engine = Get-ChildItem -Path (Join-Path $repoRoot 'third_party/stockfish') -Recurse -Filter 'stockfish*.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($null -ne $engine) {
+    $streaming = Join-Path $repoRoot 'client/Assets/StreamingAssets/stockfish'
+    New-Item -ItemType Directory -Force -Path $streaming | Out-Null
+    Copy-Item $engine.FullName (Join-Path $streaming 'stockfish.exe') -Force
+    Write-Host "Stockfish staged in $streaming"
+}
+else {
+    Write-Host "Stockfish not found under third_party/stockfish; run scripts/fetch-stockfish.ps1 first." -ForegroundColor Yellow
+}

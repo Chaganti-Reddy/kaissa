@@ -23,5 +23,6 @@
 sysinfo.txt
 *.stackdump
 
-# Plugin DLLs are managed by the build, but we DO commit them so the project opens.
-# (see Assets/Plugins/Kaissa)
+# Stockfish binary staged for the client (fetched/copied, not committed)
+Assets/StreamingAssets/
+Assets/StreamingAssets.meta
