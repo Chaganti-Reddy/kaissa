@@ -80,6 +80,24 @@ public sealed class ChessGame
         return false;
     }
 
+    /// <summary>
+    /// Returns the UCI form of a legal move given as SAN or UCI, or null if it is not legal here.
+    /// Lets callers compare a player's move to a stored solution regardless of notation.
+    /// </summary>
+    public string? ResolveToUci(string move)
+    {
+        foreach (var candidate in _board.Moves())
+        {
+            if (string.Equals(candidate.San, move, StringComparison.Ordinal) ||
+                string.Equals(ToUci(candidate), move, StringComparison.OrdinalIgnoreCase))
+            {
+                return ToUci(candidate);
+            }
+        }
+
+        return null;
+    }
+
     public bool IsCheck => _board.WhiteKingChecked || _board.BlackKingChecked;
 
     public bool IsGameOver => _board.IsEndGame;

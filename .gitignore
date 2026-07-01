@@ -23,6 +23,9 @@ coverage*.xml
 # Downloaded engine binaries (fetched via scripts/fetch-stockfish.ps1, not committed)
 third_party/stockfish/
 
+# Local training progress written by the CLI
+kaissa-progress.json
+
 # OS
 .DS_Store
 Thumbs.db

@@ -1,0 +1,61 @@
+{
+  "patterns": [
+    {
+      "id": "checkmate.back_rank",
+      "name": "Back-rank mate",
+      "description": "A rook or queen mates a king trapped on its back rank behind its own pawns."
+    },
+    {
+      "id": "checkmate.f7_weakness",
+      "name": "Mate on f7",
+      "description": "The queen, supported by a bishop, mates on the weak f7 square (the scholar's-mate idea)."
+    },
+    {
+      "id": "checkmate.smothered",
+      "name": "Smothered mate",
+      "description": "A knight mates a king that is hemmed in by its own pieces."
+    },
+    {
+      "id": "checkmate.king_and_queen",
+      "name": "King-and-queen mate",
+      "description": "The queen mates on the edge while the king covers the escape squares."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "br-1",
+      "pattern": "checkmate.back_rank",
+      "fen": "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1",
+      "solutions": ["a1a8"],
+      "prompt": "White to play and mate in one."
+    },
+    {
+      "id": "br-2",
+      "pattern": "checkmate.back_rank",
+      "fen": "7k/8/6K1/8/8/8/8/R7 w - - 0 1",
+      "solutions": ["a1a8"],
+      "prompt": "White to play and mate in one."
+    },
+    {
+      "id": "f7-1",
+      "pattern": "checkmate.f7_weakness",
+      "fen": "r1bqkbnr/pppp1ppp/2n5/2b1p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+      "solutions": ["f3f7"],
+      "prompt": "White to play and mate in one."
+    },
+    {
+      "id": "sm-1",
+      "pattern": "checkmate.smothered",
+      "fen": "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1",
+      "solutions": ["g5f7"],
+      "prompt": "White to play and mate in one."
+    },
+    {
+      "id": "kq-1",
+      "pattern": "checkmate.king_and_queen",
+      "fen": "6k1/8/5QK1/8/8/8/8/8 w - - 0 1",
+      "solutions": ["f6g7"],
+      "prompt": "White to play and mate in one."
+    }
+  ]
+}

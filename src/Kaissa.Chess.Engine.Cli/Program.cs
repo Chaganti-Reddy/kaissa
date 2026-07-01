@@ -19,6 +19,18 @@ if (string.IsNullOrWhiteSpace(enginePath))
 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 var ct = cts.Token;
 
+// Focused mode: `-- <engine> <fen>` analyzes one position and prints "bestmove <uci> <score>".
+// Used to validate authored training positions against the engine.
+if (args.Length >= 2)
+{
+    await using var probe = UciChessEngine.LaunchProcess(enginePath);
+    await probe.HandshakeAsync(ct);
+    await probe.NewGameAsync(ct);
+    var r = await probe.AnalyzeAsync(args[1], SearchLimits.ToDepth(20), ct);
+    Console.WriteLine($"bestmove {r.BestMove} {r.Evaluation}");
+    return 0;
+}
+
 await using var engine = UciChessEngine.LaunchProcess(enginePath);
 
 var id = await engine.HandshakeAsync(ct);
