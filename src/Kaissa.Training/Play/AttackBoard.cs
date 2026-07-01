@@ -99,6 +99,18 @@ public sealed class AttackBoard
         return false;
     }
 
+    /// <summary>Every square, in order, walking from (file, rank) along a direction (empties included, as '\0').</summary>
+    public IEnumerable<(int file, int rank, char piece)> RaySquares(int file, int rank, int df, int dr)
+    {
+        int f = file + df, r = rank + dr;
+        while (OnBoard(f, r))
+        {
+            yield return (f, r, _pieces[f, r]);
+            f += df;
+            r += dr;
+        }
+    }
+
     /// <summary>The pieces met, in order, walking from (file, rank) along a direction (empties skipped).</summary>
     public IEnumerable<(int file, int rank, char piece)> RayPieces(int file, int rank, int df, int dr)
     {

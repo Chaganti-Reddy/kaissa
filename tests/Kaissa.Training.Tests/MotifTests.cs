@@ -66,6 +66,13 @@ public sealed class MotifTests
     }
 
     [Fact]
+    public void Moving_a_knight_to_unveil_a_bishop_on_the_queen_is_a_discovered_attack()
+    {
+        // Bishop a1 is blocked by the knight on d4; Ne6 unveils the bishop's attack on the queen on h8.
+        Assert.Equal(Motif.DiscoveredAttack, MotifClassifier.Classify("7q/8/7k/8/3N4/8/8/B3K3 w - - 0 1", "d4e6"));
+    }
+
+    [Fact]
     public void Delivering_mate_is_classified_as_checkmate()
     {
         Assert.Equal(Motif.Checkmate, MotifClassifier.Classify("6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8"));
@@ -83,6 +90,7 @@ public sealed class MotifTests
     [InlineData("k3r3/8/8/1N6/8/8/8/7K w - - 0 1", "b5c7", "tactic.fork")]
     [InlineData("4k3/8/8/4n3/8/8/8/R5K1 w - - 0 1", "a1e1", "tactic.pin")]
     [InlineData("3k3q/8/8/8/8/8/8/R3K3 w - - 0 1", "a1a8", "tactic.skewer")]
+    [InlineData("7q/8/7k/8/3N4/8/8/B3K3 w - - 0 1", "d4e6", "tactic.discovered_attack")]
     [InlineData("4k3/8/8/3b4/8/8/8/3RK3 w - - 0 1", "d1d5", "tactic.hanging_piece")]
     [InlineData("6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8", "tactic.from_your_games")]
     public void A_missed_move_routes_to_the_pattern_for_its_motif(string fen, string best, string expectedPattern)

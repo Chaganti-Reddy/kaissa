@@ -7,6 +7,7 @@ public enum Motif
 {
     Checkmate,
     Fork,
+    DiscoveredAttack,
     Skewer,
     Pin,
     HangingPiece,
@@ -42,6 +43,10 @@ public static class MotifClassifier
         if (CountForkTargets(after, to, moverWhite) >= 2)
             return Motif.Fork;
 
+        var from = AttackBoard.Square(uciMove.Substring(0, 2));
+        if (IsDiscoveredAttack(after, from, to, moverWhite))
+            return Motif.DiscoveredAttack;
+
         if (PinOrSkewer(after, to, moved, moverWhite) is { } lineMotif)
             return lineMotif;
 
@@ -75,6 +80,41 @@ public static class MotifClassifier
         }
 
         return null;
+    }
+
+    private static bool IsDiscoveredAttack(AttackBoard board, (int file, int rank) origin, (int file, int rank) moved, bool moverWhite)
+    {
+        // A friendly slider, other than the piece that just moved, now attacks an enemy king or
+        // queen along a line that runs through the vacated origin square (i.e. it was blocked by
+        // the moved piece a moment ago).
+        for (int f = 0; f < 8; f++)
+        for (int r = 0; r < 8; r++)
+        {
+            char piece = board.PieceAt(f, r);
+            if (piece == '\0' || board.IsWhite(piece) != moverWhite)
+                continue;
+            if (f == moved.file && r == moved.rank)
+                continue; // the piece that moved is not the revealer
+
+            foreach (var (df, dr) in AttackBoard.SliderDirections(piece))
+            {
+                bool passedOrigin = false;
+                foreach (var (sf, sr, sp) in board.RaySquares(f, r, df, dr))
+                {
+                    if (sf == origin.file && sr == origin.rank)
+                        passedOrigin = true;
+                    if (sp == '\0')
+                        continue;
+
+                    // First piece along this ray.
+                    if (passedOrigin && board.IsWhite(sp) != moverWhite && char.ToUpperInvariant(sp) is 'K' or 'Q')
+                        return true;
+                    break;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static int Value(char piece) => char.ToUpperInvariant(piece) switch
