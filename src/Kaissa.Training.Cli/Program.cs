@@ -85,7 +85,21 @@ async Task<int> PlayGame(string savePath)
     PrintBoard(game.Fen);
     game.FinalizeRating();
     model.RatingEstimate = game.PlayerRating;
-    Console.WriteLine($"Game over: {game.Result}. Your new rating: {model.RatingEstimate:0}");
+    Console.WriteLine($"Game over: {game.Result}. Your new rating: {model.RatingEstimate:0}\n");
+
+    // Review the game: the engine grades your moves and your mistakes become practice.
+    var analyzer = new GameAnalyzer(engine, depth: 12);
+    var assessments = await analyzer.AnalyzeAsync(game.StartFen, game.MoveHistory, game.PlayerSide);
+    var mistakes = assessments.Where(a => a.Quality > MoveQuality.Inaccuracy).ToList();
+
+    Console.WriteLine($"Review: {assessments.Count} of your moves analysed, {mistakes.Count} mistake(s)/blunder(s).");
+    foreach (var m in mistakes)
+        Console.WriteLine($"  move {m.Ply / 2 + 1}: you played {m.PlayedMove}, best was {m.BestMove} ({m.Quality}, -{m.CentipawnLoss}cp)");
+
+    var practice = GamePractice.FromAssessments(assessments);
+    if (practice.Count > 0)
+        Console.WriteLine($"\n{practice.Count} position(s) from this game added to your practice queue.");
+
     File.WriteAllText(savePath, model.ToJson());
     return 0;
 }

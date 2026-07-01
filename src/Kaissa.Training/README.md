@@ -24,6 +24,11 @@ sequencing in the project plan.
   `Submit(move, thinkingTime)` grades it, updates the schedule, and adjusts the player rating.
 - `Play/AdaptiveOpponent` + `Play/GameSession` — play a full game against the engine capped to
   the player's level; the result updates the player's rating. The other half of "play, not study".
+- `Play/MoveClassifier` + `Play/GameAnalyzer` — grade each of the player's moves against the
+  engine's best (best/good/inaccuracy/mistake/blunder) from the evaluation swing.
+- `Play/GamePractice` — turn the mistakes from a game into practice scenarios (the missed move is
+  the solution), so a player's own blunders come back as spaced practice. This is where playing
+  and learning meet.
 
 ## Try it
 

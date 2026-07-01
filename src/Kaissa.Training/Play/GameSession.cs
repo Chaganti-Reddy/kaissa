@@ -13,6 +13,7 @@ public sealed class GameSession
     private readonly AdaptiveOpponent _opponent;
     private readonly ChessGame _game;
     private readonly int _opponentElo;
+    private readonly List<string> _moves = new();
 
     public GameSession(
         IChessEngine engine,
@@ -22,12 +23,15 @@ public sealed class GameSession
         AdaptiveOpponent? opponent = null)
     {
         _opponent = opponent ?? new AdaptiveOpponent(engine);
-        _game = fen is null ? ChessGame.Start() : ChessGame.FromFen(fen);
+        StartFen = fen ?? ChessGame.StartFen;
+        _game = ChessGame.FromFen(StartFen);
         PlayerSide = playerSide;
         PlayerRating = playerRating;
         _opponentElo = _opponent.TargetElo(playerRating);
     }
 
+    public string StartFen { get; }
+    public IReadOnlyList<string> MoveHistory => _moves;
     public Side PlayerSide { get; }
     public double PlayerRating { get; private set; }
     public int OpponentElo => _opponentElo;
@@ -43,7 +47,10 @@ public sealed class GameSession
     {
         if (_game.SideToMove != PlayerSide || _game.IsGameOver)
             return false;
-        return _game.TryMakeMove(move);
+        if (!_game.TryMakeMove(move))
+            return false;
+        _moves.Add(move);
+        return true;
     }
 
     /// <summary>Plays the opponent's reply if it is their turn. Returns the move, or null if not applicable.</summary>
@@ -53,7 +60,10 @@ public sealed class GameSession
             return null;
 
         var move = await _opponent.ChooseMoveAsync(_game.Fen, PlayerRating, cancellationToken).ConfigureAwait(false);
-        return _game.TryMakeMove(move) ? move : null;
+        if (!_game.TryMakeMove(move))
+            return null;
+        _moves.Add(move);
+        return move;
     }
 
     /// <summary>Once the game is over, updates the player's rating by the result against the opponent Elo.</summary>
