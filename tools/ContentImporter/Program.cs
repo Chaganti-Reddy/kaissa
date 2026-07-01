@@ -165,6 +165,7 @@ static void WriteContent(string path, List<Scenario> scenarios)
             Fen = s.Fen,
             Solutions = s.Solutions.ToList(),
             Prompt = s.Prompt,
+            Rating = s.Rating,
         })
         .ToList();
 
@@ -192,4 +193,5 @@ file sealed class ScenarioDto
     [JsonPropertyName("fen")] public string Fen { get; init; } = "";
     [JsonPropertyName("solutions")] public List<string> Solutions { get; init; } = new();
     [JsonPropertyName("prompt")] public string Prompt { get; init; } = "";
+    [JsonPropertyName("rating")] public int Rating { get; init; }
 }

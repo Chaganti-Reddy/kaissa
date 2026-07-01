@@ -59,7 +59,18 @@
       "solutions": [
         "d1d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1118
+    },
+    {
+      "id": "lichess-0030b",
+      "pattern": "checkmate.back_rank",
+      "fen": "6k1/5ppp/5n2/pp6/4b1rP/5N1Q/Pq2r1P1/3R2RK w - - 5 33",
+      "solutions": [
+        "d1d8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 538
     },
     {
       "id": "lichess-003Tx",
@@ -68,7 +79,28 @@
       "solutions": [
         "f3d2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1516
+    },
+    {
+      "id": "lichess-0042j",
+      "pattern": "checkmate.back_rank",
+      "fen": "3r2k1/4nppp/pq3b2/1p2p3/2r2P2/2P1NR2/PP1Q2BP/3R2K1 w - - 0 25",
+      "solutions": [
+        "d2d8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 555
+    },
+    {
+      "id": "lichess-00465",
+      "pattern": "checkmate.back_rank",
+      "fen": "5r1k/pp4pp/2p5/6q1/5R2/2P5/P1P2PPP/3rR1K1 w - - 0 28",
+      "solutions": [
+        "f4f8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 578
     },
     {
       "id": "lichess-005N7",
@@ -77,7 +109,8 @@
       "solutions": [
         "a4a8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 651
     },
     {
       "id": "lichess-007XE",
@@ -86,7 +119,8 @@
       "solutions": [
         "d8d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 628
     },
     {
       "id": "lichess-007mr",
@@ -95,7 +129,8 @@
       "solutions": [
         "d5d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 750
     },
     {
       "id": "lichess-008aL",
@@ -104,7 +139,8 @@
       "solutions": [
         "b6b1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 849
     },
     {
       "id": "lichess-009L0",
@@ -113,7 +149,8 @@
       "solutions": [
         "c1d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 706
     },
     {
       "id": "lichess-009YT",
@@ -122,7 +159,8 @@
       "solutions": [
         "d1d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 687
     },
     {
       "id": "lichess-00Aq4",
@@ -131,7 +169,8 @@
       "solutions": [
         "e8e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1537
     },
     {
       "id": "lichess-00BQD",
@@ -140,7 +179,8 @@
       "solutions": [
         "e8e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 717
     },
     {
       "id": "lichess-00Bg4",
@@ -149,7 +189,8 @@
       "solutions": [
         "a5d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1373
     },
     {
       "id": "lichess-00EXM",
@@ -158,7 +199,28 @@
       "solutions": [
         "d7d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 769
+    },
+    {
+      "id": "lichess-00EXP",
+      "pattern": "checkmate.back_rank",
+      "fen": "2n3k1/p4ppp/2p1p3/P1NrP3/1N1r4/8/5PPP/1R1R2K1 b - - 0 29",
+      "solutions": [
+        "d4d1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 584
+    },
+    {
+      "id": "lichess-00HAM",
+      "pattern": "checkmate.back_rank",
+      "fen": "q4r1k/1p3Qpp/1n6/3P2pP/2PP2P1/1P6/2K5/5R2 w - - 0 30",
+      "solutions": [
+        "f7f8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 573
     },
     {
       "id": "lichess-00IqI",
@@ -167,7 +229,18 @@
       "solutions": [
         "d2d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1433
+    },
+    {
+      "id": "lichess-00JQS",
+      "pattern": "checkmate.back_rank",
+      "fen": "7k/pb3rpp/2p5/5p2/3P4/8/PPP2PPP/4R1K1 w - - 0 22",
+      "solutions": [
+        "e1e8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 560
     },
     {
       "id": "lichess-00MDG",
@@ -176,7 +249,8 @@
       "solutions": [
         "f2f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1054
     },
     {
       "id": "lichess-00MS3",
@@ -185,7 +259,8 @@
       "solutions": [
         "e2e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 809
     },
     {
       "id": "lichess-00NOI",
@@ -194,7 +269,18 @@
       "solutions": [
         "d4e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 964
+    },
+    {
+      "id": "lichess-00O9Z",
+      "pattern": "checkmate.back_rank",
+      "fen": "5Q1R/5p1p/1b3qp1/p6k/P2P4/8/1P2rPPP/5RK1 b - - 8 32",
+      "solutions": [
+        "f6f2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1619
     },
     {
       "id": "lichess-00O9a",
@@ -203,7 +289,18 @@
       "solutions": [
         "a7f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 985
+    },
+    {
+      "id": "lichess-00QZV",
+      "pattern": "checkmate.back_rank",
+      "fen": "r1bk4/pppp3p/2n5/2b1prN1/8/1B6/PPPP2PP/RNB2R1K b - - 2 14",
+      "solutions": [
+        "f5f1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 597
     },
     {
       "id": "lichess-00RYH",
@@ -212,7 +309,8 @@
       "solutions": [
         "e7e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1029
     },
     {
       "id": "lichess-00TU2",
@@ -221,7 +319,8 @@
       "solutions": [
         "d6d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 624
     },
     {
       "id": "lichess-00Ycz",
@@ -230,7 +329,8 @@
       "solutions": [
         "c2f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1130
     },
     {
       "id": "lichess-00ZKw",
@@ -239,7 +339,8 @@
       "solutions": [
         "d8d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 957
     },
     {
       "id": "lichess-00aBq",
@@ -248,7 +349,18 @@
       "solutions": [
         "e4e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 894
+    },
+    {
+      "id": "lichess-00awK",
+      "pattern": "checkmate.back_rank",
+      "fen": "r6k/2p2Qpp/p7/4b3/8/8/1PP1KR2/2q5 w - - 1 25",
+      "solutions": [
+        "f7f8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 562
     },
     {
       "id": "lichess-00cJo",
@@ -257,7 +369,28 @@
       "solutions": [
         "a1a8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 941
+    },
+    {
+      "id": "lichess-00dpQ",
+      "pattern": "checkmate.back_rank",
+      "fen": "6k1/5ppp/8/1r2rP2/6P1/2RK3P/8/7B w - - 1 48",
+      "solutions": [
+        "c3c8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 570
+    },
+    {
+      "id": "lichess-00fgg",
+      "pattern": "checkmate.back_rank",
+      "fen": "4r1k1/p4ppp/8/8/8/8/PP1R1PPP/K7 b - - 0 21",
+      "solutions": [
+        "e8e1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 584
     },
     {
       "id": "lichess-00gH0",
@@ -266,7 +399,8 @@
       "solutions": [
         "f5f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1347
     },
     {
       "id": "lichess-00jOm",
@@ -275,7 +409,8 @@
       "solutions": [
         "b8b1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 798
     },
     {
       "id": "lichess-00mJY",
@@ -284,7 +419,8 @@
       "solutions": [
         "f7e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1046
     },
     {
       "id": "lichess-00ns1",
@@ -293,7 +429,8 @@
       "solutions": [
         "f4f1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 600
     },
     {
       "id": "lichess-00pSv",
@@ -302,7 +439,8 @@
       "solutions": [
         "e5a1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1009
     },
     {
       "id": "lichess-00r1D",
@@ -311,7 +449,8 @@
       "solutions": [
         "d6d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1371
     },
     {
       "id": "lichess-00rTX",
@@ -320,7 +459,8 @@
       "solutions": [
         "h4e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 971
     },
     {
       "id": "lichess-00s8j",
@@ -329,7 +469,8 @@
       "solutions": [
         "c6c1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1214
     },
     {
       "id": "lichess-00wL8",
@@ -338,7 +479,8 @@
       "solutions": [
         "d7d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 856
     },
     {
       "id": "lichess-00xMV",
@@ -347,7 +489,8 @@
       "solutions": [
         "d3d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 800
     },
     {
       "id": "lichess-00zVd",
@@ -356,7 +499,8 @@
       "solutions": [
         "d8d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 677
     },
     {
       "id": "lichess-00zkP",
@@ -365,7 +509,8 @@
       "solutions": [
         "e2e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1448
     },
     {
       "id": "lichess-012tD",
@@ -374,7 +519,18 @@
       "solutions": [
         "d5d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 803
+    },
+    {
+      "id": "lichess-01337",
+      "pattern": "checkmate.back_rank",
+      "fen": "1k6/ppp3r1/8/P1b5/4R3/7P/1PPr4/R6K w - - 1 26",
+      "solutions": [
+        "e4e8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 576
     },
     {
       "id": "lichess-01382",
@@ -383,7 +539,8 @@
       "solutions": [
         "a8a1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 848
     },
     {
       "id": "lichess-014It",
@@ -392,7 +549,8 @@
       "solutions": [
         "d2f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1295
     },
     {
       "id": "lichess-0175u",
@@ -401,7 +559,8 @@
       "solutions": [
         "e7e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1248
     },
     {
       "id": "lichess-0192c",
@@ -410,7 +569,88 @@
       "solutions": [
         "b7c8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 957
+    },
+    {
+      "id": "lichess-01GBu",
+      "pattern": "checkmate.back_rank",
+      "fen": "5r1k/3p2bp/p4pp1/qp1Pr3/8/1Q4B1/PP2RPPP/4R1K1 b - - 0 23",
+      "solutions": [
+        "a5e1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1276
+    },
+    {
+      "id": "lichess-01Inf",
+      "pattern": "checkmate.back_rank",
+      "fen": "r6k/pp2R1pp/3p4/q7/8/8/Pb3PPP/4R1K1 w - - 0 30",
+      "solutions": [
+        "e7e8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 530
+    },
+    {
+      "id": "lichess-01MPw",
+      "pattern": "checkmate.back_rank",
+      "fen": "3r4/p1k3q1/1p2p2p/2p1n1p1/2P1N3/P3R1Q1/1P3PPP/6K1 b - - 2 29",
+      "solutions": [
+        "d8d1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 664
+    },
+    {
+      "id": "lichess-01PPM",
+      "pattern": "checkmate.back_rank",
+      "fen": "3r2k1/p1p2ppp/2B1b3/4q3/N4n1Q/8/P4PPP/5RK1 w - - 6 21",
+      "solutions": [
+        "h4d8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1056
+    },
+    {
+      "id": "lichess-01Pbw",
+      "pattern": "checkmate.back_rank",
+      "fen": "6k1/ppp2pp1/7p/8/2R5/2Pr4/PR4PP/7K b - - 0 26",
+      "solutions": [
+        "d3d1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 717
+    },
+    {
+      "id": "lichess-01Pko",
+      "pattern": "checkmate.back_rank",
+      "fen": "5rk1/b5pp/4p3/pp1N4/8/P2rP3/B5PP/2B2RK1 w - - 0 27",
+      "solutions": [
+        "d5e7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1196
+    },
+    {
+      "id": "lichess-01Q8c",
+      "pattern": "checkmate.back_rank",
+      "fen": "r5k1/p4ppp/q1p3b1/3p1Pn1/8/2P1R3/P1P4P/4R1K1 w - - 0 24",
+      "solutions": [
+        "e3e8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 585
+    },
+    {
+      "id": "lichess-01S1N",
+      "pattern": "checkmate.back_rank",
+      "fen": "6k1/5ppp/1P2p3/3p4/3nb3/6P1/1r5P/R5K1 w - - 1 34",
+      "solutions": [
+        "a1a8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 663
     },
     {
       "id": "lichess-001pC",
@@ -419,7 +659,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 870
     },
     {
       "id": "lichess-00A9Q",
@@ -428,7 +669,8 @@
       "solutions": [
         "e4f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 717
     },
     {
       "id": "lichess-00Bn0",
@@ -437,7 +679,8 @@
       "solutions": [
         "b5d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1030
     },
     {
       "id": "lichess-00LWa",
@@ -446,7 +689,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 881
     },
     {
       "id": "lichess-00Tmr",
@@ -455,7 +699,8 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 988
     },
     {
       "id": "lichess-00pER",
@@ -464,7 +709,8 @@
       "solutions": [
         "b3g8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1565
     },
     {
       "id": "lichess-00uQY",
@@ -473,7 +719,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 974
     },
     {
       "id": "lichess-00wPZ",
@@ -482,7 +729,8 @@
       "solutions": [
         "f2g1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1409
     },
     {
       "id": "lichess-0123H",
@@ -491,7 +739,8 @@
       "solutions": [
         "f7g8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1332
     },
     {
       "id": "lichess-017Lc",
@@ -500,7 +749,8 @@
       "solutions": [
         "a3c2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1059
     },
     {
       "id": "lichess-01H4V",
@@ -509,7 +759,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 846
     },
     {
       "id": "lichess-01Tea",
@@ -518,7 +769,8 @@
       "solutions": [
         "e4f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 836
     },
     {
       "id": "lichess-01Tfr",
@@ -527,7 +779,8 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1204
     },
     {
       "id": "lichess-01TmZ",
@@ -536,7 +789,8 @@
       "solutions": [
         "f2h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1356
     },
     {
       "id": "lichess-01ZWA",
@@ -545,7 +799,18 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 967
+    },
+    {
+      "id": "lichess-01bxA",
+      "pattern": "checkmate.smothered",
+      "fen": "5r1k/p5pp/8/6N1/2Q5/8/Pq3P1P/1b3RK1 w - - 4 31",
+      "solutions": [
+        "g5f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1782
     },
     {
       "id": "lichess-01fz7",
@@ -554,7 +819,8 @@
       "solutions": [
         "b5d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1374
     },
     {
       "id": "lichess-01h8e",
@@ -563,7 +829,8 @@
       "solutions": [
         "f4g6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1360
     },
     {
       "id": "lichess-01rgi",
@@ -572,7 +839,8 @@
       "solutions": [
         "e4d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1050
     },
     {
       "id": "lichess-02Clu",
@@ -581,7 +849,8 @@
       "solutions": [
         "d3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 772
     },
     {
       "id": "lichess-02Int",
@@ -590,7 +859,8 @@
       "solutions": [
         "b5d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 920
     },
     {
       "id": "lichess-02U15",
@@ -599,7 +869,8 @@
       "solutions": [
         "e4d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1150
     },
     {
       "id": "lichess-0342j",
@@ -608,7 +879,8 @@
       "solutions": [
         "e4d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 816
     },
     {
       "id": "lichess-03EDn",
@@ -617,7 +889,8 @@
       "solutions": [
         "e5f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 844
     },
     {
       "id": "lichess-03LKc",
@@ -626,7 +899,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 938
     },
     {
       "id": "lichess-03RI0",
@@ -635,7 +909,8 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 939
     },
     {
       "id": "lichess-03sho",
@@ -644,7 +919,8 @@
       "solutions": [
         "e5d3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1410
     },
     {
       "id": "lichess-044zE",
@@ -653,7 +929,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1011
     },
     {
       "id": "lichess-04fMB",
@@ -662,7 +939,8 @@
       "solutions": [
         "f2h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1319
     },
     {
       "id": "lichess-04l90",
@@ -671,7 +949,8 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 915
     },
     {
       "id": "lichess-04lPa",
@@ -680,7 +959,8 @@
       "solutions": [
         "f8f1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1372
     },
     {
       "id": "lichess-054Pk",
@@ -689,7 +969,18 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1013
+    },
+    {
+      "id": "lichess-058MB",
+      "pattern": "checkmate.smothered",
+      "fen": "1rb3k1/pQ4pp/1p3n2/q3N3/3P4/P7/1B3PPP/6K1 w - - 0 28",
+      "solutions": [
+        "b7f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1642
     },
     {
       "id": "lichess-05DRo",
@@ -698,7 +989,8 @@
       "solutions": [
         "g6e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 939
     },
     {
       "id": "lichess-05GFz",
@@ -707,7 +999,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 643
     },
     {
       "id": "lichess-05HWB",
@@ -716,7 +1009,8 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 665
     },
     {
       "id": "lichess-05LI1",
@@ -725,7 +1019,8 @@
       "solutions": [
         "h3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 921
     },
     {
       "id": "lichess-05V0f",
@@ -734,7 +1029,8 @@
       "solutions": [
         "a6c7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 951
     },
     {
       "id": "lichess-05W1D",
@@ -743,7 +1039,8 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 854
     },
     {
       "id": "lichess-05bKI",
@@ -752,7 +1049,8 @@
       "solutions": [
         "c5g1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1374
     },
     {
       "id": "lichess-05fLI",
@@ -761,7 +1059,8 @@
       "solutions": [
         "h6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 902
     },
     {
       "id": "lichess-05imK",
@@ -770,7 +1069,198 @@
       "solutions": [
         "e5f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 828
+    },
+    {
+      "id": "lichess-05sSo",
+      "pattern": "checkmate.smothered",
+      "fen": "r4rk1/1p2pp2/3p1Bpp/p2P4/2P1RP2/7n/PP4PP/R1Q2BNK b - - 0 23",
+      "solutions": [
+        "h3f2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1257
+    },
+    {
+      "id": "lichess-06D4f",
+      "pattern": "checkmate.smothered",
+      "fen": "r7/ppp2Q2/8/4k3/3nb3/5P2/PPq3PP/K2RR3 b - - 0 24",
+      "solutions": [
+        "c2b1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1346
+    },
+    {
+      "id": "lichess-06Fmf",
+      "pattern": "checkmate.smothered",
+      "fen": "B1b2rk1/p1p2ppp/8/3p4/3bn3/8/PPP3PP/RNBQ2RK b - - 0 14",
+      "solutions": [
+        "e4f2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 916
+    },
+    {
+      "id": "lichess-06Jy4",
+      "pattern": "checkmate.smothered",
+      "fen": "r5k1/pbp3pp/1p1ppr2/5p1q/2PPn3/P1PBP2P/1BQ2RPN/6RK b - - 0 18",
+      "solutions": [
+        "e4g3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1628
+    },
+    {
+      "id": "lichess-06XV4",
+      "pattern": "checkmate.smothered",
+      "fen": "3qkb1r/1b1pppp1/pp3n2/nN4B1/2r5/P3QNP1/1P2PPB1/R4RK1 w k - 0 16",
+      "solutions": [
+        "b5d6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1149
+    },
+    {
+      "id": "lichess-06Y4M",
+      "pattern": "checkmate.smothered",
+      "fen": "r5rk/pp4pp/2n5/q3p1N1/2B3b1/bRP1B3/P4PPP/5K1R w - - 0 20",
+      "solutions": [
+        "g5f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 825
+    },
+    {
+      "id": "lichess-07KvB",
+      "pattern": "checkmate.smothered",
+      "fen": "r2qkb1r/pp1nnp1p/2p3p1/3p1N2/3P4/3QR3/PPP2PPP/RN4K1 w kq - 1 12",
+      "solutions": [
+        "f5d6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1314
+    },
+    {
+      "id": "lichess-07Qdz",
+      "pattern": "checkmate.smothered",
+      "fen": "r1b1k1nr/1pp1qppp/1p6/4n3/1P1B4/P4N2/3NPPPP/R2QKB1R b KQkq - 0 11",
+      "solutions": [
+        "e5d3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1141
+    },
+    {
+      "id": "lichess-07VlN",
+      "pattern": "checkmate.smothered",
+      "fen": "r5rk/1bp3pp/pbq2N2/np2p1N1/8/1BPP3P/PP3PP1/R1B1R1K1 w - - 0 19",
+      "solutions": [
+        "g5f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 817
+    },
+    {
+      "id": "lichess-07ZwS",
+      "pattern": "checkmate.smothered",
+      "fen": "1nkr3r/1ppn1pp1/p2p3p/3N4/P3PP2/3BB1bP/1PP5/2KR3R w - - 0 19",
+      "solutions": [
+        "d5e7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 969
+    },
+    {
+      "id": "lichess-07bg6",
+      "pattern": "checkmate.smothered",
+      "fen": "6k1/pb3ppp/1q1p4/8/N7/PP1Q1P1n/6PP/1R3R1K b - - 0 28",
+      "solutions": [
+        "b6g1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1582
+    },
+    {
+      "id": "lichess-07faR",
+      "pattern": "checkmate.smothered",
+      "fen": "r2qkb1Q/pp1npp1p/2p3pB/3n4/2b1N3/8/PP3PPP/R3R1K1 w q - 0 15",
+      "solutions": [
+        "e4d6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1652
+    },
+    {
+      "id": "lichess-07jsZ",
+      "pattern": "checkmate.smothered",
+      "fen": "r1bqkb1r/pppp2pp/5n2/3Pnp2/2P1p3/2N1P3/PP1BNPPP/R2QKB1R b KQkq - 4 7",
+      "solutions": [
+        "e5d3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1092
+    },
+    {
+      "id": "lichess-07kKy",
+      "pattern": "checkmate.smothered",
+      "fen": "r4r2/p3p2k/2p1B1p1/2p4p/2P1P3/1P5n/P5PP/2B1R1RK b - - 0 27",
+      "solutions": [
+        "h3f2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 933
+    },
+    {
+      "id": "lichess-07y0q",
+      "pattern": "checkmate.smothered",
+      "fen": "r4rk1/pp1n2bp/2p1b1p1/4pp2/2P1P3/1PN2PPn/P1QBN1BP/R5RK b - - 0 19",
+      "solutions": [
+        "h3f2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 910
+    },
+    {
+      "id": "lichess-07yWG",
+      "pattern": "checkmate.smothered",
+      "fen": "r4rk1/1p1n1pp1/p3p2p/3PPn2/4pP1q/8/PP2B1PP/R2Q1RBK b - - 0 18",
+      "solutions": [
+        "f5g3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 831
+    },
+    {
+      "id": "lichess-08Aqq",
+      "pattern": "checkmate.smothered",
+      "fen": "r4rk1/1p3Npp/pq3b2/3Q4/8/P2P4/1PP3PP/R1B4K w - - 0 19",
+      "solutions": [
+        "f7h6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1336
+    },
+    {
+      "id": "lichess-08AtT",
+      "pattern": "checkmate.smothered",
+      "fen": "5rk1/Q4ppp/1p2p3/8/8/5P1n/6PP/1R4RK b - - 0 30",
+      "solutions": [
+        "h3f2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 832
+    },
+    {
+      "id": "lichess-001h8",
+      "pattern": "tactic.deflection",
+      "fen": "2r3k1/2r4p/4p1p1/1p1q1pP1/p2P1P1Q/P6R/4bB2/2R3K1 w - - 6 35",
+      "solutions": [
+        "h4h7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1780
     },
     {
       "id": "lichess-002Mm",
@@ -779,7 +1269,8 @@
       "solutions": [
         "h7h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 939
     },
     {
       "id": "lichess-003IM",
@@ -788,7 +1279,8 @@
       "solutions": [
         "g3e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1096
     },
     {
       "id": "lichess-004LZ",
@@ -797,7 +1289,8 @@
       "solutions": [
         "c3c2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1187
     },
     {
       "id": "lichess-0068B",
@@ -806,7 +1299,8 @@
       "solutions": [
         "d2d7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1435
     },
     {
       "id": "lichess-006E1",
@@ -815,7 +1309,8 @@
       "solutions": [
         "f8e8"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1528
     },
     {
       "id": "lichess-0088O",
@@ -824,7 +1319,8 @@
       "solutions": [
         "g2g5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1133
     },
     {
       "id": "lichess-00AoZ",
@@ -833,7 +1329,8 @@
       "solutions": [
         "b7d7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 978
     },
     {
       "id": "lichess-00DcC",
@@ -842,7 +1339,8 @@
       "solutions": [
         "c5e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1402
     },
     {
       "id": "lichess-00DkJ",
@@ -851,7 +1349,8 @@
       "solutions": [
         "b1d1"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1575
     },
     {
       "id": "lichess-00Gc5",
@@ -860,7 +1359,8 @@
       "solutions": [
         "e6e5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1587
     },
     {
       "id": "lichess-00J1Y",
@@ -869,7 +1369,8 @@
       "solutions": [
         "g3g6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1141
     },
     {
       "id": "lichess-00JAo",
@@ -878,7 +1379,8 @@
       "solutions": [
         "a2a6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1184
     },
     {
       "id": "lichess-00L76",
@@ -887,7 +1389,18 @@
       "solutions": [
         "h5h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1182
+    },
+    {
+      "id": "lichess-00Nay",
+      "pattern": "tactic.deflection",
+      "fen": "r2q1r2/ppp2p2/3p1nk1/4p1p1/2B1P3/2NP2Q1/PPP5/2K4R w - - 1 20",
+      "solutions": [
+        "g3h3"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1797
     },
     {
       "id": "lichess-00PZo",
@@ -896,7 +1409,8 @@
       "solutions": [
         "h8e8"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1065
     },
     {
       "id": "lichess-00TFd",
@@ -905,7 +1419,8 @@
       "solutions": [
         "g5g4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1033
     },
     {
       "id": "lichess-00TLz",
@@ -914,7 +1429,8 @@
       "solutions": [
         "h2h4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1470
     },
     {
       "id": "lichess-00UEs",
@@ -923,7 +1439,8 @@
       "solutions": [
         "d7d5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1513
     },
     {
       "id": "lichess-00Wfu",
@@ -932,7 +1449,8 @@
       "solutions": [
         "e8e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1354
     },
     {
       "id": "lichess-00Zit",
@@ -941,7 +1459,18 @@
       "solutions": [
         "h4f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1189
+    },
+    {
+      "id": "lichess-00bFH",
+      "pattern": "tactic.deflection",
+      "fen": "4r1k1/1q3ppp/3B1n2/p2P4/8/PQ5P/5PPN/1R4K1 b - - 0 27",
+      "solutions": [
+        "e8e1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1796
     },
     {
       "id": "lichess-00d9q",
@@ -950,7 +1479,8 @@
       "solutions": [
         "e1e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1139
     },
     {
       "id": "lichess-00g5H",
@@ -959,7 +1489,8 @@
       "solutions": [
         "d1d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1432
     },
     {
       "id": "lichess-00lvP",
@@ -968,7 +1499,8 @@
       "solutions": [
         "f6f4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1459
     },
     {
       "id": "lichess-00nh0",
@@ -977,7 +1509,18 @@
       "solutions": [
         "g2g3"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1578
+    },
+    {
+      "id": "lichess-00rAM",
+      "pattern": "tactic.deflection",
+      "fen": "3rr1k1/1p3pq1/p1n1b2p/2b3p1/QP6/P2BPNB1/5PPP/R2R2K1 b - b3 0 20",
+      "solutions": [
+        "d8d3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1743
     },
     {
       "id": "lichess-00u0R",
@@ -986,7 +1529,8 @@
       "solutions": [
         "d1d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1401
     },
     {
       "id": "lichess-00uKb",
@@ -995,7 +1539,8 @@
       "solutions": [
         "h5h4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1548
     },
     {
       "id": "lichess-00xgR",
@@ -1004,7 +1549,8 @@
       "solutions": [
         "e1f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1124
     },
     {
       "id": "lichess-00yDE",
@@ -1013,7 +1559,8 @@
       "solutions": [
         "c4e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1358
     },
     {
       "id": "lichess-00ybx",
@@ -1022,7 +1569,8 @@
       "solutions": [
         "g6d3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 971
     },
     {
       "id": "lichess-00zQz",
@@ -1031,7 +1579,8 @@
       "solutions": [
         "g4h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1283
     },
     {
       "id": "lichess-011o8",
@@ -1040,7 +1589,8 @@
       "solutions": [
         "e1e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1532
     },
     {
       "id": "lichess-017AB",
@@ -1049,7 +1599,8 @@
       "solutions": [
         "c2c5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1165
     },
     {
       "id": "lichess-01Dcf",
@@ -1058,7 +1609,8 @@
       "solutions": [
         "g8g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1257
     },
     {
       "id": "lichess-01FB6",
@@ -1067,7 +1619,8 @@
       "solutions": [
         "c3e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1307
     },
     {
       "id": "lichess-01Ie5",
@@ -1076,7 +1629,8 @@
       "solutions": [
         "g4g5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 885
     },
     {
       "id": "lichess-01Jpm",
@@ -1085,7 +1639,28 @@
       "solutions": [
         "e3e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1471
+    },
+    {
+      "id": "lichess-01M7o",
+      "pattern": "tactic.deflection",
+      "fen": "3r2r1/p3kp1p/2q1p3/2p2p2/5Q2/6N1/PPP3PP/3R2K1 w - - 2 22",
+      "solutions": [
+        "f4h4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1679
+    },
+    {
+      "id": "lichess-01OSA",
+      "pattern": "tactic.deflection",
+      "fen": "r3r3/R3nkb1/5p2/3p4/3P2N1/2P1R1PP/5P2/5K2 w - - 11 35",
+      "solutions": [
+        "e3e7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1623
     },
     {
       "id": "lichess-01Qwv",
@@ -1094,7 +1669,8 @@
       "solutions": [
         "g4e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 989
     },
     {
       "id": "lichess-01R8j",
@@ -1103,7 +1679,8 @@
       "solutions": [
         "c4d5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1590
     },
     {
       "id": "lichess-01SLc",
@@ -1112,7 +1689,28 @@
       "solutions": [
         "a4c5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 992
+    },
+    {
+      "id": "lichess-01X5n",
+      "pattern": "tactic.deflection",
+      "fen": "8/8/7p/p3r1p1/2PKpkP1/7P/4R3/8 w - - 3 41",
+      "solutions": [
+        "e2f2"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1776
+    },
+    {
+      "id": "lichess-01aAR",
+      "pattern": "tactic.deflection",
+      "fen": "4k3/R3P3/1p3Kpp/2p5/2P5/4r3/4p1P1/8 w - - 3 38",
+      "solutions": [
+        "a7a8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1607
     },
     {
       "id": "lichess-01bhr",
@@ -1121,7 +1719,8 @@
       "solutions": [
         "d1h1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1096
     },
     {
       "id": "lichess-01fHH",
@@ -1130,7 +1729,168 @@
       "solutions": [
         "f6c3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1111
+    },
+    {
+      "id": "lichess-01i0G",
+      "pattern": "tactic.deflection",
+      "fen": "6k1/8/p2b1q2/1p1p4/1P1P3p/P4QP1/5PK1/4R3 b - - 1 38",
+      "solutions": [
+        "h4h3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1344
+    },
+    {
+      "id": "lichess-01jao",
+      "pattern": "tactic.deflection",
+      "fen": "2kr3r/ppp2ppp/2nbp3/6B1/P2P2n1/2N2N1q/1PP2P2/R2QRBK1 b - - 3 14",
+      "solutions": [
+        "d6h2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1344
+    },
+    {
+      "id": "lichess-01kWV",
+      "pattern": "tactic.deflection",
+      "fen": "6r1/Rb4r1/pPp1p3/2Pp1pk1/3P4/4P1p1/5K1P/6R1 w - - 0 34",
+      "solutions": [
+        "g1g3"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1542
+    },
+    {
+      "id": "lichess-01kih",
+      "pattern": "tactic.deflection",
+      "fen": "6k1/pp3pp1/1n4p1/2p5/6P1/1B3PKP/PP1r4/4R3 w - - 6 29",
+      "solutions": [
+        "e1e8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1070
+    },
+    {
+      "id": "lichess-01lp3",
+      "pattern": "tactic.deflection",
+      "fen": "r1b3Q1/5R2/p3p1p1/1p4kp/8/1KPB1n2/PP3q2/8 w - - 0 43",
+      "solutions": [
+        "g8g6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1458
+    },
+    {
+      "id": "lichess-01mqD",
+      "pattern": "tactic.deflection",
+      "fen": "4B1k1/2p2p1p/1p1p1P1K/p2P2P1/2P5/1n6/8/8 w - - 0 40",
+      "solutions": [
+        "e8f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1439
+    },
+    {
+      "id": "lichess-01osm",
+      "pattern": "tactic.deflection",
+      "fen": "7r/pp2Rp2/1n4pk/4Q3/3N2q1/8/PP3PPP/5K2 b - - 0 29",
+      "solutions": [
+        "g4d1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1167
+    },
+    {
+      "id": "lichess-01pgJ",
+      "pattern": "tactic.deflection",
+      "fen": "1R6/6pk/5p1p/2N5/6PK/r6P/8/8 b - - 2 40",
+      "solutions": [
+        "g7g5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 820
+    },
+    {
+      "id": "lichess-01q3y",
+      "pattern": "tactic.deflection",
+      "fen": "rnb2r2/ppp2B1k/3p3p/2b4Q/4P3/3P4/Pq1NKPPP/8 w - - 0 15",
+      "solutions": [
+        "h5g6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1091
+    },
+    {
+      "id": "lichess-01r7u",
+      "pattern": "tactic.deflection",
+      "fen": "8/1p3pp1/p1k3p1/3nR3/3P4/Q5P1/P3KP1r/7q w - - 10 33",
+      "solutions": [
+        "a3c5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1726
+    },
+    {
+      "id": "lichess-01upx",
+      "pattern": "tactic.deflection",
+      "fen": "6k1/1p1r1pp1/p6p/3p2q1/PPnBr3/4PQ2/2R2PPP/2R3K1 w - - 1 25",
+      "solutions": [
+        "c2c4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1438
+    },
+    {
+      "id": "lichess-01vYl",
+      "pattern": "tactic.deflection",
+      "fen": "r6r/p1p3k1/1p1qpbp1/8/3P2R1/2P2P2/PPQ2P1P/2KR4 w - - 0 19",
+      "solutions": [
+        "c2g6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1124
+    },
+    {
+      "id": "lichess-001XA",
+      "pattern": "tactic.discovered_attack",
+      "fen": "2r2rk1/pbq1bppp/8/8/2p1N3/P1Bn2P1/2Q2PBP/1R3RK1 w - - 4 24",
+      "solutions": [
+        "b1b7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1687
+    },
+    {
+      "id": "lichess-002KJ",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r3k2r/ppq1bppp/4pn2/2Ppn3/1P4bP/2P2N2/P3BPP1/RNBQ1RK1 w kq - 3 11",
+      "solutions": [
+        "f3e5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1615
+    },
+    {
+      "id": "lichess-004RF",
+      "pattern": "tactic.discovered_attack",
+      "fen": "5rk1/5ppp/1p6/1q3P1Q/2pp3P/6R1/6PK/8 w - - 0 31",
+      "solutions": [
+        "g3g7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1746
+    },
+    {
+      "id": "lichess-006fF",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r1b4r/pp1k2p1/2nb2qp/1B1p2B1/3p3Q/8/PPP2PPP/3RR1K1 w - - 0 18",
+      "solutions": [
+        "h4g4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1752
     },
     {
       "id": "lichess-008Y3",
@@ -1139,7 +1899,28 @@
       "solutions": [
         "d5f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1055
+    },
+    {
+      "id": "lichess-009FS",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r2qr1k1/p5bp/1pp1N1p1/8/2Q2p2/2P1n2P/PP3PP1/R1B1RNK1 b - - 0 18",
+      "solutions": [
+        "e3c4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1739
+    },
+    {
+      "id": "lichess-009zR",
+      "pattern": "tactic.discovered_attack",
+      "fen": "3Q4/p1p2ppp/4k3/8/5P2/4P3/Prqn2PP/3R1RK1 b - - 0 22",
+      "solutions": [
+        "d2f3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1620
     },
     {
       "id": "lichess-009zS",
@@ -1148,7 +1929,8 @@
       "solutions": [
         "g4e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1425
     },
     {
       "id": "lichess-00AFG",
@@ -1157,7 +1939,8 @@
       "solutions": [
         "f5h6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1456
     },
     {
       "id": "lichess-00AdI",
@@ -1166,7 +1949,8 @@
       "solutions": [
         "d8d3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1264
     },
     {
       "id": "lichess-00Bul",
@@ -1175,7 +1959,8 @@
       "solutions": [
         "e5c6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1240
     },
     {
       "id": "lichess-00DEc",
@@ -1184,7 +1969,8 @@
       "solutions": [
         "d3f4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1091
     },
     {
       "id": "lichess-00Dke",
@@ -1193,7 +1979,8 @@
       "solutions": [
         "c4f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1501
     },
     {
       "id": "lichess-00E29",
@@ -1202,7 +1989,8 @@
       "solutions": [
         "d3h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 955
     },
     {
       "id": "lichess-00EXS",
@@ -1211,7 +1999,8 @@
       "solutions": [
         "f2e3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1551
     },
     {
       "id": "lichess-00GBX",
@@ -1220,7 +2009,8 @@
       "solutions": [
         "d6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 883
     },
     {
       "id": "lichess-00Gt0",
@@ -1229,7 +2019,28 @@
       "solutions": [
         "d5d4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1052
+    },
+    {
+      "id": "lichess-00IYg",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r1b2r2/pp2n1p1/1qn1ppk1/3pP1N1/3P3P/P7/1P1Q1PP1/RN2K2R w KQ - 0 14",
+      "solutions": [
+        "h4h5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1742
+    },
+    {
+      "id": "lichess-00Kia",
+      "pattern": "tactic.discovered_attack",
+      "fen": "5r1k/4n2p/1p4p1/pP5Q/P2pB2K/6P1/2P4P/4q3 w - - 0 38",
+      "solutions": [
+        "h5e5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1758
     },
     {
       "id": "lichess-00Lh9",
@@ -1238,7 +2049,8 @@
       "solutions": [
         "e2g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1324
     },
     {
       "id": "lichess-00Lt1",
@@ -1247,7 +2059,8 @@
       "solutions": [
         "f4d5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1583
     },
     {
       "id": "lichess-00O37",
@@ -1256,7 +2069,8 @@
       "solutions": [
         "e2a6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1300
     },
     {
       "id": "lichess-00R2A",
@@ -1265,7 +2079,8 @@
       "solutions": [
         "f8b4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 947
     },
     {
       "id": "lichess-00T4i",
@@ -1274,7 +2089,8 @@
       "solutions": [
         "d7h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1535
     },
     {
       "id": "lichess-00UHZ",
@@ -1283,7 +2099,8 @@
       "solutions": [
         "e4f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1071
     },
     {
       "id": "lichess-00Uo9",
@@ -1292,7 +2109,8 @@
       "solutions": [
         "e8e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1177
     },
     {
       "id": "lichess-00VDN",
@@ -1301,7 +2119,8 @@
       "solutions": [
         "d5e4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1524
     },
     {
       "id": "lichess-00Vdx",
@@ -1310,7 +2129,8 @@
       "solutions": [
         "g8g2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1456
     },
     {
       "id": "lichess-00XQ8",
@@ -1319,7 +2139,8 @@
       "solutions": [
         "f2e3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1487
     },
     {
       "id": "lichess-00Y6y",
@@ -1328,7 +2149,28 @@
       "solutions": [
         "d2f1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1193
+    },
+    {
+      "id": "lichess-00dqP",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r1b2rk1/5p1p/p3pq2/1p1p4/7n/1P5P/P1P1QPB1/1K1R2R1 w - - 0 22",
+      "solutions": [
+        "g2d5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1697
+    },
+    {
+      "id": "lichess-00e63",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r4r1k/pp4pp/2pp1b2/4p3/N2qP3/3Q4/PPP2PPP/3RR1K1 w - - 4 17",
+      "solutions": [
+        "d3b3"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1742
     },
     {
       "id": "lichess-00f1Y",
@@ -1337,7 +2179,8 @@
       "solutions": [
         "c5e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1275
     },
     {
       "id": "lichess-00jCD",
@@ -1346,7 +2189,8 @@
       "solutions": [
         "f6g4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1359
     },
     {
       "id": "lichess-00kZF",
@@ -1355,7 +2199,18 @@
       "solutions": [
         "e4e1"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1308
+    },
+    {
+      "id": "lichess-00lIV",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r2qr1k1/pb2bppp/2p2n2/3pN1B1/2P5/4P3/PPQ1BPPP/3RK2R b K - 4 13",
+      "solutions": [
+        "e7b4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1644
     },
     {
       "id": "lichess-00mvP",
@@ -1364,7 +2219,8 @@
       "solutions": [
         "e5f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1164
     },
     {
       "id": "lichess-00mvr",
@@ -1373,7 +2229,8 @@
       "solutions": [
         "c1g5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 851
     },
     {
       "id": "lichess-00nHy",
@@ -1382,7 +2239,8 @@
       "solutions": [
         "e5f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1271
     },
     {
       "id": "lichess-00rx9",
@@ -1391,7 +2249,8 @@
       "solutions": [
         "g7e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1358
     },
     {
       "id": "lichess-00sO1",
@@ -1400,7 +2259,8 @@
       "solutions": [
         "e1a5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 901
     },
     {
       "id": "lichess-00wYl",
@@ -1409,7 +2269,8 @@
       "solutions": [
         "f4a4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1158
     },
     {
       "id": "lichess-00xGN",
@@ -1418,7 +2279,8 @@
       "solutions": [
         "d6h2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 974
     },
     {
       "id": "lichess-00xvM",
@@ -1427,7 +2289,8 @@
       "solutions": [
         "f8h6"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1184
     },
     {
       "id": "lichess-00yIS",
@@ -1436,7 +2299,8 @@
       "solutions": [
         "e3e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1099
     },
     {
       "id": "lichess-00yPS",
@@ -1445,7 +2309,8 @@
       "solutions": [
         "c5c8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1074
     },
     {
       "id": "lichess-011J1",
@@ -1454,7 +2319,8 @@
       "solutions": [
         "d3g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1243
     },
     {
       "id": "lichess-012QY",
@@ -1463,7 +2329,8 @@
       "solutions": [
         "d4e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1223
     },
     {
       "id": "lichess-013hi",
@@ -1472,7 +2339,8 @@
       "solutions": [
         "f7e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1196
     },
     {
       "id": "lichess-017Ut",
@@ -1481,7 +2349,8 @@
       "solutions": [
         "d5f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1000
     },
     {
       "id": "lichess-017c1",
@@ -1490,7 +2359,118 @@
       "solutions": [
         "b2c3"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1082
+    },
+    {
+      "id": "lichess-017zX",
+      "pattern": "tactic.discovered_attack",
+      "fen": "6qk/1p4p1/B1n2rQp/3p4/8/2P2P2/P6P/6RK w - - 1 30",
+      "solutions": [
+        "g6f6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1383
+    },
+    {
+      "id": "lichess-0191t",
+      "pattern": "tactic.discovered_attack",
+      "fen": "6k1/1p3r2/p1p1p3/4Pqpp/3P4/1P2R1QP/P4PP1/6K1 b - - 1 33",
+      "solutions": [
+        "h5h4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1704
+    },
+    {
+      "id": "lichess-019Oa",
+      "pattern": "tactic.discovered_attack",
+      "fen": "3q4/5kpQ/p1p5/1p1n4/2p3P1/P6P/1PPB4/1K6 b - - 0 33",
+      "solutions": [
+        "d5f6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1565
+    },
+    {
+      "id": "lichess-01Ag5",
+      "pattern": "tactic.discovered_attack",
+      "fen": "2k2r1r/p2n3p/1pqbQ3/8/3P4/2P2N2/P2B1PPP/R4RK1 b - - 0 19",
+      "solutions": [
+        "d6h2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 971
+    },
+    {
+      "id": "lichess-01B6x",
+      "pattern": "tactic.discovered_attack",
+      "fen": "6k1/1B2ppbp/p2p2p1/3P4/1P2P3/P3B1P1/4qP1P/1Q1b2K1 b - - 0 28",
+      "solutions": [
+        "e2e1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1162
+    },
+    {
+      "id": "lichess-01CKc",
+      "pattern": "tactic.discovered_attack",
+      "fen": "2r2rk1/1b3ppp/p2pp3/bp1n4/3PQ1Nq/PP1B4/1BP2PPP/R4RK1 w - - 4 18",
+      "solutions": [
+        "g4f6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1365
+    },
+    {
+      "id": "lichess-01Cb9",
+      "pattern": "tactic.discovered_attack",
+      "fen": "4r2k/p3q1p1/7p/2R5/2PpN3/6P1/4Q2P/6K1 b - - 0 39",
+      "solutions": [
+        "e7c5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1730
+    },
+    {
+      "id": "lichess-01I9O",
+      "pattern": "tactic.discovered_attack",
+      "fen": "r5k1/1pp2r2/p3n2q/3pP2p/2P2R1P/8/PP1Q2P1/5RK1 w - - 1 23",
+      "solutions": [
+        "f4g4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1302
+    },
+    {
+      "id": "lichess-01JzG",
+      "pattern": "tactic.discovered_attack",
+      "fen": "8/2k5/8/1r2p1R1/6p1/3K4/1p4PP/1N6 b - - 1 41",
+      "solutions": [
+        "e5e4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1386
+    },
+    {
+      "id": "lichess-00TJN",
+      "pattern": "tactic.double_check",
+      "fen": "r3r1k1/pp3pB1/2q3pp/3R4/8/P4Q2/BP3PPP/1b4K1 w - - 0 24",
+      "solutions": [
+        "f3f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1637
+    },
+    {
+      "id": "lichess-00ZEc",
+      "pattern": "tactic.double_check",
+      "fen": "1r3b2/5p1k/3P1qRP/r1n1p3/ppB5/P2Q1P2/1PP5/1K6 w - - 1 36",
+      "solutions": [
+        "g6g7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1786
     },
     {
       "id": "lichess-00bou",
@@ -1499,7 +2479,8 @@
       "solutions": [
         "e2h5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1420
     },
     {
       "id": "lichess-00c0D",
@@ -1508,7 +2489,8 @@
       "solutions": [
         "g4f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 763
     },
     {
       "id": "lichess-01VBW",
@@ -1517,7 +2499,8 @@
       "solutions": [
         "f4g6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1157
     },
     {
       "id": "lichess-01XlK",
@@ -1526,7 +2509,8 @@
       "solutions": [
         "e4g5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1528
     },
     {
       "id": "lichess-01Z8E",
@@ -1535,7 +2519,8 @@
       "solutions": [
         "d3f4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1092
     },
     {
       "id": "lichess-01z4c",
@@ -1544,7 +2529,8 @@
       "solutions": [
         "e8f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1094
     },
     {
       "id": "lichess-020iD",
@@ -1553,7 +2539,8 @@
       "solutions": [
         "b5c7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 810
     },
     {
       "id": "lichess-02PrW",
@@ -1562,7 +2549,8 @@
       "solutions": [
         "d4e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 921
     },
     {
       "id": "lichess-02RYC",
@@ -1571,7 +2559,8 @@
       "solutions": [
         "d4e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1074
     },
     {
       "id": "lichess-02bLn",
@@ -1580,7 +2569,18 @@
       "solutions": [
         "g6e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1119
+    },
+    {
+      "id": "lichess-02fS6",
+      "pattern": "tactic.double_check",
+      "fen": "r1b2rk1/pppp1ppp/8/8/1KBbP3/3Q2N1/PPq4P/R1B4R b - - 1 15",
+      "solutions": [
+        "a7a5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1752
     },
     {
       "id": "lichess-02kXd",
@@ -1589,7 +2589,18 @@
       "solutions": [
         "h5h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1345
+    },
+    {
+      "id": "lichess-02zCV",
+      "pattern": "tactic.double_check",
+      "fen": "r4k1r/1pp2pp1/1b1p1P2/pP6/P2PNnq1/1Q3N1p/5P2/R1B1RB1K b - - 1 21",
+      "solutions": [
+        "g4g2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1631
     },
     {
       "id": "lichess-038rm",
@@ -1598,7 +2609,18 @@
       "solutions": [
         "d4f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1355
+    },
+    {
+      "id": "lichess-03av2",
+      "pattern": "tactic.double_check",
+      "fen": "r1b1r1k1/1pN1bppp/p1n2n2/8/8/P2P3P/BPP2PP1/R1B1K1NR b KQ - 0 12",
+      "solutions": [
+        "e7b4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1615
     },
     {
       "id": "lichess-03rAR",
@@ -1607,7 +2629,8 @@
       "solutions": [
         "h5g4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1248
     },
     {
       "id": "lichess-04BBn",
@@ -1616,7 +2639,8 @@
       "solutions": [
         "d5e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1408
     },
     {
       "id": "lichess-04KbJ",
@@ -1625,7 +2649,8 @@
       "solutions": [
         "f1g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 809
     },
     {
       "id": "lichess-04Rkh",
@@ -1634,7 +2659,8 @@
       "solutions": [
         "e4f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1395
     },
     {
       "id": "lichess-04Xrh",
@@ -1643,7 +2669,8 @@
       "solutions": [
         "e6f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1484
     },
     {
       "id": "lichess-04bch",
@@ -1652,7 +2679,18 @@
       "solutions": [
         "e8f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 938
+    },
+    {
+      "id": "lichess-04kFZ",
+      "pattern": "tactic.double_check",
+      "fen": "r2qr1k1/ppp2p1p/5pPB/8/6Q1/2P5/P1p3PP/bN3K1R w - - 0 20",
+      "solutions": [
+        "g6h7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1602
     },
     {
       "id": "lichess-04yPy",
@@ -1661,7 +2699,8 @@
       "solutions": [
         "b3b2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1381
     },
     {
       "id": "lichess-04zhG",
@@ -1670,7 +2709,38 @@
       "solutions": [
         "h5g6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1020
+    },
+    {
+      "id": "lichess-05LLQ",
+      "pattern": "tactic.double_check",
+      "fen": "r3k2r/4ppbp/2Pp2p1/1B2n3/1p6/1P3P2/2PQ2PP/B1KR3R b kq - 0 20",
+      "solutions": [
+        "a8a1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1662
+    },
+    {
+      "id": "lichess-05bmj",
+      "pattern": "tactic.double_check",
+      "fen": "R4bk1/5rP1/5pR1/8/2r5/p5P1/6K1/1q6 w - - 0 42",
+      "solutions": [
+        "g7f8q"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1651
+    },
+    {
+      "id": "lichess-05zrE",
+      "pattern": "tactic.double_check",
+      "fen": "2r1r3/1p1q1pk1/p4n2/P2ppbN1/8/n1P1P2B/1P2Q3/R4KR1 w - - 0 32",
+      "solutions": [
+        "g5e6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1688
     },
     {
       "id": "lichess-062Zq",
@@ -1679,7 +2749,8 @@
       "solutions": [
         "f7f8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 730
     },
     {
       "id": "lichess-066ld",
@@ -1688,7 +2759,8 @@
       "solutions": [
         "c4d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1252
     },
     {
       "id": "lichess-06ACU",
@@ -1697,7 +2769,8 @@
       "solutions": [
         "h6g5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1195
     },
     {
       "id": "lichess-06BuX",
@@ -1706,7 +2779,8 @@
       "solutions": [
         "e4d5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1298
     },
     {
       "id": "lichess-06IxM",
@@ -1715,7 +2789,18 @@
       "solutions": [
         "g7g8q"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1554
+    },
+    {
+      "id": "lichess-06VoP",
+      "pattern": "tactic.double_check",
+      "fen": "2rr2k1/5pp1/p1qp3p/4pP1N/1p6/1P4PK/PP5P/R2Q4 w - - 5 32",
+      "solutions": [
+        "d1g4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1790
     },
     {
       "id": "lichess-06kcu",
@@ -1724,7 +2809,8 @@
       "solutions": [
         "d4d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1522
     },
     {
       "id": "lichess-06uYP",
@@ -1733,7 +2819,8 @@
       "solutions": [
         "f6d4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 933
     },
     {
       "id": "lichess-073Wk",
@@ -1742,7 +2829,8 @@
       "solutions": [
         "f5f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 962
     },
     {
       "id": "lichess-07ECu",
@@ -1751,7 +2839,8 @@
       "solutions": [
         "g4f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1451
     },
     {
       "id": "lichess-07GeY",
@@ -1760,7 +2849,8 @@
       "solutions": [
         "h6g5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1288
     },
     {
       "id": "lichess-07OHG",
@@ -1769,7 +2859,38 @@
       "solutions": [
         "f2h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 909
+    },
+    {
+      "id": "lichess-07Wce",
+      "pattern": "tactic.double_check",
+      "fen": "r2qr3/1p1b1pk1/p2p2pp/3n1P2/3N4/1PQ5/1P4PP/R3R1K1 w - - 0 28",
+      "solutions": [
+        "d4e6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1617
+    },
+    {
+      "id": "lichess-07p1C",
+      "pattern": "tactic.double_check",
+      "fen": "1r2r1k1/5p1p/4b1p1/2p5/1n1b4/1P3PPN/P2BK2P/1BRQ3R b - - 0 23",
+      "solutions": [
+        "e6c4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1798
+    },
+    {
+      "id": "lichess-07zqN",
+      "pattern": "tactic.double_check",
+      "fen": "3q1r1k/6p1/p2p3P/2pB1P2/4Pn2/2PP3R/1P4QK/r7 w - - 0 36",
+      "solutions": [
+        "h6g7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 582
     },
     {
       "id": "lichess-08XzM",
@@ -1778,7 +2899,8 @@
       "solutions": [
         "b5d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 707
     },
     {
       "id": "lichess-08wFc",
@@ -1787,7 +2909,8 @@
       "solutions": [
         "g3f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1494
     },
     {
       "id": "lichess-098Gu",
@@ -1796,7 +2919,8 @@
       "solutions": [
         "f7g8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1436
     },
     {
       "id": "lichess-09JUw",
@@ -1805,7 +2929,8 @@
       "solutions": [
         "c7a6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1200
     },
     {
       "id": "lichess-09dS7",
@@ -1814,7 +2939,8 @@
       "solutions": [
         "d5e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1353
     },
     {
       "id": "lichess-09dtC",
@@ -1823,7 +2949,8 @@
       "solutions": [
         "e5e4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1587
     },
     {
       "id": "lichess-09iNz",
@@ -1832,7 +2959,8 @@
       "solutions": [
         "e6e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1455
     },
     {
       "id": "lichess-09tHX",
@@ -1841,7 +2969,8 @@
       "solutions": [
         "e5f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1105
     },
     {
       "id": "lichess-0A3tC",
@@ -1850,7 +2979,78 @@
       "solutions": [
         "h3h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1554
+    },
+    {
+      "id": "lichess-0ABas",
+      "pattern": "tactic.double_check",
+      "fen": "5r2/p4B2/1p3BR1/2n3pk/4P3/qP4p1/P5KP/6n1 w - - 5 38",
+      "solutions": [
+        "g6g5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1581
+    },
+    {
+      "id": "lichess-0AFRX",
+      "pattern": "tactic.double_check",
+      "fen": "3rrq1k/2p3pB/pbn2p1p/1p2P3/1Pbp2PN/P2Q2NP/2P4K/R4R2 w - - 8 27",
+      "solutions": [
+        "h4g6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 982
+    },
+    {
+      "id": "lichess-0AaUW",
+      "pattern": "tactic.double_check",
+      "fen": "2R5/p4ppk/1b2r3/5rQp/3p4/P4PBq/1P3PRP/5K2 w - - 10 31",
+      "solutions": [
+        "g5g7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1760
+    },
+    {
+      "id": "lichess-0Adjr",
+      "pattern": "tactic.double_check",
+      "fen": "r1b1k1nr/ppp2ppp/3q4/3p4/8/8/3NBPPP/1R1QR1K1 w kq - 2 16",
+      "solutions": [
+        "e2b5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1301
+    },
+    {
+      "id": "lichess-0B4Lr",
+      "pattern": "tactic.double_check",
+      "fen": "5rk1/pb2qNbp/1p2Q1p1/7n/1Pr2P2/2P5/P5PP/2B2RK1 w - - 0 26",
+      "solutions": [
+        "f7h6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1632
+    },
+    {
+      "id": "lichess-0BK43",
+      "pattern": "tactic.double_check",
+      "fen": "r1bq1rk1/pp4p1/2pp1Ppp/2bNp1N1/2B1P3/3P4/PPn1K1PP/R1B4n w - - 0 15",
+      "solutions": [
+        "d5e7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1691
+    },
+    {
+      "id": "lichess-0BOUF",
+      "pattern": "tactic.double_check",
+      "fen": "r1b1kb1r/pp1ppppp/8/q2P4/1nNnP3/6B1/PP3PPP/R2QKBNR b KQkq - 2 9",
+      "solutions": [
+        "b4c2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1249
     },
     {
       "id": "lichess-000Pw",
@@ -1859,7 +3059,8 @@
       "solutions": [
         "d4e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1550
     },
     {
       "id": "lichess-000rO",
@@ -1868,7 +3069,8 @@
       "solutions": [
         "e5c7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1110
     },
     {
       "id": "lichess-0017R",
@@ -1877,7 +3079,8 @@
       "solutions": [
         "d3c4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1397
     },
     {
       "id": "lichess-001wr",
@@ -1886,7 +3089,8 @@
       "solutions": [
         "d6c5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1013
     },
     {
       "id": "lichess-002GQ",
@@ -1895,7 +3099,8 @@
       "solutions": [
         "c3e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 654
     },
     {
       "id": "lichess-002IE",
@@ -1904,7 +3109,8 @@
       "solutions": [
         "d4e5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1205
     },
     {
       "id": "lichess-002Tf",
@@ -1913,7 +3119,8 @@
       "solutions": [
         "e7b4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1564
     },
     {
       "id": "lichess-003Jb",
@@ -1922,7 +3129,8 @@
       "solutions": [
         "e7g5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 993
     },
     {
       "id": "lichess-003jH",
@@ -1931,7 +3139,8 @@
       "solutions": [
         "e5d3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1065
     },
     {
       "id": "lichess-003jb",
@@ -1940,7 +3149,8 @@
       "solutions": [
         "d4a4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1000
     },
     {
       "id": "lichess-003jv",
@@ -1949,7 +3159,8 @@
       "solutions": [
         "d6f7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1007
     },
     {
       "id": "lichess-003mh",
@@ -1958,7 +3169,8 @@
       "solutions": [
         "e1e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1338
     },
     {
       "id": "lichess-003o0",
@@ -1967,7 +3179,8 @@
       "solutions": [
         "d8a5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1002
     },
     {
       "id": "lichess-003r5",
@@ -1976,7 +3189,18 @@
       "solutions": [
         "b4d3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1107
+    },
+    {
+      "id": "lichess-0047P",
+      "pattern": "tactic.fork",
+      "fen": "8/1N3k2/6p1/8/2P3P1/pr6/R7/5K2 b - - 2 56",
+      "solutions": [
+        "b3b1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1766
     },
     {
       "id": "lichess-004nd",
@@ -1985,7 +3209,8 @@
       "solutions": [
         "e4f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 898
     },
     {
       "id": "lichess-0050w",
@@ -1994,7 +3219,18 @@
       "solutions": [
         "h3g3"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1095
+    },
+    {
+      "id": "lichess-005HG",
+      "pattern": "tactic.fork",
+      "fen": "r2q1rk1/p1p2pp1/3bbn1p/4N3/8/1P4P1/PBQPPP1P/RN2K2R b KQ - 2 12",
+      "solutions": [
+        "d6e5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1772
     },
     {
       "id": "lichess-005do",
@@ -2003,7 +3239,8 @@
       "solutions": [
         "c1c7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1439
     },
     {
       "id": "lichess-005nD",
@@ -2012,7 +3249,8 @@
       "solutions": [
         "c6e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1104
     },
     {
       "id": "lichess-006wz",
@@ -2021,7 +3259,8 @@
       "solutions": [
         "b1b2"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1428
     },
     {
       "id": "lichess-00761",
@@ -2030,7 +3269,8 @@
       "solutions": [
         "h7g7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1474
     },
     {
       "id": "lichess-008D5",
@@ -2039,7 +3279,8 @@
       "solutions": [
         "d1a4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1408
     },
     {
       "id": "lichess-008P4",
@@ -2048,7 +3289,8 @@
       "solutions": [
         "d4b3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 694
     },
     {
       "id": "lichess-009tE",
@@ -2057,7 +3299,8 @@
       "solutions": [
         "c6e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 647
     },
     {
       "id": "lichess-00Aas",
@@ -2066,7 +3309,8 @@
       "solutions": [
         "d4e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1070
     },
     {
       "id": "lichess-00BJm",
@@ -2075,7 +3319,8 @@
       "solutions": [
         "c6e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1107
     },
     {
       "id": "lichess-00BNd",
@@ -2084,7 +3329,8 @@
       "solutions": [
         "d5e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 912
     },
     {
       "id": "lichess-00Bn4",
@@ -2093,7 +3339,8 @@
       "solutions": [
         "f6d7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 689
     },
     {
       "id": "lichess-00BnG",
@@ -2102,7 +3349,8 @@
       "solutions": [
         "d7e7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1450
     },
     {
       "id": "lichess-00DPI",
@@ -2111,7 +3359,8 @@
       "solutions": [
         "d5f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 956
     },
     {
       "id": "lichess-00EBZ",
@@ -2120,7 +3369,8 @@
       "solutions": [
         "g3e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 818
     },
     {
       "id": "lichess-00Ea3",
@@ -2129,7 +3379,8 @@
       "solutions": [
         "d4e5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1317
     },
     {
       "id": "lichess-00Evs",
@@ -2138,7 +3389,8 @@
       "solutions": [
         "d5f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1059
     },
     {
       "id": "lichess-00Gvp",
@@ -2147,7 +3399,8 @@
       "solutions": [
         "d7c5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 952
     },
     {
       "id": "lichess-00HDS",
@@ -2156,7 +3409,8 @@
       "solutions": [
         "f3d5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1506
     },
     {
       "id": "lichess-00HEx",
@@ -2165,7 +3419,8 @@
       "solutions": [
         "c1d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 921
     },
     {
       "id": "lichess-00HLP",
@@ -2174,7 +3429,8 @@
       "solutions": [
         "d4e2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 840
     },
     {
       "id": "lichess-00HZa",
@@ -2183,7 +3439,18 @@
       "solutions": [
         "d1d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 937
+    },
+    {
+      "id": "lichess-00Hpe",
+      "pattern": "tactic.fork",
+      "fen": "1rr3k1/4Qppp/q3p3/p2pn3/3N4/4P2P/5PP1/RR4K1 w - - 0 30",
+      "solutions": [
+        "b1b8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1768
     },
     {
       "id": "lichess-00HzX",
@@ -2192,7 +3459,8 @@
       "solutions": [
         "c2c1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1590
     },
     {
       "id": "lichess-00IEW",
@@ -2201,7 +3469,8 @@
       "solutions": [
         "f5e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 844
     },
     {
       "id": "lichess-00ISm",
@@ -2210,7 +3479,178 @@
       "solutions": [
         "e4g5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 907
+    },
+    {
+      "id": "lichess-00IUT",
+      "pattern": "tactic.fork",
+      "fen": "1r2r1k1/ppp1q1pp/4b3/4P3/1Q1R1P2/8/P5PP/R1B3K1 b - - 0 19",
+      "solutions": [
+        "c7c5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1514
+    },
+    {
+      "id": "lichess-00K0G",
+      "pattern": "tactic.fork",
+      "fen": "8/8/8/2Pk4/pK4p1/3N4/4bP2/8 w - - 8 60",
+      "solutions": [
+        "d3f4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 777
+    },
+    {
+      "id": "lichess-00Kq4",
+      "pattern": "tactic.fork",
+      "fen": "r2qk3/5p1r/p1p1p3/1p1pP1N1/P1nP2Pn/2P3B1/2P2P2/R1QR2K1 b q - 0 21",
+      "solutions": [
+        "d8g5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1419
+    },
+    {
+      "id": "lichess-00Kxt",
+      "pattern": "tactic.fork",
+      "fen": "r2q1r2/p3ppkp/3p2P1/1N2n3/4P1P1/5P2/PPPQ4/R3K2R b KQ - 0 16",
+      "solutions": [
+        "e5f3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 905
+    },
+    {
+      "id": "lichess-00LG5",
+      "pattern": "tactic.fork",
+      "fen": "6k1/5r1p/4b1pQ/5q2/3B3P/2P5/4R1P1/6K1 b - - 8 36",
+      "solutions": [
+        "f5f1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1113
+    },
+    {
+      "id": "lichess-00M6i",
+      "pattern": "tactic.fork",
+      "fen": "6k1/6pp/p7/2N1bp2/P1P5/1r6/6PP/2R3K1 b - - 2 33",
+      "solutions": [
+        "e5d4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1143
+    },
+    {
+      "id": "lichess-00MwU",
+      "pattern": "tactic.fork",
+      "fen": "3r1b1R/1pq3p1/p1k3P1/3p4/1P1Q4/4PP2/P1P5/2K5 w - - 0 27",
+      "solutions": [
+        "h8f8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1709
+    },
+    {
+      "id": "lichess-00MyT",
+      "pattern": "tactic.fork",
+      "fen": "r3q3/1ppknr2/p5pB/2QPn3/4P3/8/PP4BP/2K2R1R b - - 0 22",
+      "solutions": [
+        "e5d3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 923
+    },
+    {
+      "id": "lichess-00Myw",
+      "pattern": "tactic.fork",
+      "fen": "r1b3rk/2q2p2/1n2p2n/p2pP1NP/P1pP1QP1/1pP5/1P3PB1/R3R1K1 w - - 5 27",
+      "solutions": [
+        "f4f6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1442
+    },
+    {
+      "id": "lichess-00NHK",
+      "pattern": "tactic.fork",
+      "fen": "r1b2rk1/1p2b1p1/pq2p1P1/3pn3/1P1P4/P1N1P3/6P1/R2QK2R w KQ - 0 18",
+      "solutions": [
+        "h1h8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1680
+    },
+    {
+      "id": "lichess-00Nej",
+      "pattern": "tactic.fork",
+      "fen": "6k1/1p3pp1/pB2q2p/2P1b3/1P6/6QP/4r1P1/3R3K w - - 5 34",
+      "solutions": [
+        "d1d8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1037
+    },
+    {
+      "id": "lichess-00Nf5",
+      "pattern": "tactic.fork",
+      "fen": "r1bq1rk1/pp2bppp/2pp1n2/8/5P2/2N2N2/PBPPB1PP/R2Q1RK1 b - - 6 11",
+      "solutions": [
+        "d8b6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1632
+    },
+    {
+      "id": "lichess-00Ngg",
+      "pattern": "tactic.fork",
+      "fen": "3qk2r/1p1bbppp/4pn2/1BPp1n2/3P4/4PN2/4QPPP/BN2K2R b Kk - 2 15",
+      "solutions": [
+        "d8a5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1497
+    },
+    {
+      "id": "lichess-00O8m",
+      "pattern": "tactic.fork",
+      "fen": "r3r1k1/ppp2ppp/2nnq3/8/3P4/P1P1P1P1/2Q3BP/R1B1KR2 w Q - 5 17",
+      "solutions": [
+        "d4d5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1386
+    },
+    {
+      "id": "lichess-00OPi",
+      "pattern": "tactic.fork",
+      "fen": "5k2/5p1p/1p1P2p1/1B6/4KP2/1P4P1/n6P/8 b - - 1 38",
+      "solutions": [
+        "a2c3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 578
+    },
+    {
+      "id": "lichess-00OxK",
+      "pattern": "tactic.fork",
+      "fen": "3r2k1/1p3p2/p1n2P2/2P3P1/1PR1p3/P2pP3/3B4/6K1 b - - 1 33",
+      "solutions": [
+        "c6e5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1149
+    },
+    {
+      "id": "lichess-00PGi",
+      "pattern": "tactic.fork",
+      "fen": "3r1q1k/p1pb2pp/1pnp4/6N1/5B2/1Q4P1/PP4PP/4R2K w - - 0 25",
+      "solutions": [
+        "g5f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1041
     },
     {
       "id": "lichess-000lC",
@@ -2219,7 +3659,8 @@
       "solutions": [
         "d7d6"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1374
     },
     {
       "id": "lichess-001gi",
@@ -2228,7 +3669,8 @@
       "solutions": [
         "a5c3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 819
     },
     {
       "id": "lichess-002Z9",
@@ -2237,7 +3679,8 @@
       "solutions": [
         "e7e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1231
     },
     {
       "id": "lichess-002bK",
@@ -2246,7 +3689,8 @@
       "solutions": [
         "a3b5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1129
     },
     {
       "id": "lichess-005wJ",
@@ -2255,7 +3699,8 @@
       "solutions": [
         "c7c1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1371
     },
     {
       "id": "lichess-0071K",
@@ -2264,7 +3709,8 @@
       "solutions": [
         "a6a7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1126
     },
     {
       "id": "lichess-007OE",
@@ -2273,7 +3719,8 @@
       "solutions": [
         "d4d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1284
     },
     {
       "id": "lichess-00B8m",
@@ -2282,7 +3729,8 @@
       "solutions": [
         "f6f5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1277
     },
     {
       "id": "lichess-00CYP",
@@ -2291,7 +3739,18 @@
       "solutions": [
         "d5d8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 738
+    },
+    {
+      "id": "lichess-00Cqg",
+      "pattern": "tactic.hanging_piece",
+      "fen": "3r2k1/pp4bp/4qpp1/3Pp3/8/4Q2P/4B1P1/2rR3K w - - 0 27",
+      "solutions": [
+        "d5e6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1621
     },
     {
       "id": "lichess-00Er4",
@@ -2300,7 +3759,8 @@
       "solutions": [
         "e8d7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1296
     },
     {
       "id": "lichess-00IF1",
@@ -2309,7 +3769,8 @@
       "solutions": [
         "e3f4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1267
     },
     {
       "id": "lichess-00InW",
@@ -2318,7 +3779,18 @@
       "solutions": [
         "f2f3"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1475
+    },
+    {
+      "id": "lichess-00KVb",
+      "pattern": "tactic.hanging_piece",
+      "fen": "2k2r2/pp5p/3p4/3Nb1p1/8/1P1P3P/P1PR4/1K3R2 b - - 0 28",
+      "solutions": [
+        "f8f1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 588
     },
     {
       "id": "lichess-00LI0",
@@ -2327,7 +3799,8 @@
       "solutions": [
         "f6d5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1290
     },
     {
       "id": "lichess-00MTn",
@@ -2336,7 +3809,18 @@
       "solutions": [
         "h8h5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1328
+    },
+    {
+      "id": "lichess-00NR5",
+      "pattern": "tactic.hanging_piece",
+      "fen": "R2r2k1/6pp/3N4/1nP5/6P1/1P3P2/P2K2n1/8 w - - 2 31",
+      "solutions": [
+        "a8d8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 538
     },
     {
       "id": "lichess-00WzS",
@@ -2345,7 +3829,8 @@
       "solutions": [
         "g5e3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1432
     },
     {
       "id": "lichess-00X1l",
@@ -2354,7 +3839,18 @@
       "solutions": [
         "f1f8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 848
+    },
+    {
+      "id": "lichess-00ZAn",
+      "pattern": "tactic.hanging_piece",
+      "fen": "rnbqk1nr/ppp1b1pp/3p4/4N3/2B1P3/8/PPPP2PP/RNBQK2R b KQkq - 0 6",
+      "solutions": [
+        "d6e5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1794
     },
     {
       "id": "lichess-00dzT",
@@ -2363,7 +3859,8 @@
       "solutions": [
         "f4f1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 871
     },
     {
       "id": "lichess-00eCY",
@@ -2372,7 +3869,8 @@
       "solutions": [
         "a5d5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 774
     },
     {
       "id": "lichess-00hbV",
@@ -2381,7 +3879,18 @@
       "solutions": [
         "f4e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 951
+    },
+    {
+      "id": "lichess-00hxr",
+      "pattern": "tactic.hanging_piece",
+      "fen": "r4rk1/pp3pBp/4p3/3p2qB/Q1p5/2PbP3/PP1N1P1P/R3K2R b KQ - 0 15",
+      "solutions": [
+        "g5h5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1711
     },
     {
       "id": "lichess-00i7t",
@@ -2390,7 +3899,8 @@
       "solutions": [
         "e1e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 927
     },
     {
       "id": "lichess-00kS9",
@@ -2399,7 +3909,8 @@
       "solutions": [
         "g8h7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1460
     },
     {
       "id": "lichess-00l3p",
@@ -2408,7 +3919,18 @@
       "solutions": [
         "f5f4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1132
+    },
+    {
+      "id": "lichess-00lL3",
+      "pattern": "tactic.hanging_piece",
+      "fen": "Qr5k/5pp1/5N1p/4q3/4P3/8/7P/R6K b - - 7 36",
+      "solutions": [
+        "g7f6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1759
     },
     {
       "id": "lichess-00pRN",
@@ -2417,7 +3939,8 @@
       "solutions": [
         "e5g4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1337
     },
     {
       "id": "lichess-00qIK",
@@ -2426,7 +3949,8 @@
       "solutions": [
         "b6e3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1569
     },
     {
       "id": "lichess-00tbH",
@@ -2435,7 +3959,8 @@
       "solutions": [
         "e2d2"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1264
     },
     {
       "id": "lichess-00vZg",
@@ -2444,7 +3969,8 @@
       "solutions": [
         "c5f8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 841
     },
     {
       "id": "lichess-00xa4",
@@ -2453,7 +3979,8 @@
       "solutions": [
         "g7h6"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 991
     },
     {
       "id": "lichess-00zxV",
@@ -2462,7 +3989,8 @@
       "solutions": [
         "b2h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 636
     },
     {
       "id": "lichess-0139J",
@@ -2471,7 +3999,28 @@
       "solutions": [
         "f4h6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 804
+    },
+    {
+      "id": "lichess-016yu",
+      "pattern": "tactic.hanging_piece",
+      "fen": "4r1k1/p5pp/1p3n2/8/1q3B2/3Q1P2/PP3P1P/2R3K1 b - - 6 24",
+      "solutions": [
+        "b4f4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1760
+    },
+    {
+      "id": "lichess-01Amq",
+      "pattern": "tactic.hanging_piece",
+      "fen": "4r1k1/4Pp2/pQ3b1p/6pP/q1p5/P4P2/5BPK/8 w - - 3 32",
+      "solutions": [
+        "b6f6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1678
     },
     {
       "id": "lichess-01Az7",
@@ -2480,7 +4029,8 @@
       "solutions": [
         "c3e5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1371
     },
     {
       "id": "lichess-01I0q",
@@ -2489,7 +4039,8 @@
       "solutions": [
         "f4c1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 724
     },
     {
       "id": "lichess-01LBw",
@@ -2498,7 +4049,8 @@
       "solutions": [
         "h3g4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 727
     },
     {
       "id": "lichess-01PQE",
@@ -2507,7 +4059,8 @@
       "solutions": [
         "e5f4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1104
     },
     {
       "id": "lichess-01QTc",
@@ -2516,7 +4069,18 @@
       "solutions": [
         "a8c8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 814
+    },
+    {
+      "id": "lichess-01Uzs",
+      "pattern": "tactic.hanging_piece",
+      "fen": "rnbqk2r/ppp2ppp/3bp3/8/4n3/1BN5/PPPP2PP/R1BQK1NR w KQkq - 0 7",
+      "solutions": [
+        "c3e4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1798
     },
     {
       "id": "lichess-01Wci",
@@ -2525,7 +4089,8 @@
       "solutions": [
         "f3a8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1423
     },
     {
       "id": "lichess-01Y2F",
@@ -2534,7 +4099,8 @@
       "solutions": [
         "e6f5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1186
     },
     {
       "id": "lichess-01YXn",
@@ -2543,7 +4109,8 @@
       "solutions": [
         "f6e4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 932
     },
     {
       "id": "lichess-01Z2n",
@@ -2552,7 +4119,8 @@
       "solutions": [
         "d5a8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1430
     },
     {
       "id": "lichess-01g9q",
@@ -2561,7 +4129,8 @@
       "solutions": [
         "e3f2"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1418
     },
     {
       "id": "lichess-01i3C",
@@ -2570,7 +4139,128 @@
       "solutions": [
         "a1e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 677
+    },
+    {
+      "id": "lichess-01lNV",
+      "pattern": "tactic.hanging_piece",
+      "fen": "4r1k1/pppq2b1/2bp1Npp/5p2/2P4N/7P/PP1BQPP1/4R1K1 b - - 1 24",
+      "solutions": [
+        "g7f6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 901
+    },
+    {
+      "id": "lichess-01luV",
+      "pattern": "tactic.hanging_piece",
+      "fen": "r2qkbr1/pp2pp1p/2n2p2/3p4/3P4/2PB1b2/PP2N1PP/RN1QK1R1 w Qq - 0 11",
+      "solutions": [
+        "g2f3"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1462
+    },
+    {
+      "id": "lichess-01pz8",
+      "pattern": "tactic.hanging_piece",
+      "fen": "5r2/1p1R4/p2Qq1pk/4P2p/3P1n1P/8/PP5K/8 w - - 1 36",
+      "solutions": [
+        "d6f8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1014
+    },
+    {
+      "id": "lichess-01uDg",
+      "pattern": "tactic.hanging_piece",
+      "fen": "1q2nr1k/5p1p/4NP2/p7/7Q/4p3/1PP3PP/1K6 w - - 0 33",
+      "solutions": [
+        "e6f8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1176
+    },
+    {
+      "id": "lichess-01zWA",
+      "pattern": "tactic.hanging_piece",
+      "fen": "8/2r5/1b5k/1P1Pp1R1/4Q2p/6pP/6P1/2r2B1K b - - 0 41",
+      "solutions": [
+        "c1f1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 694
+    },
+    {
+      "id": "lichess-01zzO",
+      "pattern": "tactic.hanging_piece",
+      "fen": "r4rk1/1p1b1p2/p3p1p1/q2pN2p/5Q1P/6R1/NPP2PP1/2K1R3 b - - 0 21",
+      "solutions": [
+        "a5e1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 852
+    },
+    {
+      "id": "lichess-0217e",
+      "pattern": "tactic.hanging_piece",
+      "fen": "1rb1k2r/b5p1/p2pPp1p/qp1Q4/7N/1P6/P4PPP/R1B1R1K1 b k - 0 19",
+      "solutions": [
+        "a5e1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 524
+    },
+    {
+      "id": "lichess-021Lo",
+      "pattern": "tactic.hanging_piece",
+      "fen": "r2qk2r/pp2bBpp/2n5/4p3/6b1/2P2N2/P4PPP/R1BQ1RK1 b kq - 0 13",
+      "solutions": [
+        "e8f7"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 779
+    },
+    {
+      "id": "lichess-021U1",
+      "pattern": "tactic.hanging_piece",
+      "fen": "r7/bp6/4kNQ1/1b2Pp1p/p2R1P1N/P1q5/5KPP/7R b - - 6 31",
+      "solutions": [
+        "a7d4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1465
+    },
+    {
+      "id": "lichess-021Ww",
+      "pattern": "tactic.hanging_piece",
+      "fen": "8/2kr2p1/5pP1/1p2pP2/pP1NPb2/P4K2/Q2p3r/3R4 b - - 2 42",
+      "solutions": [
+        "d7d4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1544
+    },
+    {
+      "id": "lichess-021aU",
+      "pattern": "tactic.hanging_piece",
+      "fen": "7k/6pp/2R1p3/p4p2/3Qq3/6P1/3K1P2/3R4 b - - 0 47",
+      "solutions": [
+        "e4d4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1498
+    },
+    {
+      "id": "lichess-002rd",
+      "pattern": "tactic.pin",
+      "fen": "r6k/q1p2p1p/1b2bPr1/p1ppP2Q/3P2p1/4B3/PP2NRPP/3R2K1 w - - 2 26",
+      "solutions": [
+        "e2f4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1795
     },
     {
       "id": "lichess-003S3",
@@ -2579,7 +4269,8 @@
       "solutions": [
         "g5e6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1330
     },
     {
       "id": "lichess-003nQ",
@@ -2588,7 +4279,8 @@
       "solutions": [
         "f5g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1287
     },
     {
       "id": "lichess-005Bm",
@@ -2597,7 +4289,28 @@
       "solutions": [
         "h4g6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1260
+    },
+    {
+      "id": "lichess-006pe",
+      "pattern": "tactic.pin",
+      "fen": "r4r2/2q1Nb2/5Qpk/2n4p/pp5P/8/1PP2PP1/2KR3R w - - 0 29",
+      "solutions": [
+        "e7f5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1657
+    },
+    {
+      "id": "lichess-00734",
+      "pattern": "tactic.pin",
+      "fen": "r4bk1/2rqp2p/n1p3p1/3p1p2/3P1P1B/pP1BP3/P1Q2PRP/1KR5 w - - 1 27",
+      "solutions": [
+        "d3f5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1692
     },
     {
       "id": "lichess-009BH",
@@ -2606,7 +4319,8 @@
       "solutions": [
         "e6h6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1472
     },
     {
       "id": "lichess-00C8e",
@@ -2615,7 +4329,8 @@
       "solutions": [
         "a2b1"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1540
     },
     {
       "id": "lichess-00Dt6",
@@ -2624,7 +4339,8 @@
       "solutions": [
         "f5h4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1204
     },
     {
       "id": "lichess-00F5G",
@@ -2633,7 +4349,8 @@
       "solutions": [
         "f5h6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1525
     },
     {
       "id": "lichess-00KhM",
@@ -2642,7 +4359,8 @@
       "solutions": [
         "d5f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1335
     },
     {
       "id": "lichess-00LNH",
@@ -2651,7 +4369,8 @@
       "solutions": [
         "e6f5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1595
     },
     {
       "id": "lichess-00M1q",
@@ -2660,7 +4379,8 @@
       "solutions": [
         "g6h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1438
     },
     {
       "id": "lichess-00Tdk",
@@ -2669,7 +4389,18 @@
       "solutions": [
         "e5f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1028
+    },
+    {
+      "id": "lichess-00Ueq",
+      "pattern": "tactic.pin",
+      "fen": "r1b3k1/pp4b1/n1pqprQ1/4p3/2P2PP1/P2B4/1P6/R1B1K2R w KQ - 2 20",
+      "solutions": [
+        "h1h8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1777
     },
     {
       "id": "lichess-00W5B",
@@ -2678,7 +4409,8 @@
       "solutions": [
         "c5d5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1402
     },
     {
       "id": "lichess-00WG3",
@@ -2687,7 +4419,8 @@
       "solutions": [
         "f1d1"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1044
     },
     {
       "id": "lichess-00XL2",
@@ -2696,7 +4429,28 @@
       "solutions": [
         "e5f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 997
+    },
+    {
+      "id": "lichess-00XXM",
+      "pattern": "tactic.pin",
+      "fen": "3r2r1/Qpqkbp2/p1p1p2p/3nP3/8/2P1NP1N/PP6/1K1R3R w - - 4 26",
+      "solutions": [
+        "c3c4"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1699
+    },
+    {
+      "id": "lichess-00XZR",
+      "pattern": "tactic.pin",
+      "fen": "8/2p5/p1n5/1pP1p2k/1P1p4/P2P3q/5P2/R4KR1 w - - 0 35",
+      "solutions": [
+        "f1e2"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1658
     },
     {
       "id": "lichess-00YbZ",
@@ -2705,7 +4459,8 @@
       "solutions": [
         "f4h4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1346
     },
     {
       "id": "lichess-00ZSd",
@@ -2714,7 +4469,8 @@
       "solutions": [
         "e3h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1296
     },
     {
       "id": "lichess-00ZeT",
@@ -2723,7 +4479,18 @@
       "solutions": [
         "c4b5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1355
+    },
+    {
+      "id": "lichess-00aG8",
+      "pattern": "tactic.pin",
+      "fen": "1r3k2/p4ppp/2r5/5N2/P2P4/8/2P2PPP/3Q2K1 b - - 4 23",
+      "solutions": [
+        "c6b6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1745
     },
     {
       "id": "lichess-00blC",
@@ -2732,7 +4499,8 @@
       "solutions": [
         "f8f5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1027
     },
     {
       "id": "lichess-00bns",
@@ -2741,7 +4509,8 @@
       "solutions": [
         "f5e7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 959
     },
     {
       "id": "lichess-00byq",
@@ -2750,7 +4519,8 @@
       "solutions": [
         "c7c1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1112
     },
     {
       "id": "lichess-00cy1",
@@ -2759,7 +4529,18 @@
       "solutions": [
         "c5b6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1179
+    },
+    {
+      "id": "lichess-00eWz",
+      "pattern": "tactic.pin",
+      "fen": "4r1k1/p5bp/1q2N1p1/2pPrp2/1pP5/6PP/P4QB1/1R3RK1 b - - 3 25",
+      "solutions": [
+        "e5e6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1657
     },
     {
       "id": "lichess-00jPw",
@@ -2768,7 +4549,18 @@
       "solutions": [
         "h5g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1077
+    },
+    {
+      "id": "lichess-00l7Y",
+      "pattern": "tactic.pin",
+      "fen": "r1bq4/p3p1bk/2p3p1/3pn2p/8/2NB3P/PPPBQ1P1/5RK1 w - - 2 18",
+      "solutions": [
+        "e2h5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1616
     },
     {
       "id": "lichess-00n3G",
@@ -2777,7 +4569,8 @@
       "solutions": [
         "g6g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1135
     },
     {
       "id": "lichess-00o3m",
@@ -2786,7 +4579,8 @@
       "solutions": [
         "h3g5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1518
     },
     {
       "id": "lichess-00o5f",
@@ -2795,7 +4589,8 @@
       "solutions": [
         "h5f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1252
     },
     {
       "id": "lichess-00o9U",
@@ -2804,7 +4599,28 @@
       "solutions": [
         "e7b4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1137
+    },
+    {
+      "id": "lichess-00oXF",
+      "pattern": "tactic.pin",
+      "fen": "3r1rk1/1p3p1p/p1q3p1/4Pb1P/2p2P2/P5R1/2Q1B1P1/3R2K1 w - - 2 26",
+      "solutions": [
+        "c2f5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1647
+    },
+    {
+      "id": "lichess-00rKj",
+      "pattern": "tactic.pin",
+      "fen": "r1b2rk1/1p3ppp/2p5/pq6/3b4/1BP2Q2/PP3PPP/R3R1K1 w - - 0 18",
+      "solutions": [
+        "f3f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1779
     },
     {
       "id": "lichess-00s7Y",
@@ -2813,7 +4629,18 @@
       "solutions": [
         "g4c8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 999
+    },
+    {
+      "id": "lichess-00sKo",
+      "pattern": "tactic.pin",
+      "fen": "5rk1/R5bp/q2p4/3Ppn1p/4Q3/4B2P/5PP1/5RK1 b - - 0 24",
+      "solutions": [
+        "a6f1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1615
     },
     {
       "id": "lichess-00tB9",
@@ -2822,7 +4649,8 @@
       "solutions": [
         "c5b3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1227
     },
     {
       "id": "lichess-00tTz",
@@ -2831,7 +4659,8 @@
       "solutions": [
         "h5g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1266
     },
     {
       "id": "lichess-00uJL",
@@ -2840,7 +4669,18 @@
       "solutions": [
         "d4g4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1540
+    },
+    {
+      "id": "lichess-00umX",
+      "pattern": "tactic.pin",
+      "fen": "2k3rr/ppp2p2/3B1p2/2pP1q1p/2P5/2N2B1b/PP1Q1PP1/R3R1K1 b - - 0 19",
+      "solutions": [
+        "f5f3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1636
     },
     {
       "id": "lichess-00xmm",
@@ -2849,7 +4689,8 @@
       "solutions": [
         "e5d6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 999
     },
     {
       "id": "lichess-00yP0",
@@ -2858,7 +4699,8 @@
       "solutions": [
         "h6f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1407
     },
     {
       "id": "lichess-011JG",
@@ -2867,7 +4709,18 @@
       "solutions": [
         "a4a2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1593
+    },
+    {
+      "id": "lichess-01273",
+      "pattern": "tactic.pin",
+      "fen": "8/p1B4p/1p3pk1/6p1/3PQ1P1/2P1nP1K/P3q2P/8 b - - 10 36",
+      "solutions": [
+        "g6h6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1777
     },
     {
       "id": "lichess-012Fq",
@@ -2876,7 +4729,8 @@
       "solutions": [
         "g4g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1387
     },
     {
       "id": "lichess-0147O",
@@ -2885,7 +4739,18 @@
       "solutions": [
         "a6c4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1522
+    },
+    {
+      "id": "lichess-0150p",
+      "pattern": "tactic.pin",
+      "fen": "8/pp4k1/2b2pr1/3R4/PP1Q4/8/7P/7K b - - 0 31",
+      "solutions": [
+        "g6g5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1676
     },
     {
       "id": "lichess-015hW",
@@ -2894,7 +4759,8 @@
       "solutions": [
         "d2e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1171
     },
     {
       "id": "lichess-0162G",
@@ -2903,7 +4769,8 @@
       "solutions": [
         "c8c1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 840
     },
     {
       "id": "lichess-017Vq",
@@ -2912,7 +4779,8 @@
       "solutions": [
         "b7d7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1593
     },
     {
       "id": "lichess-018KA",
@@ -2921,7 +4789,18 @@
       "solutions": [
         "d7d1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1159
+    },
+    {
+      "id": "lichess-01Aty",
+      "pattern": "tactic.pin",
+      "fen": "2kr3r/1pp2p2/p2p3p/3P1bpB/2P2q2/1P6/P5PP/R2QR2K w - - 0 19",
+      "solutions": [
+        "e1f1"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1762
     },
     {
       "id": "lichess-01Btz",
@@ -2930,7 +4809,48 @@
       "solutions": [
         "b6b3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1555
+    },
+    {
+      "id": "lichess-01Cqi",
+      "pattern": "tactic.pin",
+      "fen": "r3q1r1/1ppn3k/p2p1N1b/3Pp1Bp/1PP4P/5P1Q/P7/2K2RR1 b - - 10 27",
+      "solutions": [
+        "d7f6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1499
+    },
+    {
+      "id": "lichess-01CvZ",
+      "pattern": "tactic.pin",
+      "fen": "2b5/8/6p1/1R6/3kP3/5PPn/4K3/8 b - - 2 54",
+      "solutions": [
+        "c8a6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1232
+    },
+    {
+      "id": "lichess-01FmQ",
+      "pattern": "tactic.pin",
+      "fen": "3r2k1/2B1P1pp/1Q3p2/2b5/P3n3/5N2/2q2PPP/5RK1 b - - 0 32",
+      "solutions": [
+        "c2f2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1763
+    },
+    {
+      "id": "lichess-01Gqt",
+      "pattern": "tactic.pin",
+      "fen": "4Q3/6bk/6pp/pp6/8/P2qBP1P/1P6/K1R5 b - - 0 37",
+      "solutions": [
+        "d3a3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1365
     },
     {
       "id": "lichess-004kB",
@@ -2939,7 +4859,8 @@
       "solutions": [
         "f6f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1209
     },
     {
       "id": "lichess-00BrZ",
@@ -2948,7 +4869,8 @@
       "solutions": [
         "h8h2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1382
     },
     {
       "id": "lichess-00Cwz",
@@ -2957,7 +4879,8 @@
       "solutions": [
         "b8b1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1495
     },
     {
       "id": "lichess-00F6y",
@@ -2966,7 +4889,8 @@
       "solutions": [
         "e3e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 938
     },
     {
       "id": "lichess-00GVf",
@@ -2975,7 +4899,8 @@
       "solutions": [
         "h1h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1563
     },
     {
       "id": "lichess-00GuD",
@@ -2984,7 +4909,8 @@
       "solutions": [
         "h1h6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1165
     },
     {
       "id": "lichess-00HEh",
@@ -2993,7 +4919,8 @@
       "solutions": [
         "e2e8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 792
     },
     {
       "id": "lichess-00IUW",
@@ -3002,7 +4929,18 @@
       "solutions": [
         "h3g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1591
+    },
+    {
+      "id": "lichess-00LMb",
+      "pattern": "tactic.sacrifice",
+      "fen": "8/8/1n4kP/1P2Kp2/3P4/2p1N3/8/8 b - - 5 49",
+      "solutions": [
+        "b6c4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1777
     },
     {
       "id": "lichess-00LNB",
@@ -3011,7 +4949,18 @@
       "solutions": [
         "f6a6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1166
+    },
+    {
+      "id": "lichess-00Lhb",
+      "pattern": "tactic.sacrifice",
+      "fen": "7k/p3b2p/Pp1n4/1PpPp3/2B1PpP1/1P6/5BK1/8 w - - 1 34",
+      "solutions": [
+        "f2c5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1783
     },
     {
       "id": "lichess-00M92",
@@ -3020,7 +4969,8 @@
       "solutions": [
         "h4g6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1023
     },
     {
       "id": "lichess-00NUc",
@@ -3029,7 +4979,28 @@
       "solutions": [
         "b3h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1519
+    },
+    {
+      "id": "lichess-00NpT",
+      "pattern": "tactic.sacrifice",
+      "fen": "4rrk1/1ppq2p1/p3Rp1p/3P4/2P2Q2/3B3P/PP4PK/8 w - - 2 26",
+      "solutions": [
+        "f4f5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1699
+    },
+    {
+      "id": "lichess-00Nqd",
+      "pattern": "tactic.sacrifice",
+      "fen": "8/p7/5P2/PP1bp3/4N3/K7/2kp4/8 w - - 0 49",
+      "solutions": [
+        "e4d2"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1747
     },
     {
       "id": "lichess-00OCQ",
@@ -3038,7 +5009,8 @@
       "solutions": [
         "c8c3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1142
     },
     {
       "id": "lichess-00Oim",
@@ -3047,7 +5019,8 @@
       "solutions": [
         "a7e3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1213
     },
     {
       "id": "lichess-00Pr6",
@@ -3056,7 +5029,8 @@
       "solutions": [
         "f3f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1510
     },
     {
       "id": "lichess-00Tya",
@@ -3065,7 +5039,8 @@
       "solutions": [
         "f3f1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1259
     },
     {
       "id": "lichess-00Yy4",
@@ -3074,7 +5049,8 @@
       "solutions": [
         "h5g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1022
     },
     {
       "id": "lichess-00ZPK",
@@ -3083,7 +5059,8 @@
       "solutions": [
         "d7f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 968
     },
     {
       "id": "lichess-00aCb",
@@ -3092,7 +5069,8 @@
       "solutions": [
         "e4f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1059
     },
     {
       "id": "lichess-00aDl",
@@ -3101,7 +5079,18 @@
       "solutions": [
         "a1b1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1474
+    },
+    {
+      "id": "lichess-00eXL",
+      "pattern": "tactic.sacrifice",
+      "fen": "8/8/3RP3/2Pn4/ppN1k2p/8/rP1K4/8 w - - 0 41",
+      "solutions": [
+        "d6d5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1669
     },
     {
       "id": "lichess-00hdN",
@@ -3110,7 +5099,18 @@
       "solutions": [
         "f6f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1172
+    },
+    {
+      "id": "lichess-00he6",
+      "pattern": "tactic.sacrifice",
+      "fen": "2k5/pp3p2/5q2/2bNp1p1/4P1Pr/1n3BK1/PPP3P1/R2Q4 b - - 4 23",
+      "solutions": [
+        "f6f4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1780
     },
     {
       "id": "lichess-00j3i",
@@ -3119,7 +5119,8 @@
       "solutions": [
         "f6f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1557
     },
     {
       "id": "lichess-00ouE",
@@ -3128,7 +5129,8 @@
       "solutions": [
         "c2b1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1394
     },
     {
       "id": "lichess-00qk4",
@@ -3137,7 +5139,8 @@
       "solutions": [
         "b4c2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1525
     },
     {
       "id": "lichess-00rNc",
@@ -3146,7 +5149,18 @@
       "solutions": [
         "b2a2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1577
+    },
+    {
+      "id": "lichess-00rqm",
+      "pattern": "tactic.sacrifice",
+      "fen": "2r2r1k/7n/p6q/1p1nNb2/7P/3P2Q1/PPP2P2/1K4RR w - - 1 31",
+      "solutions": [
+        "g3g8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1784
     },
     {
       "id": "lichess-00rwh",
@@ -3155,7 +5169,8 @@
       "solutions": [
         "a3g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1587
     },
     {
       "id": "lichess-00uDH",
@@ -3164,7 +5179,18 @@
       "solutions": [
         "c8c5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1279
+    },
+    {
+      "id": "lichess-00uHj",
+      "pattern": "tactic.sacrifice",
+      "fen": "r5k1/p4p1p/1p3ppB/8/2pP4/4QP1q/P1n2P2/4R1K1 w - - 0 22",
+      "solutions": [
+        "e3e8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 502
     },
     {
       "id": "lichess-00vl5",
@@ -3173,7 +5199,8 @@
       "solutions": [
         "f7f1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1066
     },
     {
       "id": "lichess-00wUm",
@@ -3182,7 +5209,18 @@
       "solutions": [
         "d7f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1502
+    },
+    {
+      "id": "lichess-00xMv",
+      "pattern": "tactic.sacrifice",
+      "fen": "r3brk1/1pqnb2p/p3ppp1/2ppN2Q/5P2/1P1PP1R1/PBPN2PP/R5K1 w - - 0 16",
+      "solutions": [
+        "e5g6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1758
     },
     {
       "id": "lichess-00y9H",
@@ -3191,7 +5229,28 @@
       "solutions": [
         "e4f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1380
+    },
+    {
+      "id": "lichess-00yfJ",
+      "pattern": "tactic.sacrifice",
+      "fen": "r1b1k2r/p4p1p/2p1p3/1pRnPp2/q2P4/2Q2N1P/5PP1/1B3RK1 w kq - 1 20",
+      "solutions": [
+        "c5d5"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1642
+    },
+    {
+      "id": "lichess-010MJ",
+      "pattern": "tactic.sacrifice",
+      "fen": "3r2k1/pR3pp1/8/5p1p/5q2/5n2/PP4R1/6QK w - - 0 30",
+      "solutions": [
+        "g2g7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1655
     },
     {
       "id": "lichess-01244",
@@ -3200,7 +5259,18 @@
       "solutions": [
         "e3e1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 620
+    },
+    {
+      "id": "lichess-014QG",
+      "pattern": "tactic.sacrifice",
+      "fen": "7k/p5pp/8/3Q4/8/5r1b/PP3q1P/3N2RK b - - 1 28",
+      "solutions": [
+        "f2g1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1688
     },
     {
       "id": "lichess-0156a",
@@ -3209,7 +5279,18 @@
       "solutions": [
         "h8h1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1508
+    },
+    {
+      "id": "lichess-015Di",
+      "pattern": "tactic.sacrifice",
+      "fen": "r2k1bnr/p1pp1Bpp/1p6/4N1q1/3p4/2P5/PP2QPbP/RN2K2R w KQ - 0 11",
+      "solutions": [
+        "e5c6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1713
     },
     {
       "id": "lichess-0199s",
@@ -3218,7 +5299,8 @@
       "solutions": [
         "h1h6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1441
     },
     {
       "id": "lichess-01BeL",
@@ -3227,7 +5309,8 @@
       "solutions": [
         "a3g3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1579
     },
     {
       "id": "lichess-01EMd",
@@ -3236,7 +5319,8 @@
       "solutions": [
         "h4h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1328
     },
     {
       "id": "lichess-01IFU",
@@ -3245,7 +5329,8 @@
       "solutions": [
         "e5f3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 970
     },
     {
       "id": "lichess-01Kz0",
@@ -3254,7 +5339,8 @@
       "solutions": [
         "f6f2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1156
     },
     {
       "id": "lichess-01LlS",
@@ -3263,7 +5349,8 @@
       "solutions": [
         "e4f6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 863
     },
     {
       "id": "lichess-01MRs",
@@ -3272,7 +5359,8 @@
       "solutions": [
         "d7h3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1469
     },
     {
       "id": "lichess-01OFy",
@@ -3281,7 +5369,18 @@
       "solutions": [
         "h5h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1374
+    },
+    {
+      "id": "lichess-01Qdr",
+      "pattern": "tactic.sacrifice",
+      "fen": "6k1/pp4p1/7p/1PPp4/P2b2rq/5QN1/6PP/4R2K b - - 0 30",
+      "solutions": [
+        "h4h2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1659
     },
     {
       "id": "lichess-01StK",
@@ -3290,7 +5389,68 @@
       "solutions": [
         "b8b3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1326
+    },
+    {
+      "id": "lichess-01Vrb",
+      "pattern": "tactic.sacrifice",
+      "fen": "2k5/pp4pp/4pr2/2qp1n2/8/2PN2P1/PP4PP/R2Q1R1K b - - 3 20",
+      "solutions": [
+        "f5g3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1202
+    },
+    {
+      "id": "lichess-01WoU",
+      "pattern": "tactic.sacrifice",
+      "fen": "6k1/1p4pp/p3N3/2b1r3/8/2P5/PP2n1PP/2B1RR1K b - - 0 26",
+      "solutions": [
+        "e2g3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1131
+    },
+    {
+      "id": "lichess-01Y2x",
+      "pattern": "tactic.sacrifice",
+      "fen": "rn2r1k1/ppq3pp/2p1p3/2B4N/4P3/P2P4/2P2QPP/b4RK1 w - - 0 19",
+      "solutions": [
+        "f2f8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1633
+    },
+    {
+      "id": "lichess-01Y67",
+      "pattern": "tactic.sacrifice",
+      "fen": "3rr3/3q2pk/5b1p/pppB1b1Q/2P5/KP1n4/P4P2/2B3RR w - b6 0 34",
+      "solutions": [
+        "h5h6"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1687
+    },
+    {
+      "id": "lichess-01aP5",
+      "pattern": "tactic.sacrifice",
+      "fen": "6rk/3Q2bp/p2p4/5p2/Pq6/2p4P/2P5/K3R1R1 w - - 9 35",
+      "solutions": [
+        "d7g7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1458
+    },
+    {
+      "id": "lichess-01ehq",
+      "pattern": "tactic.sacrifice",
+      "fen": "2kr3r/1bpp1ppp/1b4q1/p3Pn2/PpN5/1BPP1P2/3BQ1PP/R4R1K b - - 0 18",
+      "solutions": [
+        "f5g3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1390
     },
     {
       "id": "lichess-001m3",
@@ -3299,7 +5459,8 @@
       "solutions": [
         "h8h1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1459
     },
     {
       "id": "lichess-001xl",
@@ -3308,7 +5469,8 @@
       "solutions": [
         "e7f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1095
     },
     {
       "id": "lichess-0039T",
@@ -3317,7 +5479,8 @@
       "solutions": [
         "b8b1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1071
     },
     {
       "id": "lichess-003eP",
@@ -3326,7 +5489,8 @@
       "solutions": [
         "h1h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1156
     },
     {
       "id": "lichess-004mT",
@@ -3335,7 +5499,8 @@
       "solutions": [
         "f8a8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1374
     },
     {
       "id": "lichess-006OI",
@@ -3344,7 +5509,8 @@
       "solutions": [
         "f1g1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 843
     },
     {
       "id": "lichess-006yP",
@@ -3353,7 +5519,8 @@
       "solutions": [
         "g8c8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 819
     },
     {
       "id": "lichess-007tv",
@@ -3362,7 +5529,8 @@
       "solutions": [
         "f3f7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1115
     },
     {
       "id": "lichess-00AB1",
@@ -3371,7 +5539,8 @@
       "solutions": [
         "h7h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1151
     },
     {
       "id": "lichess-00EoE",
@@ -3380,7 +5549,8 @@
       "solutions": [
         "h1h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 974
     },
     {
       "id": "lichess-00F1l",
@@ -3389,7 +5559,8 @@
       "solutions": [
         "a5a7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 836
     },
     {
       "id": "lichess-00ICz",
@@ -3398,7 +5569,8 @@
       "solutions": [
         "b5a7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1198
     },
     {
       "id": "lichess-00KMV",
@@ -3407,7 +5579,8 @@
       "solutions": [
         "c3h8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 943
     },
     {
       "id": "lichess-00KOz",
@@ -3416,7 +5589,8 @@
       "solutions": [
         "h6h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 962
     },
     {
       "id": "lichess-00PrK",
@@ -3425,7 +5599,8 @@
       "solutions": [
         "h7h6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 968
     },
     {
       "id": "lichess-00Q4v",
@@ -3434,7 +5609,8 @@
       "solutions": [
         "e7h4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1228
     },
     {
       "id": "lichess-00TiV",
@@ -3443,7 +5619,8 @@
       "solutions": [
         "a4a3"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1135
     },
     {
       "id": "lichess-00WJN",
@@ -3452,7 +5629,8 @@
       "solutions": [
         "f8a3"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1324
     },
     {
       "id": "lichess-00WZO",
@@ -3461,7 +5639,8 @@
       "solutions": [
         "b7b4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1103
     },
     {
       "id": "lichess-00coU",
@@ -3470,7 +5649,28 @@
       "solutions": [
         "f4f7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1490
+    },
+    {
+      "id": "lichess-00h95",
+      "pattern": "tactic.skewer",
+      "fen": "7k/2p3p1/5p1p/2Qq4/3Pr3/4P3/P4P1P/1R4K1 b - - 3 26",
+      "solutions": [
+        "e4g4"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1711
+    },
+    {
+      "id": "lichess-00l0K",
+      "pattern": "tactic.skewer",
+      "fen": "2b5/2Q2p2/k7/1q2P3/1p6/1N3P2/1PP5/2K5 b - - 0 38",
+      "solutions": [
+        "b5f1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1654
     },
     {
       "id": "lichess-00lap",
@@ -3479,7 +5679,8 @@
       "solutions": [
         "a5a6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 948
     },
     {
       "id": "lichess-00nl3",
@@ -3488,7 +5689,8 @@
       "solutions": [
         "g8c8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 820
     },
     {
       "id": "lichess-00sXv",
@@ -3497,7 +5699,8 @@
       "solutions": [
         "a7b7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1121
     },
     {
       "id": "lichess-0100g",
@@ -3506,7 +5709,8 @@
       "solutions": [
         "h4h5"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 873
     },
     {
       "id": "lichess-0112g",
@@ -3515,7 +5719,8 @@
       "solutions": [
         "h8h4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1060
     },
     {
       "id": "lichess-01243",
@@ -3524,7 +5729,8 @@
       "solutions": [
         "d7b7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1481
     },
     {
       "id": "lichess-012ee",
@@ -3533,7 +5739,8 @@
       "solutions": [
         "c7h2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1090
     },
     {
       "id": "lichess-0135c",
@@ -3542,7 +5749,8 @@
       "solutions": [
         "b3b2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 794
     },
     {
       "id": "lichess-015jf",
@@ -3551,7 +5759,18 @@
       "solutions": [
         "h6h7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1079
+    },
+    {
+      "id": "lichess-015pp",
+      "pattern": "tactic.skewer",
+      "fen": "8/8/8/3p4/5p1R/r3k3/6K1/8 w - - 0 52",
+      "solutions": [
+        "h4h3"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1606
     },
     {
       "id": "lichess-016Ym",
@@ -3560,7 +5779,8 @@
       "solutions": [
         "f3a8"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1080
     },
     {
       "id": "lichess-01A3W",
@@ -3569,7 +5789,8 @@
       "solutions": [
         "e2e5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1010
     },
     {
       "id": "lichess-01DXj",
@@ -3578,7 +5799,8 @@
       "solutions": [
         "b7g7"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 816
     },
     {
       "id": "lichess-01Kjm",
@@ -3587,7 +5809,8 @@
       "solutions": [
         "e7e4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1189
     },
     {
       "id": "lichess-01Nco",
@@ -3596,7 +5819,8 @@
       "solutions": [
         "e2d2"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 776
     },
     {
       "id": "lichess-01QSk",
@@ -3605,7 +5829,18 @@
       "solutions": [
         "h7h4"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1039
+    },
+    {
+      "id": "lichess-01Z1w",
+      "pattern": "tactic.skewer",
+      "fen": "r7/2p2pk1/q4np1/3PQ3/4P3/5PPK/2R2N1P/8 b - - 0 34",
+      "solutions": [
+        "a6f1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1656
     },
     {
       "id": "lichess-01iaw",
@@ -3614,7 +5849,8 @@
       "solutions": [
         "d1g4"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 942
     },
     {
       "id": "lichess-01j3h",
@@ -3623,7 +5859,8 @@
       "solutions": [
         "e8d7"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 874
     },
     {
       "id": "lichess-01jvC",
@@ -3632,7 +5869,18 @@
       "solutions": [
         "a5a6"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1077
+    },
+    {
+      "id": "lichess-01kfz",
+      "pattern": "tactic.skewer",
+      "fen": "1r2q1k1/1rR2pp1/1p1np2p/3pN3/3P4/P3P2P/1PQ2PP1/2R3K1 b - - 0 27",
+      "solutions": [
+        "b7c7"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1631
     },
     {
       "id": "lichess-01ktp",
@@ -3641,7 +5889,8 @@
       "solutions": [
         "a6b5"
       ],
-      "prompt": "White to move. Find the best move."
+      "prompt": "White to move. Find the best move.",
+      "rating": 1097
     },
     {
       "id": "lichess-01q52",
@@ -3650,7 +5899,158 @@
       "solutions": [
         "b5f1"
       ],
-      "prompt": "Black to move. Find the best move."
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1566
+    },
+    {
+      "id": "lichess-01qI9",
+      "pattern": "tactic.skewer",
+      "fen": "1r6/1n4p1/1P1p1kp1/4p3/2K1P3/5P1P/5BP1/2R5 b - - 12 46",
+      "solutions": [
+        "b8c8"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1328
+    },
+    {
+      "id": "lichess-01qfU",
+      "pattern": "tactic.skewer",
+      "fen": "r4k1r/pppq1p2/3pb2p/6p1/2nQ4/8/PPP2PPP/R4RK1 w - - 0 17",
+      "solutions": [
+        "d4h8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 842
+    },
+    {
+      "id": "lichess-01rGW",
+      "pattern": "tactic.skewer",
+      "fen": "6B1/p2R4/5p1p/2r3k1/4b3/6P1/P5PK/8 w - - 10 45",
+      "solutions": [
+        "d7g7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1392
+    },
+    {
+      "id": "lichess-01u1J",
+      "pattern": "tactic.skewer",
+      "fen": "r1b2rk1/5ppp/4p3/1B6/1P6/5P2/2PR2PP/2K4R b - - 0 18",
+      "solutions": [
+        "a8a1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1025
+    },
+    {
+      "id": "lichess-01xzs",
+      "pattern": "tactic.skewer",
+      "fen": "r5k1/6pp/p1R5/4Pp2/1P3P2/4P3/1P3P1r/R4K2 b - - 2 28",
+      "solutions": [
+        "h2h1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 740
+    },
+    {
+      "id": "lichess-022ky",
+      "pattern": "tactic.skewer",
+      "fen": "4r3/5p2/1Q6/3pk3/7K/P5PN/7q/8 w - - 12 50",
+      "solutions": [
+        "b6e3"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1295
+    },
+    {
+      "id": "lichess-023NL",
+      "pattern": "tactic.skewer",
+      "fen": "3rk3/R4p2/p6p/1p4pB/8/1b2P3/1P2KPPP/3R4 b - - 0 26",
+      "solutions": [
+        "b3d1"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1383
+    },
+    {
+      "id": "lichess-0240A",
+      "pattern": "tactic.skewer",
+      "fen": "3b4/3P1k2/2pB4/1p1bK1p1/2p3B1/2P5/P4P2/8 b - - 3 47",
+      "solutions": [
+        "d8f6"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1209
+    },
+    {
+      "id": "lichess-025y9",
+      "pattern": "tactic.skewer",
+      "fen": "5rk1/6pp/pqp1p3/4P3/1PK5/2P3P1/P3Q2P/3R4 b - b3 0 28",
+      "solutions": [
+        "b6b5"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 995
+    },
+    {
+      "id": "lichess-029B5",
+      "pattern": "tactic.skewer",
+      "fen": "4R3/6p1/6pp/Bp1kn3/2p3PP/2P3K1/3r4/8 w - - 9 42",
+      "solutions": [
+        "e8d8"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 957
+    },
+    {
+      "id": "lichess-02BgN",
+      "pattern": "tactic.skewer",
+      "fen": "6k1/p2R4/6p1/5p2/3KbP2/r7/P3R3/8 b - - 5 41",
+      "solutions": [
+        "a3d3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1235
+    },
+    {
+      "id": "lichess-02CX1",
+      "pattern": "tactic.skewer",
+      "fen": "6k1/p3b1p1/1p6/7R/K1P5/1P4B1/P3rPPP/8 b - - 2 29",
+      "solutions": [
+        "e2a2"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1459
+    },
+    {
+      "id": "lichess-02F4S",
+      "pattern": "tactic.skewer",
+      "fen": "8/4n1k1/4P3/3p2PP/rp1P4/3K4/P4R2/8 b - - 1 47",
+      "solutions": [
+        "a4a3"
+      ],
+      "prompt": "Black to move. Find the best move.",
+      "rating": 1258
+    },
+    {
+      "id": "lichess-02KwH",
+      "pattern": "tactic.skewer",
+      "fen": "r5k1/6pR/3prPP1/8/1pp1P3/p7/2P5/1K6 w - - 0 39",
+      "solutions": [
+        "f6f7"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1486
+    },
+    {
+      "id": "lichess-02MkW",
+      "pattern": "tactic.skewer",
+      "fen": "8/6p1/2R4p/p7/1p1q3P/1P3BP1/5PK1/4k3 w - - 15 46",
+      "solutions": [
+        "c6c1"
+      ],
+      "prompt": "White to move. Find the best move.",
+      "rating": 1208
     }
   ]
 }

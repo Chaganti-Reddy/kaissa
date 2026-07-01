@@ -9,7 +9,8 @@ public sealed record SubmitOutcome(
     Rating Rating,
     int IntervalDays,
     DateTime DueUtc,
-    double Stability);
+    double Stability,
+    double PlayerRating);
 
 /// <summary>
 /// The headless training loop: pick a scenario, take the player's move, grade it, update the
@@ -24,8 +25,9 @@ public sealed class TrainingSession
     private readonly FsrsScheduler _scheduler;
     private readonly SessionPlanner _planner;
     private readonly GradeExtractor _grader;
+    private readonly DifficultyController _difficulty;
     private readonly IClock _clock;
-    private readonly Dictionary<PatternId, int> _rotation = new();
+    private readonly Dictionary<PatternId, string> _lastShown = new();
 
     private Scenario? _current;
 
@@ -35,7 +37,8 @@ public sealed class TrainingSession
         IClock clock,
         FsrsScheduler? scheduler = null,
         SessionPlanner? planner = null,
-        GradeExtractor? grader = null)
+        GradeExtractor? grader = null,
+        DifficultyController? difficulty = null)
     {
         _library = library;
         _model = model;
@@ -43,6 +46,7 @@ public sealed class TrainingSession
         _scheduler = scheduler ?? new FsrsScheduler();
         _planner = planner ?? new SessionPlanner();
         _grader = grader ?? new GradeExtractor();
+        _difficulty = difficulty ?? new DifficultyController();
     }
 
     /// <summary>Selects the next scenario to present, or null if there is no content.</summary>
@@ -56,10 +60,9 @@ public sealed class TrainingSession
         if (scenarios.Count == 0)
             return null;
 
-        // Rotate through a pattern's scenarios so the same idea is drilled from different positions.
-        var index = _rotation.GetValueOrDefault(id);
-        _rotation[id] = index + 1;
-        _current = scenarios[index % scenarios.Count];
+        // Pick a position near the player's level, avoiding an immediate repeat of the same one.
+        _current = _difficulty.Pick(scenarios, _model.RatingEstimate, _lastShown.GetValueOrDefault(id));
+        _lastShown[id] = _current.Id;
         return _current;
     }
 
@@ -85,9 +88,13 @@ public sealed class TrainingSession
         if (attempt.Rating == Rating.Again)
             card.Lapses++;
 
+        // Update the player's overall rating estimate from this attempt against the puzzle's rating.
+        _model.RatingEstimate = RatingEstimator.Update(_model.RatingEstimate, scenario.Rating, attempt.Correct);
+
         _current = null;
 
         return new SubmitOutcome(
-            scenario, attempt.Correct, attempt.Rating, review.IntervalDays, card.DueUtc.Value, review.State.Stability);
+            scenario, attempt.Correct, attempt.Rating, review.IntervalDays, card.DueUtc.Value,
+            review.State.Stability, _model.RatingEstimate);
     }
 }

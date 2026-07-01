@@ -126,7 +126,8 @@ public static class LichessPuzzleParser
             patternId,
             game.Fen,
             new[] { solution },
-            $"{game.SideToMove} to move. Find the best move.");
+            $"{game.SideToMove} to move. Find the best move.",
+            puzzle.Rating);
         return true;
     }
 

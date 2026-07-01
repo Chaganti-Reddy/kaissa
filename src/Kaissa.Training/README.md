@@ -14,10 +14,14 @@ sequencing in the project plan.
 - `SkillModel` / `PatternCard` — the player's per-pattern FSRS state, serialisable to JSON.
 - `GradeExtractor` — derives an FSRS grade from the move played and how long it took. The player
   is never asked to rate themselves.
-- `SessionPlanner` — chooses the next pattern: due reviews first, then a new pattern, then the
-  weakest. The seam where a future adaptive/ML selector plugs in.
-- `TrainingSession` — the loop: `Next()` picks a scenario, `Submit(move, thinkingTime)` grades it
-  and updates the schedule.
+- `SessionPlanner` — chooses the next *pattern*: due reviews first, then a new pattern, then the
+  weakest.
+- `RatingEstimator` — maintains a live estimate of the player's strength on the puzzle-rating
+  (Elo) scale, updated from each attempt against the puzzle's own rating.
+- `DifficultyController` — chooses which *scenario* of a pattern to serve, aiming just above the
+  player's rating (desirable difficulty). The seam where a future ML selector plugs in.
+- `TrainingSession` — the loop: `Next()` picks a pattern and a level-matched scenario,
+  `Submit(move, thinkingTime)` grades it, updates the schedule, and adjusts the player rating.
 
 ## Try it
 

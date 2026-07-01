@@ -36,8 +36,9 @@ static void RunInteractive(ScenarioLibrary library, string progressPath)
         }
 
         var pattern = library.Describe(scenario.Pattern);
+        Console.WriteLine($"Your rating: {model.RatingEstimate:0}");
         Console.WriteLine($"Pattern: {pattern.Name} — {pattern.Description}");
-        Console.WriteLine(scenario.Prompt);
+        Console.WriteLine($"{scenario.Prompt}  (puzzle rating {scenario.Rating})");
         PrintBoard(scenario.Fen);
 
         Console.Write("Your move: ");
@@ -91,6 +92,7 @@ static void Simulate(ScenarioLibrary library)
 
 static void PrintProgress(ScenarioLibrary library, SkillModel model)
 {
+    Console.WriteLine($"Player rating estimate: {model.RatingEstimate:0}");
     Console.WriteLine("Progress:");
     foreach (var pattern in library.Patterns)
     {

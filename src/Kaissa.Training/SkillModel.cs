@@ -26,6 +26,9 @@ public sealed class SkillModel
 
     public IReadOnlyCollection<PatternCard> Cards => _cards.Values;
 
+    /// <summary>Live estimate of the player's overall strength on the puzzle-rating scale.</summary>
+    public double RatingEstimate { get; set; } = RatingEstimator.Default;
+
     public bool Has(PatternId pattern) => _cards.ContainsKey(pattern);
 
     public PatternCard GetOrCreate(PatternId pattern)
@@ -41,16 +44,20 @@ public sealed class SkillModel
 
     public string ToJson()
     {
-        var dto = _cards.Values.Select(c => new CardDto
+        var dto = new ModelDto
         {
-            Pattern = c.Pattern.Value,
-            Stability = c.State?.Stability,
-            Difficulty = c.State?.Difficulty,
-            LastReviewUtc = c.LastReviewUtc,
-            DueUtc = c.DueUtc,
-            Reps = c.Reps,
-            Lapses = c.Lapses,
-        }).ToList();
+            RatingEstimate = RatingEstimate,
+            Cards = _cards.Values.Select(c => new CardDto
+            {
+                Pattern = c.Pattern.Value,
+                Stability = c.State?.Stability,
+                Difficulty = c.State?.Difficulty,
+                LastReviewUtc = c.LastReviewUtc,
+                DueUtc = c.DueUtc,
+                Reps = c.Reps,
+                Lapses = c.Lapses,
+            }).ToList(),
+        };
 
         return JsonSerializer.Serialize(dto);
     }
@@ -58,23 +65,30 @@ public sealed class SkillModel
     public static SkillModel FromJson(string json)
     {
         var model = new SkillModel();
-        var dtos = JsonSerializer.Deserialize<List<CardDto>>(json) ?? new List<CardDto>();
+        var dto = JsonSerializer.Deserialize<ModelDto>(json) ?? new ModelDto();
+        model.RatingEstimate = dto.RatingEstimate;
 
-        foreach (var dto in dtos)
+        foreach (var card in dto.Cards)
         {
-            var pattern = new PatternId(dto.Pattern);
+            var pattern = new PatternId(card.Pattern);
             model._cards[pattern] = new PatternCard
             {
                 Pattern = pattern,
-                State = dto.Stability is { } s && dto.Difficulty is { } d ? new MemoryState(s, d) : null,
-                LastReviewUtc = dto.LastReviewUtc,
-                DueUtc = dto.DueUtc,
-                Reps = dto.Reps,
-                Lapses = dto.Lapses,
+                State = card.Stability is { } s && card.Difficulty is { } d ? new MemoryState(s, d) : null,
+                LastReviewUtc = card.LastReviewUtc,
+                DueUtc = card.DueUtc,
+                Reps = card.Reps,
+                Lapses = card.Lapses,
             };
         }
 
         return model;
+    }
+
+    private sealed class ModelDto
+    {
+        public double RatingEstimate { get; init; } = RatingEstimator.Default;
+        public List<CardDto> Cards { get; init; } = new();
     }
 
     private sealed class CardDto
