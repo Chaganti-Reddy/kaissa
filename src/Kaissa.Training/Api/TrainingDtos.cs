@@ -58,6 +58,17 @@ public sealed record AnswerResult(
     double PlayerRating,
     double PlayerRatingChange);
 
+/// <summary>Headline stats for an insights screen.</summary>
+public sealed record PlayerStats(
+    double Rating,
+    int TotalAttempts,
+    int TotalCorrect,
+    double Accuracy,
+    int PatternsSeen,
+    int CurrentStreak,
+    int BestStreak,
+    IReadOnlyList<double> RatingHistory);
+
 /// <summary>One row of the player's progress across a pattern.</summary>
 public sealed record ProgressRow(
     string PatternId,

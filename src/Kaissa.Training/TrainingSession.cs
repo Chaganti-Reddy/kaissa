@@ -90,6 +90,7 @@ public sealed class TrainingSession
 
         // Update the player's overall rating estimate from this attempt against the puzzle's rating.
         _model.RatingEstimate = RatingEstimator.Update(_model.RatingEstimate, scenario.Rating, attempt.Correct);
+        _model.RecordResult(attempt.Correct, _model.RatingEstimate);
 
         _current = null;
 

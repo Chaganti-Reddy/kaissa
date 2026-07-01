@@ -91,6 +91,23 @@ public sealed class KaissaTrainer
         return rows;
     }
 
+    /// <summary>Headline stats for an insights screen.</summary>
+    public PlayerStats GetStats()
+    {
+        int attempts = 0, correct = 0, seen = 0;
+        foreach (var card in _model.Cards)
+        {
+            if (card.Seen)
+                seen++;
+            attempts += card.Reps;
+            correct += card.Reps - card.Lapses;
+        }
+
+        double accuracy = attempts > 0 ? (double)correct / attempts : 0;
+        return new PlayerStats(_model.RatingEstimate, attempts, correct, accuracy, seen,
+            _model.CurrentStreak, _model.BestStreak, _model.RatingHistory.ToList());
+    }
+
     /// <summary>Serialised progress for the caller to persist.</summary>
     public string ExportProgress() => _model.ToJson();
 }

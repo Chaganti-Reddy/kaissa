@@ -29,6 +29,30 @@ public sealed class SkillModel
     /// <summary>Live estimate of the player's overall strength on the puzzle-rating scale.</summary>
     public double RatingEstimate { get; set; } = RatingEstimator.Default;
 
+    /// <summary>Consecutive correct answers, current and best.</summary>
+    public int CurrentStreak { get; private set; }
+    public int BestStreak { get; private set; }
+
+    private readonly List<double> _ratingHistory = new();
+    public IReadOnlyList<double> RatingHistory => _ratingHistory;
+
+    /// <summary>Records the result of an attempt for streak and rating-history tracking.</summary>
+    public void RecordResult(bool correct, double rating)
+    {
+        if (correct)
+        {
+            CurrentStreak++;
+            if (CurrentStreak > BestStreak)
+                BestStreak = CurrentStreak;
+        }
+        else
+        {
+            CurrentStreak = 0;
+        }
+
+        _ratingHistory.Add(rating);
+    }
+
     public bool Has(PatternId pattern) => _cards.ContainsKey(pattern);
 
     public PatternCard GetOrCreate(PatternId pattern)
@@ -47,6 +71,9 @@ public sealed class SkillModel
         var dto = new ModelDto
         {
             RatingEstimate = RatingEstimate,
+            CurrentStreak = CurrentStreak,
+            BestStreak = BestStreak,
+            RatingHistory = _ratingHistory.ToList(),
             Cards = _cards.Values.Select(c => new CardDto
             {
                 Pattern = c.Pattern.Value,
@@ -67,6 +94,9 @@ public sealed class SkillModel
         var model = new SkillModel();
         var dto = JsonSerializer.Deserialize<ModelDto>(json) ?? new ModelDto();
         model.RatingEstimate = dto.RatingEstimate;
+        model.CurrentStreak = dto.CurrentStreak;
+        model.BestStreak = dto.BestStreak;
+        model._ratingHistory.AddRange(dto.RatingHistory);
 
         foreach (var card in dto.Cards)
         {
@@ -88,6 +118,9 @@ public sealed class SkillModel
     private sealed class ModelDto
     {
         public double RatingEstimate { get; init; } = RatingEstimator.Default;
+        public int CurrentStreak { get; init; }
+        public int BestStreak { get; init; }
+        public List<double> RatingHistory { get; init; } = new();
         public List<CardDto> Cards { get; init; } = new();
     }
 
