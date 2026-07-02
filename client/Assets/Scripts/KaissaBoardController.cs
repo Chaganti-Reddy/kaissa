@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,6 +18,8 @@ public sealed class KaissaBoardController : MonoBehaviour
     private KaissaTrainer _trainer;
     private Transform _boardRoot;
     private BoardView _board;
+    private IReadOnlyList<string> _legalMoves = Array.Empty<string>();
+    private readonly List<GameObject> _hints = new();
     private float _cardShownTime;
 
     private string _originSquare;
@@ -78,6 +81,7 @@ public sealed class KaissaBoardController : MonoBehaviour
             _selectedPiece = hit.transform;
             _selectedPiece.position += Vector3.up * 0.35f;
             SetGlow(_selectedPiece, true);
+            ShowHints(square);
             if (_selectClip != null) _audio.PlayOneShot(_selectClip);
         }
         else if (square == _originSquare)
@@ -101,6 +105,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         var toPos = new Vector3(target[0] - 'a', 0.12f, target[1] - '1');
         _originSquare = null;
         _selectedPiece = null;
+        ClearHints();
         StartCoroutine(PlayMove(piece, toPos, move));
     }
 
@@ -151,8 +156,45 @@ public sealed class KaissaBoardController : MonoBehaviour
             _selectedPiece.position -= Vector3.up * 0.35f;
             SetGlow(_selectedPiece, false);
         }
+        ClearHints();
         _originSquare = null;
         _selectedPiece = null;
+    }
+
+    private void ShowHints(string origin)
+    {
+        ClearHints();
+        var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+        var color = new Color(0.30f, 0.90f, 0.45f);
+
+        foreach (var uci in _legalMoves)
+        {
+            if (!uci.StartsWith(origin, StringComparison.Ordinal) || uci.Length < 4)
+                continue;
+            int file = uci[2] - 'a';
+            int rank = uci[3] - '1';
+
+            var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(disc.GetComponent<Collider>()); // let clicks pass through to the tile
+            disc.transform.SetParent(_boardRoot);
+            disc.transform.localScale = new Vector3(0.34f, 0.03f, 0.34f);
+            disc.transform.position = new Vector3(file, 0.28f, rank);
+            var mat = new Material(shader);
+            mat.color = color;
+            mat.SetColor("_BaseColor", color);
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", color * 0.6f);
+            disc.GetComponent<Renderer>().material = mat;
+            _hints.Add(disc);
+        }
+    }
+
+    private void ClearHints()
+    {
+        foreach (var hint in _hints)
+            if (hint != null)
+                Destroy(hint);
+        _hints.Clear();
     }
 
     private void DealNext()
@@ -165,6 +207,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         }
 
         _board = card.Board;
+        _legalMoves = card.LegalMoves;
+        ClearHints();
         _cardShownTime = Time.time;
         _titleText.text = $"{card.PatternName}\n{card.Prompt}";
         _ratingText.text = $"Rating {card.PlayerRating:0}";

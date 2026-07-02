@@ -19,7 +19,7 @@ public static class SceneEnvironment
 
         RenderSettings.skybox = skybox;
         RenderSettings.ambientMode = AmbientMode.Skybox;
-        RenderSettings.ambientIntensity = 1f;
+        RenderSettings.ambientIntensity = 0.75f;
         DynamicGI.UpdateEnvironment();
 
         if (Object.FindAnyObjectByType<ReflectionProbe>() != null)
@@ -29,7 +29,7 @@ public static class SceneEnvironment
         probeObj.transform.position = new Vector3(3.5f, 2f, 3.5f);
         var probe = probeObj.AddComponent<ReflectionProbe>();
         probe.size = new Vector3(40f, 20f, 40f);
-        probe.intensity = 1f;
+        probe.intensity = 0.55f;
         probe.mode = ReflectionProbeMode.Realtime;
         probe.refreshMode = ReflectionProbeRefreshMode.ViaScripting;
         probe.RenderProbe();

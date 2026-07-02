@@ -47,7 +47,8 @@ public sealed record TrainingCard(
     BoardView Board,
     string Prompt,
     int PuzzleRating,
-    double PlayerRating);
+    double PlayerRating,
+    IReadOnlyList<string> LegalMoves);
 
 /// <summary>The outcome of answering a card.</summary>
 public sealed record AnswerResult(

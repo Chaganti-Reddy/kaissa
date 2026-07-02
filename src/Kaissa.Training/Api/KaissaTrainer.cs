@@ -47,7 +47,8 @@ public sealed class KaissaTrainer
             BoardView.FromFen(_current.Fen),
             _current.Prompt,
             _current.Rating,
-            _model.RatingEstimate);
+            _model.RatingEstimate,
+            Kaissa.Chess.Rules.ChessGame.FromFen(_current.Fen).LegalUciMoves());
     }
 
     /// <summary>Grades the player's move for the current card and advances the schedule.</summary>

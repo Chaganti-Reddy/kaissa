@@ -122,10 +122,11 @@ public static class PieceFactory
         m.color = color;
         m.SetColor("_BaseColor", color);
 
-        // Premium stone look: polished, faintly metallic; obsidian glossier than marble.
+        // Polished stone: non-metallic; obsidian a bit glossier than marble. Kept modest so the
+        // HDRI does not blow out the light pieces.
         bool dark = color.grayscale < 0.5f;
-        m.SetFloat("_Smoothness", dark ? 0.72f : 0.55f);
-        m.SetFloat("_Metallic", 0.15f);
+        m.SetFloat("_Smoothness", dark ? 0.55f : 0.28f);
+        m.SetFloat("_Metallic", 0f);
         m.SetFloat("_Cull", 0f); // double-sided, so lathe winding never hides a face
         return m;
     }
