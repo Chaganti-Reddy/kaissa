@@ -69,3 +69,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - [`docs/client.md`](docs/client.md) — the Unity client and UI design, and how to set up to build it
 - [`docs/features.md`](docs/features.md) — feature parity map vs the incumbents
 - [`docs/mobile.md`](docs/mobile.md) — plan for the engine on Android/iOS
+- [`docs/release.md`](docs/release.md) — building a desktop build and cutting a release
+- [`CHANGELOG.md`](CHANGELOG.md) — release notes

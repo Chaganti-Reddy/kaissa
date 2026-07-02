@@ -134,6 +134,8 @@ public sealed class KaissaGameController : MonoBehaviour
 
             if (KaissaSettings.Sound && _moveClip != null) _audio.PlayOneShot(_moveClip);
             RenderBoard(outcome.Board);
+            HighlightMove(move);
+            if (!string.IsNullOrEmpty(outcome.BotMove)) HighlightMove(outcome.BotMove!);
 
             if (outcome.IsGameOver)
             {
@@ -162,6 +164,19 @@ public sealed class KaissaGameController : MonoBehaviour
             if (p.Square == square)
                 return p.Piece;
         return '\0';
+    }
+
+    private void HighlightMove(string uci)
+    {
+        if (uci.Length < 4 || _boardRoot == null)
+            return;
+        var color = new Color(0.95f, 0.85f, 0.35f); // soft amber for the last move
+        foreach (var sq in new[] { uci.Substring(0, 2), uci.Substring(2, 2) })
+        {
+            var tile = _boardRoot.Find($"sq_{sq}");
+            if (tile != null)
+                Paint(tile.gameObject, color);
+        }
     }
 
     private void RenderBoard(BoardView board)
