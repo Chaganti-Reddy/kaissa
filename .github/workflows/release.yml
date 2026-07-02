@@ -13,6 +13,7 @@ permissions:
 jobs:
   build-windows:
     runs-on: [self-hosted, Windows]
+    timeout-minutes: 90
     env:
       UNITY: 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe'
     steps:
@@ -39,15 +40,8 @@ jobs:
             Start-Sleep -Seconds 3
             if (Test-Path "$lock") { Remove-Item "$lock" -Force -ErrorAction SilentlyContinue }
             if (Test-Path "$out")  { Remove-Item "$out"  -Force -ErrorAction SilentlyContinue }
-            $p = Start-Process -FilePath "$env:UNITY" -PassThru -NoNewWindow -ArgumentList @(
-              '-batchmode','-quit','-projectPath','client',
-              '-buildWindows64Player',"$out",'-logFile',"$log")
-            if (-not $p.WaitForExit(1800000)) {   # 30 min hang guard
-              Write-Host "Attempt $i hung; killing."
-              try { $p.Kill() } catch {}
-              continue
-            }
-            $code = $p.ExitCode
+            & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile "$log"
+            $code = $LASTEXITCODE
             if ($code -eq 0 -and (Test-Path "$out")) { $ok = $true; break }
             Write-Host "Attempt $i failed (exit $code). Log tail:"
             if (Test-Path "$log") { Get-Content "$log" -Tail 40 }
