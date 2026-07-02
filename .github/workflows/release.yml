@@ -1,42 +1,35 @@
 name: Release
 
+# Builds the Windows desktop app and attaches it to a GitHub Release when a version tag is pushed.
+# Runs on a SELF-HOSTED Windows runner that has the Unity editor (activated) and the .NET SDK
+# installed — this avoids Unity's licensing restrictions on hosted runners. See docs/release.md.
 on:
   push:
     tags: ['v*']
 
 jobs:
   build-windows:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows]
+    env:
+      UNITY: 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch Stockfish (Windows)
+      - name: Stage engine + core plugins
+        shell: powershell
         run: |
-          mkdir -p client/Assets/StreamingAssets/stockfish
-          curl -fsSL -o sf.zip https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-windows-x86-64.zip
-          unzip -o sf.zip
-          cp stockfish/stockfish-windows-x86-64.exe client/Assets/StreamingAssets/stockfish/stockfish.exe
-
-      - name: Cache Unity Library
-        uses: actions/cache@v4
-        with:
-          path: client/Library
-          key: Library-${{ hashFiles('client/Assets/**', 'client/Packages/**', 'client/ProjectSettings/**') }}
-          restore-keys: Library-
+          ./scripts/fetch-stockfish.ps1
+          ./scripts/build-unity-plugins.ps1
 
       - name: Build (Windows 64-bit)
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          projectPath: client
-          targetPlatform: StandaloneWindows64
-          buildName: Kaissa
+        shell: powershell
+        run: |
+          & "$env:UNITY" -batchmode -quit -nographics -projectPath "client" -buildWindows64Player "build/Kaissa/Kaissa.exe" -logFile -
+          if ($LASTEXITCODE -ne 0) { throw "Unity build failed ($LASTEXITCODE)" }
 
-      - name: Zip build
-        run: cd build && zip -r ../Kaissa-Windows-${{ github.ref_name }}.zip StandaloneWindows64
+      - name: Zip
+        shell: powershell
+        run: Compress-Archive -Path build/Kaissa/* -DestinationPath "Kaissa-Windows-${{ github.ref_name }}.zip" -Force
 
       - name: Publish release
         uses: softprops/action-gh-release@v2

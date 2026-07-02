@@ -28,23 +28,22 @@ macOS/Linux builds work the same from their platforms; mobile is not ready yet (
   git push --tags
   ```
 
-## Automated releases (CI)
+## Automated releases (self-hosted runner)
 
-`.github/workflows/release.yml` builds the Windows app and attaches it to a GitHub Release when a
-version tag is pushed. It uses [game-ci](https://game.ci) and needs a Unity license stored as a
-repository secret (one-time):
+Unity removed manual activation of free Personal licenses, so hosted CI runners cannot activate one. The free workaround is a **self-hosted GitHub Actions runner** on a machine where the Unity editor is already installed and activated (your dev PC). `.github/workflows/release.yml` runs there on a version tag: it stages the engine + core DLLs, builds the Windows player with the local editor, and attaches the zip to a GitHub Release.
 
-1. Generate an activation request file, then convert it to a license:
-   - Use the `game-ci/unity-request-activation-file` action once (or run the editor with
-     `-createManualActivationFile`), download the `.alf`.
-   - Upload the `.alf` at <https://license.unity3d.com/manual>, download the resulting `.ulf`.
-2. In the GitHub repo: **Settings → Secrets and variables → Actions → New secret**:
-   - `UNITY_LICENSE` = the full contents of the `.ulf` file (Unity Personal is free and enough).
-3. Push a tag: `git tag v0.1 && git push origin v0.1`. The workflow builds and publishes the zip.
+One-time setup:
 
-Notes: game-ci must have an editor image for this project's Unity version (`6000.5.1f1`); the
-engine is fetched during the build (not committed). The first release can also be done manually
-(build locally, upload the zip) while the license secret is set up.
+1. Install the runner: repo **Settings → Actions → Runners → New self-hosted runner → Windows**,
+   then run the shown `config`/`run` commands on your PC (in any folder). Optionally install it as a
+   service (`svc.cmd install`, `svc.cmd start`) so it is always available.
+2. The runner machine needs: the Unity editor (activated), the .NET SDK, and PowerShell. Confirm the
+   editor path in `release.yml` (`env.UNITY`) matches your installed version.
+3. Push a tag: `git tag v0.1 && git push origin v0.1`. The build runs on your PC and publishes the
+   release.
+
+Alternatives if you don't want a self-hosted runner: Unity Pro with a serial (game-ci on hosted
+runners), Unity Build Automation, or just build locally and upload the zip (see above).
 
 ## Release checklist
 
