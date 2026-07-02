@@ -30,7 +30,7 @@ jobs:
         shell: powershell
         run: |
           $out = "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe"
-          & "$env:UNITY" -batchmode -quit -nographics -projectPath "client" -buildWindows64Player "$out" -logFile -
+          & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile -
           if ($LASTEXITCODE -ne 0) { throw "Unity build failed ($LASTEXITCODE)" }
           if (-not (Test-Path "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe")) { throw "Build output missing" }
 
