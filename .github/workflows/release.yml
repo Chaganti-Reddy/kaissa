@@ -30,7 +30,8 @@ jobs:
       - name: Build (Windows 64-bit)
         shell: powershell
         run: |
-          $out  = "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe"
+          $buildDir = "$env:GITHUB_WORKSPACE\build"
+          $out  = "$buildDir\Kaissa\Kaissa.exe"
           $log  = "$env:GITHUB_WORKSPACE\unity-build.log"
           $lock = "$env:GITHUB_WORKSPACE\client\Temp\UnityLockfile"
           $ok = $false
@@ -38,8 +39,10 @@ jobs:
             Write-Host "===== Unity build attempt $i ====="
             Get-Process -Name Unity -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 3
-            if (Test-Path "$lock") { Remove-Item "$lock" -Force -ErrorAction SilentlyContinue }
-            if (Test-Path "$out")  { Remove-Item "$out"  -Force -ErrorAction SilentlyContinue }
+            if (Test-Path "$lock")     { Remove-Item "$lock" -Force -ErrorAction SilentlyContinue }
+            # Wipe the whole output dir, not just the exe — Unity does an incremental player build and
+            # will skip re-emitting the exe if the *_Data folder still looks up to date.
+            if (Test-Path "$buildDir") { Remove-Item "$buildDir" -Recurse -Force -ErrorAction SilentlyContinue }
             & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile "$log"
             $code = $LASTEXITCODE
             if ($code -eq 0 -and (Test-Path "$out")) { $ok = $true; break }
