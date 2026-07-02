@@ -30,3 +30,6 @@ that use; each is credited here as required.
 - **Inter** by Rasmus Andersson (`client/Assets/Resources/Inter-Regular.ttf`) — SIL Open Font
   License 1.1. https://rsms.me/inter/
   User-interface font.
+- **Staunton chess piece models** by clarkerubber (`client/Assets/Resources/Pieces/*.obj`) — MIT.
+  https://github.com/clarkerubber/Staunton-Pieces
+  Converted from the source STL to OBJ (rotated, scaled, seated) by `tools/StlToObj`.

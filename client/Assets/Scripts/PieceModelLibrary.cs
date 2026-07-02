@@ -38,12 +38,14 @@ public static class PieceModelLibrary
 
     private static void Tint(GameObject go, bool white)
     {
-        var color = white ? new Color(0.95f, 0.95f, 0.92f) : new Color(0.13f, 0.13f, 0.16f);
+        var color = white ? new Color(0.94f, 0.91f, 0.84f) : new Color(0.07f, 0.07f, 0.10f);
         foreach (var renderer in go.GetComponentsInChildren<Renderer>())
         {
             var m = renderer.material;
             m.color = color;
             m.SetColor("_BaseColor", color);
+            m.SetFloat("_Smoothness", white ? 0.28f : 0.55f); // polished stone
+            m.SetFloat("_Metallic", 0f);
         }
     }
 }
