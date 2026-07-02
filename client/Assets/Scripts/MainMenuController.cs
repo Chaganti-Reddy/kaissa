@@ -37,6 +37,9 @@ public sealed class MainMenuController : MonoBehaviour
         MakeButton(canvas, "Openings", new Vector2(170f, 20f), () => SceneManager.LoadScene("Opening"));
         MakeButton(canvas, "Board Vision", new Vector2(170f, -50f), () => SceneManager.LoadScene("Vision"));
         MakeButton(canvas, "Coordinates", new Vector2(170f, -120f), () => SceneManager.LoadScene("Coordinate"));
+
+        // First-run calibration
+        MakeButton(canvas, "Calibrate my level", new Vector2(0f, -200f), () => SceneManager.LoadScene("Calibrate"), 360f);
     }
 
     private static void EnsureEventSystem()
@@ -77,7 +80,7 @@ public sealed class MainMenuController : MonoBehaviour
         rt.sizeDelta = sizeDelta;
     }
 
-    private void MakeButton(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick)
+    private void MakeButton(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick, float width = 300f)
     {
         var go = new GameObject(label);
         go.transform.SetParent(parent, false);
@@ -87,7 +90,7 @@ public sealed class MainMenuController : MonoBehaviour
         var rt = image.rectTransform;
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
         rt.anchoredPosition = pos;
-        rt.sizeDelta = new Vector2(300f, 64f);
+        rt.sizeDelta = new Vector2(width, 64f);
 
         var button = go.AddComponent<Button>();
         button.onClick.AddListener(onClick);

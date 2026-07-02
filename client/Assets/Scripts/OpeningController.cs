@@ -64,6 +64,8 @@ public sealed class OpeningController : MonoBehaviour
         {
             if (!name.StartsWith("pc_", StringComparison.Ordinal))
                 return;
+            if (char.IsUpper(name[3]) != BoardView.FromFen(_trainer.Fen).WhiteToMove)
+                return; // only the side to move
             _originSquare = square;
             _selectedPiece = hit.transform;
             _selectedPiece.position += Vector3.up * 0.35f;

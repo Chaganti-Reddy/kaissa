@@ -90,6 +90,8 @@ public sealed class KaissaGameController : MonoBehaviour
         {
             if (!hitName.StartsWith("pc_", StringComparison.Ordinal))
                 return;
+            if (!char.IsUpper(hitName[3]))
+                return; // you play White; can't move Black's pieces
             _originSquare = square;
             _selectedPiece = hit.transform;
             _selectedPiece.position += Vector3.up * 0.35f;

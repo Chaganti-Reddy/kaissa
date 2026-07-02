@@ -77,6 +77,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         {
             if (!hitName.StartsWith("pc_", StringComparison.Ordinal))
                 return;
+            if (char.IsUpper(hitName[3]) != _board.WhiteToMove)
+                return; // only the side to move can be selected
             _originSquare = square;
             _selectedPiece = hit.transform;
             _selectedPiece.position += Vector3.up * 0.35f;
