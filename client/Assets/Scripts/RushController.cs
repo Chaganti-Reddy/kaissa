@@ -131,6 +131,7 @@ public sealed class RushController : MonoBehaviour
         _shownTime = Time.time;
         UpdateHud();
         RenderBoard(_board);
+        Board3D.OrientCamera(_board.WhiteToMove);
     }
 
     private void UpdateHud() =>

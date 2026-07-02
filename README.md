@@ -10,7 +10,27 @@ The name is a placeholder and may change.
 
 ## Status
 
-Pre-alpha. No playable build yet. The repository currently contains design documents while the architecture is settled and the core is prototyped. See [`docs/`](docs/).
+Alpha. The learning core is complete and tested, and there is a playable Unity client on desktop covering training, puzzle rush, play-vs-bot, endgames, openings, review, stats, and calibration. Visuals are functional and still being polished; a real modelled piece set and full UX pass are pending. See [`docs/`](docs/).
+
+## Build and run
+
+Headless core (no Unity needed) — run the training loop or drive the engine from the terminal:
+
+```
+dotnet test Kaissa.sln                                   # run the test suite
+dotnet run --project src/Kaissa.Training.Cli -- --simulate   # simulate the learning loop
+```
+
+The 3D client (Unity 6 LTS):
+
+```
+./scripts/fetch-stockfish.ps1        # get the engine (GPLv3, not committed)
+./scripts/build-unity-plugins.ps1    # build the core into the client and stage the engine
+```
+
+Then open `client/` in Unity Hub and press Play. See [`client/README.md`](client/README.md) for
+details, and [`docs/client.md`](docs/client.md) for the design and how to make it look premium on a
+zero budget.
 
 ## Why it exists
 
@@ -47,3 +67,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - [`docs/architecture.md`](docs/architecture.md) — system structure and data flow
 - [`docs/learning-engine.md`](docs/learning-engine.md) — how the training loop works
 - [`docs/client.md`](docs/client.md) — the Unity client and UI design, and how to set up to build it
+- [`docs/features.md`](docs/features.md) — feature parity map vs the incumbents
+- [`docs/mobile.md`](docs/mobile.md) — plan for the engine on Android/iOS

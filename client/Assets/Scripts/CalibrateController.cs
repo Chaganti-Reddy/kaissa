@@ -100,6 +100,7 @@ public sealed class CalibrateController : MonoBehaviour
         ClearHints();
         if (_boardRoot != null) Destroy(_boardRoot.gameObject);
         _boardRoot = Board3D.Render(_board);
+        Board3D.OrientCamera(_board.WhiteToMove);
         var side = _board.WhiteToMove ? "White" : "Black";
         _hudText.text = $"Calibration {_session.Answered + 1}/{_session.Total}   —   {side} to move   (est {_session.EstimatedRating:0})";
     }

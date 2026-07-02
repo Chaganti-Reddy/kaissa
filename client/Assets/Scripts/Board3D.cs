@@ -106,6 +106,16 @@ public static class Board3D
         go.GetComponent<Renderer>().material = material;
     }
 
+    /// <summary>Positions the camera so the chosen side is at the bottom (a true 180° board flip).</summary>
+    public static void OrientCamera(bool whiteBottom)
+    {
+        var cam = Camera.main;
+        if (cam == null)
+            return;
+        cam.transform.position = whiteBottom ? new Vector3(3.5f, 7.5f, -4.5f) : new Vector3(3.5f, 7.5f, 11.5f);
+        cam.transform.LookAt(new Vector3(3.5f, 0f, 3.5f));
+    }
+
     public static void SetupScene()
     {
         var cam = Camera.main;

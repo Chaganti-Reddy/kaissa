@@ -215,6 +215,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         _titleText.text = $"{card.PatternName}\n{card.Prompt}";
         _ratingText.text = $"Rating {card.PlayerRating:0}";
         RenderBoard(_board);
+        Board3D.OrientCamera(_board.WhiteToMove);
     }
 
     private static void SetGlow(Transform piece, bool on)
