@@ -32,7 +32,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private async void Start()
     {
-        _font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
+        _font = Hud.Font;
         SetUpCameraAndLight();
         BuildPostProcessing();
         BuildAudio();
@@ -318,6 +318,8 @@ public sealed class KaissaGameController : MonoBehaviour
             key.shadows = LightShadows.Soft;
             keyObj.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
         }
+
+        SceneEnvironment.Apply();
     }
 
     private static void BuildPostProcessing()

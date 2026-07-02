@@ -5,8 +5,9 @@ using UnityEngine;
 // head). Fully procedural — our IP, no assets. A single capsule collider on the root handles clicks.
 public static class PieceFactory
 {
-    private static readonly Color White = new(0.93f, 0.92f, 0.86f);
-    private static readonly Color Black = new(0.15f, 0.15f, 0.18f);
+    // Marble ivory vs polished obsidian.
+    private static readonly Color White = new(0.94f, 0.91f, 0.84f);
+    private static readonly Color Black = new(0.07f, 0.07f, 0.10f);
 
     // Shared base silhouette (radius, height), bottom to top.
     private static readonly Vector2[] BaseProfile =
@@ -60,7 +61,7 @@ public static class PieceFactory
     {
         var body = new GameObject("body");
         body.transform.SetParent(root.transform, false);
-        body.AddComponent<MeshFilter>().mesh = LatheMesh.Build(profile);
+        body.AddComponent<MeshFilter>().mesh = LatheMesh.Build(profile, segments: 44);
         body.AddComponent<MeshRenderer>().material = Material(color);
     }
 
@@ -120,7 +121,11 @@ public static class PieceFactory
         var m = new Material(shader);
         m.color = color;
         m.SetColor("_BaseColor", color);
-        m.SetFloat("_Smoothness", 0.35f);
+
+        // Premium stone look: polished, faintly metallic; obsidian glossier than marble.
+        bool dark = color.grayscale < 0.5f;
+        m.SetFloat("_Smoothness", dark ? 0.72f : 0.55f);
+        m.SetFloat("_Metallic", 0.15f);
         m.SetFloat("_Cull", 0f); // double-sided, so lathe winding never hides a face
         return m;
     }

@@ -6,8 +6,8 @@ using UnityEngine.Rendering;
 // Training/Rush controllers keep their own copies; this consolidates the rest.
 public static class Board3D
 {
-    private static readonly Color LightSquare = new(0.87f, 0.80f, 0.64f);
-    private static readonly Color DarkSquare = new(0.36f, 0.26f, 0.19f);
+    private static readonly Color LightSquare = new(0.90f, 0.86f, 0.78f); // marble
+    private static readonly Color DarkSquare = new(0.30f, 0.20f, 0.12f);  // walnut
 
     /// <summary>Builds a full board with pieces from a BoardView; returns the root transform.</summary>
     public static Transform Render(BoardView board)
@@ -59,7 +59,33 @@ public static class Board3D
             tile.transform.position = new Vector3(file, 0f, rank);
             Paint(tile, (file + rank) % 2 == 0 ? DarkSquare : LightSquare);
         }
+
+        AddCoordinateLabels(root);
         return root;
+    }
+
+    private static void AddCoordinateLabels(Transform root)
+    {
+        var font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
+        for (int f = 0; f < 8; f++)
+            Label(root, font, $"{(char)('a' + f)}", new Vector3(f, 0.12f, -0.75f));
+        for (int r = 0; r < 8; r++)
+            Label(root, font, $"{r + 1}", new Vector3(-0.75f, 0.12f, r));
+    }
+
+    private static void Label(Transform root, Font font, string text, Vector3 pos)
+    {
+        var go = new GameObject($"lbl_{text}");
+        go.transform.SetParent(root);
+        go.transform.position = pos;
+        go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        var tm = go.AddComponent<TextMesh>();
+        tm.text = text;
+        tm.anchor = TextAnchor.MiddleCenter;
+        tm.fontSize = 48;
+        tm.characterSize = 0.06f;
+        tm.color = new Color(0.7f, 0.7f, 0.75f);
+        if (font != null) { tm.font = font; go.GetComponent<MeshRenderer>().material = font.material; }
     }
 
     public static void Highlight(Transform root, string square, Color color)
@@ -75,6 +101,8 @@ public static class Board3D
         var material = new Material(shader);
         material.color = color;
         material.SetColor("_BaseColor", color);
+        material.SetFloat("_Smoothness", 0.45f);
+        material.SetFloat("_Metallic", 0.05f);
         go.GetComponent<Renderer>().material = material;
     }
 
@@ -94,12 +122,22 @@ public static class Board3D
 
         if (Object.FindAnyObjectByType<Light>() == null)
         {
-            var lightObj = new GameObject("Sun");
-            var light = lightObj.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 1.15f;
-            light.shadows = LightShadows.Soft;
-            lightObj.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
+            AddLight("KeyLight", 1.15f, new Color(1f, 0.96f, 0.9f), new Vector3(52f, -35f, 0f), LightShadows.Soft);
+            AddLight("FillLight", 0.35f, new Color(0.7f, 0.8f, 1f), new Vector3(30f, 150f, 0f), LightShadows.None);
+            AddLight("RimLight", 0.5f, new Color(1f, 0.9f, 0.8f), new Vector3(-20f, 40f, 0f), LightShadows.None);
         }
+
+        SceneEnvironment.Apply(); // HDRI skybox + reflections when present
+    }
+
+    private static void AddLight(string name, float intensity, Color color, Vector3 euler, LightShadows shadows)
+    {
+        var obj = new GameObject(name);
+        var light = obj.AddComponent<Light>();
+        light.type = LightType.Directional;
+        light.intensity = intensity;
+        light.color = color;
+        light.shadows = shadows;
+        obj.transform.rotation = Quaternion.Euler(euler);
     }
 }

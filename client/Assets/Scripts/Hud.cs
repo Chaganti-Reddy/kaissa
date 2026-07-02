@@ -8,7 +8,8 @@ using UnityEngine.UI;
 public static class Hud
 {
     public static Font Font =>
-        Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font
+        Resources.Load<Font>("Inter-Regular")
+        ?? Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font
         ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
 
     public static Transform Canvas()

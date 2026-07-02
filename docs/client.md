@@ -115,6 +115,26 @@ NextCard() -> render board + prompt
 Breadth (multiple session types, play-vs-bot on mobile, cosmetics) comes after the slice proves the
 game feel.
 
+## Making it premium
+
+All sources below are CC0 or OFL/CC-BY (compatible with a GPLv3 project); avoid CC-BY-NC and anything
+proprietary. The drop-in loaders mean assets plug in without code changes.
+
+Where to get things (all free):
+
+- 3D piece models: Sketchfab (filter CC0/CC-BY), Poly Pizza, Kenney. Drop prefabs in
+  `Assets/Resources/Pieces` (see `PieceModelLibrary`).
+- Board/material textures (wood, marble): Poly Haven (CC0), ambientCG (CC0).
+- HDRI for lighting and glossy reflections: Poly Haven (CC0) — set as the skybox + a reflection probe.
+- UI font: Google Fonts (OFL), e.g. Inter — drop the TTF in `Assets/Resources` and point `Hud.Font` at it.
+- Sound effects: freesound (CC0 filter), Kenney audio (CC0), OpenGameArt (CC0).
+
+What is done in code (no downloads): procedural marble/obsidian piece materials, lighting rig,
+URP post-processing (bloom, vignette, colour grading), move animation, selection glow, generated
+sound cues. These carry the look until real assets are dropped in, then improve further.
+
+Attribution: keep a `THIRD-PARTY-NOTICES` entry for every asset (author, source, licence).
+
 ## Open items
 
 - ~~Multi-target the core to netstandard2.1.~~ Done: `Kaissa.Learning`, `Kaissa.Chess.Engine`,

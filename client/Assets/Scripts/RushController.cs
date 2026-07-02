@@ -31,7 +31,7 @@ public sealed class RushController : MonoBehaviour
 
     private void Start()
     {
-        _font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
+        _font = Hud.Font;
         SetUpCameraAndLight();
         BuildHud();
         _rush = RushSession.CreateDefault(startRating: 800, lives: 3);
@@ -262,5 +262,7 @@ public sealed class RushController : MonoBehaviour
             light.shadows = LightShadows.Soft;
             lightObj.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
         }
+
+        SceneEnvironment.Apply();
     }
 }

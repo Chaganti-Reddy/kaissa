@@ -40,7 +40,7 @@ public sealed class KaissaBoardController : MonoBehaviour
 
     private void Start()
     {
-        _font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
+        _font = Hud.Font;
         _trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
         SetUpCameraAndLight();
         BuildPostProcessing();
@@ -361,6 +361,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         fill.color = new Color(0.7f, 0.8f, 1f);
         fill.shadows = LightShadows.None;
         fillObj.transform.rotation = Quaternion.Euler(30f, 150f, 0f);
+
+        SceneEnvironment.Apply();
     }
 
     private static void BuildPostProcessing()
