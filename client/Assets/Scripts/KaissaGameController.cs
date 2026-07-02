@@ -47,9 +47,12 @@ public sealed class KaissaGameController : MonoBehaviour
 
         _titleText.text = "Play vs Bot";
         _statusText.text = "Starting engine...";
+        var startFen = EndgameRoute.Fen; // set by the endgame picker, if any
+        EndgameRoute.Fen = null;
         try
         {
-            _game = await KaissaGame.StartAsync(enginePath, Side.White, 1200, botThinkTime: TimeSpan.FromMilliseconds(150));
+            _game = await KaissaGame.StartAsync(enginePath, Side.White, 1200,
+                fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(150));
         }
         catch (Exception e)
         {

@@ -17,5 +17,14 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Rush.unity
     guid: 17a5b02fd61b9304b9028cd2b4b70e8e
+  - enabled: 1
+    path: Assets/Scenes/Endgame.unity
+    guid: 58d771a165875824191e3720e7652624
+  - enabled: 1
+    path: Assets/Scenes/Opening.unity
+    guid: de240b24c7c5e3240baf2b49c53735d6
+  - enabled: 1
+    path: Assets/Scenes/Vision.unity
+    guid: 8d319ac7b1d817b4a8c288d715e44e0c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

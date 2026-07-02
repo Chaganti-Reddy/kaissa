@@ -23,12 +23,20 @@ public sealed class MainMenuController : MonoBehaviour
         }
 
         var canvas = BuildCanvas();
-        MakeText(canvas, "Kaissa", 72, new Vector2(0f, 210f), new Vector2(800f, 100f));
-        MakeText(canvas, "Train. Play. Improve.", 26, new Vector2(0f, 150f), new Vector2(800f, 50f));
-        MakeButton(canvas, "Train", new Vector2(0f, 70f), () => SceneManager.LoadScene("SampleScene"));
-        MakeButton(canvas, "Puzzle Rush", new Vector2(0f, -10f), () => SceneManager.LoadScene("Rush"));
-        MakeButton(canvas, "Play vs Bot", new Vector2(0f, -90f), () => SceneManager.LoadScene("Play"));
-        MakeButton(canvas, "Progress", new Vector2(0f, -170f), () => SceneManager.LoadScene("Stats"));
+        MakeText(canvas, "Kaissa", 72, new Vector2(0f, 240f), new Vector2(800f, 100f));
+        MakeText(canvas, "Train. Play. Improve.", 26, new Vector2(0f, 180f), new Vector2(800f, 50f));
+
+        // Left column
+        MakeButton(canvas, "Train", new Vector2(-170f, 90f), () => SceneManager.LoadScene("SampleScene"));
+        MakeButton(canvas, "Puzzle Rush", new Vector2(-170f, 20f), () => SceneManager.LoadScene("Rush"));
+        MakeButton(canvas, "Play vs Bot", new Vector2(-170f, -50f), () => SceneManager.LoadScene("Play"));
+        MakeButton(canvas, "Progress", new Vector2(-170f, -120f), () => SceneManager.LoadScene("Stats"));
+
+        // Right column
+        MakeButton(canvas, "Endgames", new Vector2(170f, 90f), () => SceneManager.LoadScene("Endgame"));
+        MakeButton(canvas, "Openings", new Vector2(170f, 20f), () => SceneManager.LoadScene("Opening"));
+        MakeButton(canvas, "Board Vision", new Vector2(170f, -50f), () => SceneManager.LoadScene("Vision"));
+        MakeButton(canvas, "Coordinates", new Vector2(170f, -120f), () => SceneManager.LoadScene("Coordinate"));
     }
 
     private static void EnsureEventSystem()
