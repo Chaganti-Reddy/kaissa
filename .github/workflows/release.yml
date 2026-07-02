@@ -43,10 +43,13 @@ jobs:
             # Wipe the whole output dir, not just the exe — Unity does an incremental player build and
             # will skip re-emitting the exe if the *_Data folder still looks up to date.
             if (Test-Path "$buildDir") { Remove-Item "$buildDir" -Recurse -Force -ErrorAction SilentlyContinue }
-            & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile "$log"
-            $code = $LASTEXITCODE
-            if ($code -eq 0 -and (Test-Path "$out")) { $ok = $true; break }
-            Write-Host "Attempt $i failed (exit $code). Log tail:"
+            # Unity.exe forks its launcher, so `&` doesn't wait. Start-Process -Wait waits for the
+            # real build to finish. Its exit code is unreliable, so treat a produced exe as success.
+            $p = Start-Process -FilePath "$env:UNITY" -Wait -PassThru -NoNewWindow -ArgumentList @(
+              '-batchmode','-quit','-projectPath','client',
+              '-buildWindows64Player',"$out",'-logFile',"$log")
+            if (Test-Path "$out") { $ok = $true; break }
+            Write-Host "Attempt $i failed (exit $($p.ExitCode)). Log tail:"
             if (Test-Path "$log") { Get-Content "$log" -Tail 40 }
           }
           Get-Process -Name Unity -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
