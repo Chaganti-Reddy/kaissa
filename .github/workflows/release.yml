@@ -17,6 +17,8 @@ jobs:
       UNITY: 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe'
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: false
 
       - name: Stage engine + core plugins
         shell: powershell
