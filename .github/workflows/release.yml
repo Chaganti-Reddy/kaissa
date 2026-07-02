@@ -30,9 +30,13 @@ jobs:
         shell: powershell
         run: |
           $out = "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe"
-          & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile -
-          if ($LASTEXITCODE -ne 0) { throw "Unity build failed ($LASTEXITCODE)" }
-          if (-not (Test-Path "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe")) { throw "Build output missing" }
+          $log = "$env:GITHUB_WORKSPACE\unity-build.log"
+          & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile "$log"
+          $code = $LASTEXITCODE
+          Write-Host "===== Unity log (tail) ====="
+          if (Test-Path "$log") { Get-Content "$log" -Tail 120 }
+          if ($code -ne 0) { throw "Unity build failed ($code)" }
+          if (-not (Test-Path "$out")) { throw "Build output missing" }
 
       - name: Zip
         shell: powershell
