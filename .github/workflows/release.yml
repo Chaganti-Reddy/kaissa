@@ -31,12 +31,18 @@ jobs:
         run: |
           $out = "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe"
           $log = "$env:GITHUB_WORKSPACE\unity-build.log"
-          & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile "$log"
-          $code = $LASTEXITCODE
-          Write-Host "===== Unity log (tail) ====="
-          if (Test-Path "$log") { Get-Content "$log" -Tail 120 }
-          if ($code -ne 0) { throw "Unity build failed ($code)" }
-          if (-not (Test-Path "$out")) { throw "Build output missing" }
+          $ok = $false
+          for ($i = 1; $i -le 4; $i++) {
+            Write-Host "===== Unity build attempt $i ====="
+            if (Test-Path "$out") { Remove-Item "$out" -Force }
+            & "$env:UNITY" -batchmode -quit -projectPath "client" -buildWindows64Player "$out" -logFile "$log"
+            $code = $LASTEXITCODE
+            if ($code -eq 0 -and (Test-Path "$out")) { $ok = $true; break }
+            Write-Host "Attempt $i failed (exit $code). Log tail:"
+            if (Test-Path "$log") { Get-Content "$log" -Tail 40 }
+            Start-Sleep -Seconds 8
+          }
+          if (-not $ok) { throw "Unity build failed after retries" }
 
       - name: Zip
         shell: powershell
