@@ -38,8 +38,9 @@ public sealed class MainMenuController : MonoBehaviour
         MakeButton(canvas, "Board Vision", new Vector2(170f, -50f), () => SceneManager.LoadScene("Vision"));
         MakeButton(canvas, "Coordinates", new Vector2(170f, -120f), () => SceneManager.LoadScene("Coordinate"));
 
-        // First-run calibration
-        MakeButton(canvas, "Calibrate my level", new Vector2(0f, -200f), () => SceneManager.LoadScene("Calibrate"), 360f);
+        // First-run calibration + settings
+        MakeButton(canvas, "Calibrate my level", new Vector2(-100f, -200f), () => SceneManager.LoadScene("Calibrate"), 200f);
+        MakeButton(canvas, "Settings", new Vector2(115f, -200f), () => SceneManager.LoadScene("Settings"), 200f);
     }
 
     private static void EnsureEventSystem()

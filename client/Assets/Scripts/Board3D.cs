@@ -6,8 +6,14 @@ using UnityEngine.Rendering;
 // Training/Rush controllers keep their own copies; this consolidates the rest.
 public static class Board3D
 {
-    private static readonly Color LightSquare = new(0.90f, 0.86f, 0.78f); // marble
-    private static readonly Color DarkSquare = new(0.30f, 0.20f, 0.12f);  // walnut
+    // Board colour themes (light, dark), chosen via settings.
+    public static readonly (string Name, Color Light, Color Dark)[] Themes =
+    {
+        ("Walnut", new Color(0.90f, 0.86f, 0.78f), new Color(0.30f, 0.20f, 0.12f)),
+        ("Green", new Color(0.93f, 0.93f, 0.82f), new Color(0.46f, 0.58f, 0.34f)),
+        ("Blue", new Color(0.86f, 0.89f, 0.92f), new Color(0.40f, 0.55f, 0.70f)),
+        ("Slate", new Color(0.82f, 0.82f, 0.85f), new Color(0.28f, 0.30f, 0.36f)),
+    };
 
     /// <summary>Builds a full board with pieces from a BoardView; returns the root transform.</summary>
     public static Transform Render(BoardView board)
@@ -49,6 +55,7 @@ public static class Board3D
         Object.Destroy(basePlate.GetComponent<Collider>());
         Paint(basePlate, new Color(0.08f, 0.08f, 0.10f));
 
+        var theme = Themes[Mathf.Clamp(KaissaSettings.BoardTheme, 0, Themes.Length - 1)];
         for (int file = 0; file < 8; file++)
         for (int rank = 0; rank < 8; rank++)
         {
@@ -57,7 +64,7 @@ public static class Board3D
             tile.transform.SetParent(root);
             tile.transform.localScale = new Vector3(1f, 0.15f, 1f);
             tile.transform.position = new Vector3(file, 0f, rank);
-            Paint(tile, (file + rank) % 2 == 0 ? DarkSquare : LightSquare);
+            Paint(tile, (file + rank) % 2 == 0 ? theme.Dark : theme.Light);
         }
 
         AddCoordinateLabels(root);

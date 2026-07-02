@@ -8,6 +8,9 @@ public static class PieceModelLibrary
 {
     public static GameObject TryCreate(char piece, bool white)
     {
+        if (!KaissaSettings.UseModels)
+            return null; // player chose the simple procedural pieces
+
         var name = NameOf(piece);
 
         var byColor = Resources.Load<GameObject>($"Pieces/{(white ? "White" : "Black")}{name}");

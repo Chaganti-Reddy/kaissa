@@ -10,4 +10,10 @@ public static class KaissaProgress
     public static string? Load() => File.Exists(FilePath) ? File.ReadAllText(FilePath) : null;
 
     public static void Save(string json) => File.WriteAllText(FilePath, json);
+
+    public static void Clear()
+    {
+        if (File.Exists(FilePath))
+            File.Delete(FilePath);
+    }
 }

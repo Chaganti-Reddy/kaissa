@@ -96,7 +96,7 @@ public sealed class KaissaGameController : MonoBehaviour
             _selectedPiece = hit.transform;
             _selectedPiece.position += Vector3.up * 0.35f;
             SetGlow(_selectedPiece, true);
-            if (_moveClip != null) _audio.PlayOneShot(_moveClip);
+            if (KaissaSettings.Sound && _moveClip != null) _audio.PlayOneShot(_moveClip);
         }
         else if (square == _originSquare)
         {
@@ -132,7 +132,7 @@ public sealed class KaissaGameController : MonoBehaviour
                 return;
             }
 
-            if (_moveClip != null) _audio.PlayOneShot(_moveClip);
+            if (KaissaSettings.Sound && _moveClip != null) _audio.PlayOneShot(_moveClip);
             RenderBoard(outcome.Board);
 
             if (outcome.IsGameOver)

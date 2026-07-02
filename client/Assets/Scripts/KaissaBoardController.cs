@@ -84,7 +84,7 @@ public sealed class KaissaBoardController : MonoBehaviour
             _selectedPiece.position += Vector3.up * 0.35f;
             SetGlow(_selectedPiece, true);
             ShowHints(square);
-            if (_selectClip != null) _audio.PlayOneShot(_selectClip);
+            if (KaissaSettings.Sound && _selectClip != null) _audio.PlayOneShot(_selectClip);
         }
         else if (square == _originSquare)
         {
@@ -142,7 +142,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         _ratingText.text = $"Rating {result.PlayerRating:0}  ({result.PlayerRatingChange:+0;-0})";
 
         var clip = result.Correct ? _correctClip : _wrongClip;
-        if (clip != null) _audio.PlayOneShot(clip);
+        if (KaissaSettings.Sound && clip != null) _audio.PlayOneShot(clip);
 
         yield return new WaitForSeconds(result.Correct ? 0.9f : 1.6f);
 
@@ -215,7 +215,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         _titleText.text = $"{card.PatternName}\n{card.Prompt}";
         _ratingText.text = $"Rating {card.PlayerRating:0}";
         RenderBoard(_board);
-        Board3D.OrientCamera(_board.WhiteToMove);
+        Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
     }
 
     private static void SetGlow(Transform piece, bool on)

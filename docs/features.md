@@ -49,9 +49,9 @@ Legend: ✅ built (core) · 🎨 needs client UI · ⏳ planned · 🚫 out of s
 
 ## Platform / meta
 
-- ⏳ Onboarding + rating calibration
-- ⏳ Settings (themes, sound, difficulty, accessibility)
-- ⏳ Cosmetic piece/board themes (free + optional cosmetics; never pay-to-win)
+- ✅🎨 Onboarding + rating calibration — `CalibrationSession`
+- ✅🎨 Settings (sound, board flip, board theme, piece style, reset) — `KaissaSettings` + Settings screen
+- ✅🎨 Cosmetic board themes + piece style (modelled/procedural); more sets = drop-in. Never pay-to-win.
 - ⏳ Cloud sync (v1.5), ML weakness prediction + generated content (v2)
 - ⏳ Mobile (embed engine for iOS)
 
