@@ -27,12 +27,14 @@ jobs:
       - name: Build (Windows 64-bit)
         shell: powershell
         run: |
-          & "$env:UNITY" -batchmode -quit -nographics -projectPath "client" -buildWindows64Player "build/Kaissa/Kaissa.exe" -logFile -
+          $out = "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe"
+          & "$env:UNITY" -batchmode -quit -nographics -projectPath "client" -buildWindows64Player "$out" -logFile -
           if ($LASTEXITCODE -ne 0) { throw "Unity build failed ($LASTEXITCODE)" }
+          if (-not (Test-Path "$env:GITHUB_WORKSPACE\build\Kaissa\Kaissa.exe")) { throw "Build output missing" }
 
       - name: Zip
         shell: powershell
-        run: Compress-Archive -Path build/Kaissa/* -DestinationPath "Kaissa-Windows-${{ github.ref_name }}.zip" -Force
+        run: Compress-Archive -Path "$env:GITHUB_WORKSPACE\build\Kaissa\*" -DestinationPath "$env:GITHUB_WORKSPACE\Kaissa-Windows-${{ github.ref_name }}.zip" -Force
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
