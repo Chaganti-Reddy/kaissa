@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.2 (alpha) — 2026-07-03
+
+- Restore the HDRI skybox and reflections in player builds. The panoramic skybox shader is only
+  referenced from code, so the build stripped it; it is now registered in Always Included Shaders.
+  A small editor helper (Kaissa > Ensure Always-Included Shaders) keeps the list correct.
+
 ## v0.1.1 (alpha) — 2026-07-03
 
 - Fix a crash that left the training screen blank in player builds: a code-only skybox shader was
