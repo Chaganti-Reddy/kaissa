@@ -13,6 +13,8 @@ public static class KaissaSettings
         public bool flip = true;
         public int boardTheme;      // index into Board3D.Themes
         public bool useModels = true; // modelled pieces vs procedural
+        public bool autoQueen;        // auto-promote to queen instead of showing a picker
+        public bool dragToMove = true; // allow dragging a piece (click-to-move always works too)
     }
 
     private static Data _data;
@@ -34,4 +36,6 @@ public static class KaissaSettings
     public static bool Flip { get => D.flip; set { D.flip = value; Save(); } }
     public static int BoardTheme { get => D.boardTheme; set { D.boardTheme = value; Save(); } }
     public static bool UseModels { get => D.useModels; set { D.useModels = value; Save(); } }
+    public static bool AutoQueen { get => D.autoQueen; set { D.autoQueen = value; Save(); } }
+    public static bool DragToMove { get => D.dragToMove; set { D.dragToMove = value; Save(); } }
 }

@@ -17,15 +17,14 @@ public sealed class KaissaGameController : MonoBehaviour
     private KaissaGame _game;
     private Transform _boardRoot;
     private bool _busy;
+    private string _lastMove;
 
-    private string _originSquare;
-    private Transform _selectedPiece;
+    private BoardInteractor _interactor;
+    private PieceAudio _audio;
 
     private Text _titleText;
     private Text _statusText;
     private Font _font;
-    private AudioSource _audio;
-    private AudioClip _moveClip;
 
     private static readonly Color LightSquare = new(0.87f, 0.80f, 0.64f);
     private static readonly Color DarkSquare = new(0.36f, 0.26f, 0.19f);
@@ -35,8 +34,10 @@ public sealed class KaissaGameController : MonoBehaviour
         _font = Hud.Font;
         SetUpCameraAndLight();
         BuildPostProcessing();
-        BuildAudio();
         BuildHud();
+        _audio = PieceAudio.Attach(gameObject);
+        _interactor = gameObject.AddComponent<BoardInteractor>();
+        _interactor.Init(uci => OnMove(uci), _audio);
 
         var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
         if (!File.Exists(enginePath))
@@ -63,82 +64,44 @@ public sealed class KaissaGameController : MonoBehaviour
 
         _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.";
         RenderBoard(_game.Board);
+        _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
     }
 
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-            return;
-        }
-
-        var mouse = Mouse.current;
-        if (_busy || _game == null || mouse == null || !mouse.leftButton.wasPressedThisFrame)
-            return;
-
-        var ray = Camera.main!.ScreenPointToRay(mouse.position.ReadValue());
-        if (!Physics.Raycast(ray, out var hit))
-            return;
-
-        var hitName = hit.transform.name;
-        if (hitName.Length < 2)
-            return;
-        var square = hitName.Substring(hitName.Length - 2);
-
-        if (_originSquare == null)
-        {
-            if (!hitName.StartsWith("pc_", StringComparison.Ordinal))
-                return;
-            if (!char.IsUpper(hitName[3]))
-                return; // you play White; can't move Black's pieces
-            _originSquare = square;
-            _selectedPiece = hit.transform;
-            _selectedPiece.position += Vector3.up * 0.35f;
-            SetGlow(_selectedPiece, true);
-            if (KaissaSettings.Sound && _moveClip != null) _audio.PlayOneShot(_moveClip);
-        }
-        else if (square == _originSquare)
-        {
-            if (_selectedPiece != null) { _selectedPiece.position -= Vector3.up * 0.35f; SetGlow(_selectedPiece, false); }
-            _originSquare = null;
-            _selectedPiece = null;
-        }
-        else
-        {
-            OnMove(_originSquare, square);
-        }
     }
 
-    private async void OnMove(string origin, string target)
+    // Invoked by the BoardInteractor with a fully-formed UCI move (including any promotion letter).
+    private async void OnMove(string uci)
     {
+        if (_busy || _game == null)
+            return;
         _busy = true;
-        _originSquare = null;
-        _selectedPiece = null;
-
-        var move = origin + target;
-        char moving = PieceCharAt(origin);
-        if ((moving == 'P' && target[1] == '8') || (moving == 'p' && target[1] == '1'))
-            move += "q";
+        _interactor.SetInputEnabled(false);
 
         try
         {
-            var outcome = await _game.PlayAsync(move);
+            var outcome = await _game.PlayAsync(uci);
             if (!outcome.Accepted)
             {
                 _statusText.text = "Illegal move — try again.";
-                _busy = false;
                 RenderBoard(_game.Board);
+                _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
+                _busy = false;
                 return;
             }
 
-            if (KaissaSettings.Sound && _moveClip != null) _audio.PlayOneShot(_moveClip);
+            _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove!;
             RenderBoard(outcome.Board);
-            HighlightMove(move);
-            if (!string.IsNullOrEmpty(outcome.BotMove)) HighlightMove(outcome.BotMove!);
+            if (!string.IsNullOrEmpty(outcome.BotMove))
+                _audio.PlayMove(); // the bot's reply; check is cued by OnBoardRendered
 
             if (outcome.IsGameOver)
             {
+                _audio.PlayGameEnd();
+                _interactor.OnBoardRendered(_boardRoot, outcome.Board, _lastMove, humanCanMove: false);
                 _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. Reviewing...";
                 var review = await _game.ReviewAsync();
                 _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. " +
@@ -147,6 +110,7 @@ public sealed class KaissaGameController : MonoBehaviour
             else
             {
                 _statusText.text = $"Bot played {outcome.BotMove}. Your move.";
+                _interactor.OnBoardRendered(_boardRoot, outcome.Board, _lastMove, humanCanMove: true);
             }
         }
         catch (Exception e)
@@ -156,27 +120,6 @@ public sealed class KaissaGameController : MonoBehaviour
         }
 
         _busy = false;
-    }
-
-    private char PieceCharAt(string square)
-    {
-        foreach (var p in _game.Board.Pieces)
-            if (p.Square == square)
-                return p.Piece;
-        return '\0';
-    }
-
-    private void HighlightMove(string uci)
-    {
-        if (uci.Length < 4 || _boardRoot == null)
-            return;
-        var color = new Color(0.95f, 0.85f, 0.35f); // soft amber for the last move
-        foreach (var sq in new[] { uci.Substring(0, 2), uci.Substring(2, 2) })
-        {
-            var tile = _boardRoot.Find($"sq_{sq}");
-            if (tile != null)
-                Paint(tile.gameObject, color);
-        }
     }
 
     private void RenderBoard(BoardView board)
@@ -210,34 +153,10 @@ public sealed class KaissaGameController : MonoBehaviour
             int rank = square.Square[1] - '1';
             bool white = char.IsUpper(square.Piece);
 
-            var piece = PieceModelLibrary.TryCreate(square.Piece, white) ?? PieceFactory.Create(square.Piece, white);
-            if (piece.GetComponent<Collider>() == null)
-            {
-                var capsule = piece.AddComponent<CapsuleCollider>();
-                capsule.center = new Vector3(0f, 0.6f, 0f);
-                capsule.height = 1.4f;
-                capsule.radius = 0.35f;
-            }
+            var piece = Pieces.Create(square.Piece, white);
             piece.name = $"pc_{square.Piece}_{square.Square}";
             piece.transform.SetParent(_boardRoot);
-            piece.transform.position = new Vector3(file, 0.12f, rank);
-        }
-    }
-
-    private static void SetGlow(Transform piece, bool on)
-    {
-        foreach (var renderer in piece.GetComponentsInChildren<Renderer>())
-        {
-            var m = renderer.material;
-            if (on)
-            {
-                m.EnableKeyword("_EMISSION");
-                m.SetColor("_EmissionColor", new Color(0.9f, 0.8f, 0.3f) * 0.8f);
-            }
-            else
-            {
-                m.SetColor("_EmissionColor", Color.black);
-            }
+            piece.transform.position = new Vector3(file, 0.075f, rank); // seat base on the tile surface
         }
     }
 
@@ -274,22 +193,6 @@ public sealed class KaissaGameController : MonoBehaviour
         rt.anchoredPosition = pos;
         rt.sizeDelta = sizeDelta;
         return text;
-    }
-
-    private void BuildAudio()
-    {
-        _audio = gameObject.AddComponent<AudioSource>();
-        _audio.playOnAwake = false;
-        int sampleRate = 44100;
-        int samples = (int)(sampleRate * 0.08f);
-        var data = new float[samples];
-        for (int i = 0; i < samples; i++)
-        {
-            float t = (float)i / samples;
-            data[i] = Mathf.Sin(2f * Mathf.PI * 330f * i / sampleRate) * Mathf.Exp(-4f * t) * 0.5f;
-        }
-        _moveClip = AudioClip.Create("move", samples, 1, sampleRate, false);
-        _moveClip.SetData(data, 0);
     }
 
     private void OnDestroy()

@@ -9,7 +9,11 @@ using UnityEngine.Rendering;
 //   Unity -batchmode -quit -projectPath client -executeMethod ShaderIncluder.EnsureAlwaysIncluded
 public static class ShaderIncluder
 {
-    private static readonly string[] Required = { "Skybox/Panoramic" };
+    private static readonly string[] Required =
+    {
+        "Skybox/Panoramic",                  // HDRI skybox (SceneEnvironment)
+        "Universal Render Pipeline/Unlit",   // translucent board highlight overlays (BoardFx)
+    };
 
     [MenuItem("Kaissa/Ensure Always-Included Shaders")]
     public static void EnsureAlwaysIncluded()

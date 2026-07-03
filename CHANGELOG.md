@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.5 (alpha) — 2026-07-03
+
+- New board interaction on Play vs bot, built as a reusable layer for all board screens:
+  - Drag a piece to move, or click-to-move — both work together.
+  - Legal-move dots on empty squares and markers on capturable pieces, shown when a piece is picked
+    up; illegal drops snap back.
+  - Selected-square, last-move, and check (red king) highlights; a hover highlight while dragging.
+  - A promotion picker (queen/rook/bishop/knight), with an auto-queen setting.
+  - Distinct sounds for move, capture, castle, check, promotion, and illegal moves.
+- Play now normalizes its pieces like the other screens (consistent Staunton sizing and seating).
+
 ## v0.1.4 (alpha) — 2026-07-03
 
 - Top the king with a cross finial so it is no longer mistaken for the queen (both models otherwise
