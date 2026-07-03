@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.3 (alpha) — 2026-07-03
+
+- Fix inconsistent, abnormally sized pieces. Every piece now runs through one path that scales it to
+  a consistent Staunton height, seats its base on the board, centres it on the square, turns knights
+  to face up the board, and applies one clean ivory/obsidian material. Used by all board screens.
+- Add an editor helper (Kaissa > preview) that renders the piece set to an image for tuning.
+
 ## v0.1.2 (alpha) — 2026-07-03
 
 - Restore the HDRI skybox and reflections in player builds. The panoramic skybox shader is only

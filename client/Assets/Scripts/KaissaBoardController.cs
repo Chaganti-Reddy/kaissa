@@ -104,7 +104,7 @@ public sealed class KaissaBoardController : MonoBehaviour
             move += "q";
 
         var piece = _selectedPiece;
-        var toPos = new Vector3(target[0] - 'a', 0.12f, target[1] - '1');
+        var toPos = new Vector3(target[0] - 'a', 0.075f, target[1] - '1');
         _originSquare = null;
         _selectedPiece = null;
         ClearHints();
@@ -288,17 +288,10 @@ public sealed class KaissaBoardController : MonoBehaviour
             int rank = square.Square[1] - '1';
             bool white = char.IsUpper(square.Piece);
 
-            var piece = PieceModelLibrary.TryCreate(square.Piece, white) ?? PieceFactory.Create(square.Piece, white);
-            if (piece.GetComponent<Collider>() == null)
-            {
-                var capsule = piece.AddComponent<CapsuleCollider>();
-                capsule.center = new Vector3(0f, 0.6f, 0f);
-                capsule.height = 1.4f;
-                capsule.radius = 0.35f;
-            }
+            var piece = Pieces.Create(square.Piece, white);
             piece.name = $"pc_{square.Piece}_{square.Square}";
             piece.transform.SetParent(_boardRoot);
-            piece.transform.position = new Vector3(file, 0.12f, rank);
+            piece.transform.position = new Vector3(file, 0.075f, rank); // seat base on the tile surface
         }
     }
 
