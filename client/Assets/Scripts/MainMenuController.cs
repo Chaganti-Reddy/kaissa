@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,9 +10,18 @@ using UnityEngine.UI;
 public sealed class MainMenuController : MonoBehaviour
 {
     private Font _font;
+    private static bool _startedWindowed;
 
     private void Start()
     {
+        // Launch windowed so a first-time player isn't trapped in fullscreen with no obvious exit.
+        // Only forced once per run, so returning to the menu doesn't fight a manual resize.
+        if (!_startedWindowed)
+        {
+            Screen.SetResolution(1280, 720, FullScreenMode.Windowed);
+            _startedWindowed = true;
+        }
+
         _font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
         EnsureEventSystem();
 
@@ -41,6 +51,23 @@ public sealed class MainMenuController : MonoBehaviour
         // First-run calibration + settings
         MakeButton(canvas, "Calibrate my level", new Vector2(-100f, -200f), () => SceneManager.LoadScene("Calibrate"), 200f);
         MakeButton(canvas, "Settings", new Vector2(115f, -200f), () => SceneManager.LoadScene("Settings"), 200f);
+
+        MakeButton(canvas, "Quit", new Vector2(0f, -270f), Quit, 200f);
+    }
+
+    private void Update()
+    {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            Quit();
+    }
+
+    private static void Quit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     private static void EnsureEventSystem()

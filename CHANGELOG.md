@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.1.1 (alpha) — 2026-07-03
+
+- Fix a crash that left the training screen blank in player builds: a code-only skybox shader was
+  stripped from the build, so applying the HDRI environment threw. It now falls back to the coded
+  lighting when the shader is absent.
+- Launch windowed and add a Quit button and Esc-to-quit on the main menu, so the app no longer
+  traps you in fullscreen.
+- Set the company and product name to Kaissa (fixes the window title and the save-file location)
+  and add an application icon.
+- Ship a Windows installer (Start-menu and desktop shortcuts, uninstaller) alongside the portable
+  zip, and drop the debug-symbol folder from the release.
+
 ## v0.1 (alpha) — 2026-07-02
 
 First alpha of Kaissa, a free, open-source 3D chess training game.

@@ -55,12 +55,38 @@ jobs:
           Get-Process -Name Unity -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
           if (-not $ok) { throw "Unity build failed after retries" }
 
+      - name: Prune debug symbols
+        shell: powershell
+        run: |
+          # Unity emits *_BurstDebugInformation_DoNotShip next to the player; not for release.
+          Get-ChildItem "$env:GITHUB_WORKSPACE\build\Kaissa" -Directory -Filter '*_DoNotShip' -ErrorAction SilentlyContinue |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
       - name: Zip
         shell: powershell
         run: Compress-Archive -Path "$env:GITHUB_WORKSPACE\build\Kaissa\*" -DestinationPath "$env:GITHUB_WORKSPACE\Kaissa-Windows-${{ github.ref_name }}.zip" -Force
 
+      - name: Build installer (Inno Setup)
+        shell: powershell
+        run: |
+          $iscc = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source }
+          if (-not $iscc) {
+            Write-Warning "Inno Setup not found; skipping installer. Zip is still published."
+            exit 0
+          }
+          & "$iscc" "/DMyAppVersion=${{ github.ref_name }}" "installer\kaissa.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed ($LASTEXITCODE)" }
+          Get-ChildItem "$env:GITHUB_WORKSPACE\installer-out" | Format-Table -AutoSize
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: Kaissa-Windows-${{ github.ref_name }}.zip
+          files: |
+            Kaissa-Windows-${{ github.ref_name }}.zip
+            installer-out/Kaissa-Setup-${{ github.ref_name }}.exe
           generate_release_notes: true
+          fail_on_unmatched_files: false

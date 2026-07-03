@@ -46,3 +46,12 @@ Thumbs.db
 [Ll]ogs/
 [Uu]serSettings/
 *.csproj.meta
+
+# Player build output + installer artifacts (produced by release.yml, or local verify builds)
+/build/
+/build-verify/
+/installer-out/
+/installer/installer-out/
+unity-build.log
+verify-*.log
+verify-*.png

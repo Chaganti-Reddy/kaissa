@@ -12,7 +12,16 @@ public static class SceneEnvironment
         if (texture == null)
             return; // HDRI not added yet
 
-        var skybox = new Material(Shader.Find("Skybox/Panoramic"));
+        // Shader.Find only sees shaders the build kept. Skybox/Panoramic is referenced solely from
+        // code, so it gets stripped from player builds and Find returns null — guard it, or the
+        // Material ctor throws and takes the whole scene down (blank screen). Falls back to the
+        // coded key/fill lighting set up by the caller. Add it to Graphics > Always Included Shaders
+        // to get the HDRI skybox in builds.
+        var skyShader = Shader.Find("Skybox/Panoramic");
+        if (skyShader == null)
+            return;
+
+        var skybox = new Material(skyShader);
         skybox.SetTexture("_MainTex", texture);
         skybox.SetFloat("_Mapping", 1f);   // latitude-longitude (equirectangular)
         skybox.SetFloat("_ImageType", 0f); // 360 degrees
