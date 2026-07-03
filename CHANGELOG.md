@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.4 (alpha) — 2026-07-03
+
+- Top the king with a cross finial so it is no longer mistaken for the queen (both models otherwise
+  have a crown).
+- Keep the window title bar dark, including when the window loses focus, instead of reverting to a
+  white inactive bar.
+- The installer now behaves like an in-place update when a version is already installed: it skips
+  the welcome, directory, and ready pages, keeps the previous install location, and closes a running
+  Kaissa automatically. First-time installs are unchanged. The version is also stamped into the
+  installer and executable resources.
+
 ## v0.1.3 (alpha) — 2026-07-03
 
 - Fix inconsistent, abnormally sized pieces. Every piece now runs through one path that scales it to

@@ -31,6 +31,8 @@ public static class Pieces
 
         Normalize(root, model.transform, piece);
         Orient(model.transform, piece, white);
+        if (char.ToUpperInvariant(piece) == 'K')
+            AddKingCross(root);
         ApplyMaterial(root, white);
 
         // One clean click target on the root; drop any colliders the source mesh brought.
@@ -86,6 +88,23 @@ public static class Pieces
         if (char.ToUpperInvariant(piece) != 'N')
             return;
         model.localRotation = Quaternion.Euler(0f, white ? 0f : 180f, 0f) * model.localRotation;
+    }
+
+    // The modelled king and queen both have crown tops, which read as the same piece. Add a cross
+    // finial above the king's crown so it is unmistakable (a real Staunton king is topped by a cross).
+    private static void AddKingCross(GameObject root)
+    {
+        float top = TargetHeight('K'); // piece is normalized to this height, base at y = 0
+        AddBar(root, new Vector3(0f, top + 0.11f, 0f), new Vector3(0.055f, 0.24f, 0.055f)); // vertical
+        AddBar(root, new Vector3(0f, top + 0.09f, 0f), new Vector3(0.17f, 0.055f, 0.055f));  // horizontal
+    }
+
+    private static void AddBar(GameObject root, Vector3 localPos, Vector3 scale)
+    {
+        var bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        bar.transform.SetParent(root.transform, false);
+        bar.transform.localPosition = localPos;
+        bar.transform.localScale = scale;
     }
 
     private static Bounds MeshBounds(GameObject root)
