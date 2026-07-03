@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Kaissa.Chess.Rules;
 using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -18,23 +19,16 @@ public sealed class KaissaBoardController : MonoBehaviour
     private KaissaTrainer _trainer;
     private Transform _boardRoot;
     private BoardView _board;
-    private IReadOnlyList<string> _legalMoves = Array.Empty<string>();
-    private readonly List<GameObject> _hints = new();
     private float _cardShownTime;
+    private bool _busy;
 
-    private string _originSquare;
-    private Transform _selectedPiece;
-    private bool _awaitingFeedback;
+    private BoardInteractor _interactor;
+    private PieceAudio _audio;
 
     private Text _titleText;
     private Text _ratingText;
     private Text _feedbackText;
     private Font _font;
-
-    private AudioSource _audio;
-    private AudioClip _selectClip;
-    private AudioClip _correctClip;
-    private AudioClip _wrongClip;
 
     private static readonly Color LightSquare = new(0.87f, 0.80f, 0.64f);
     private static readonly Color DarkSquare = new(0.36f, 0.26f, 0.19f);
@@ -47,90 +41,36 @@ public sealed class KaissaBoardController : MonoBehaviour
         _trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
         SetUpCameraAndLight();
         BuildPostProcessing();
-        BuildAudio();
         BuildHud();
+        _audio = PieceAudio.Attach(gameObject);
+        _interactor = gameObject.AddComponent<BoardInteractor>();
+        _interactor.Init(uci => OnPlayerMove(uci), _audio);
         DealNext();
     }
 
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-            return;
-        }
-
-        var mouse = Mouse.current;
-        if (_awaitingFeedback || mouse == null || !mouse.leftButton.wasPressedThisFrame || _board == null)
-            return;
-
-        var ray = Camera.main!.ScreenPointToRay(mouse.position.ReadValue());
-        if (!Physics.Raycast(ray, out var hit))
-            return;
-
-        var hitName = hit.transform.name;
-        if (hitName.Length < 2)
-            return;
-        var square = hitName.Substring(hitName.Length - 2);
-
-        if (_originSquare == null)
-        {
-            if (!hitName.StartsWith("pc_", StringComparison.Ordinal))
-                return;
-            if (char.IsUpper(hitName[3]) != _board.WhiteToMove)
-                return; // only the side to move can be selected
-            _originSquare = square;
-            _selectedPiece = hit.transform;
-            _selectedPiece.position += Vector3.up * 0.35f;
-            SetGlow(_selectedPiece, true);
-            ShowHints(square);
-            if (KaissaSettings.Sound && _selectClip != null) _audio.PlayOneShot(_selectClip);
-        }
-        else if (square == _originSquare)
-        {
-            Deselect();
-        }
-        else
-        {
-            SubmitMove(_originSquare, square);
-        }
     }
 
-    private void SubmitMove(string origin, string target)
+    // Called by the BoardInteractor only for legal moves (illegal ones are rejected before this),
+    // so the trainer never grades an impossible move. Shows the played move, then grades and advances.
+    private void OnPlayerMove(string uci)
     {
-        var move = origin + target;
-        char moving = PieceAt(origin);
-        if ((moving == 'P' && target[1] == '8') || (moving == 'p' && target[1] == '1'))
-            move += "q";
-
-        var piece = _selectedPiece;
-        var toPos = new Vector3(target[0] - 'a', 0.075f, target[1] - '1');
-        _originSquare = null;
-        _selectedPiece = null;
-        ClearHints();
-        StartCoroutine(PlayMove(piece, toPos, move));
-    }
-
-    private IEnumerator PlayMove(Transform piece, Vector3 toPos, string move)
-    {
-        _awaitingFeedback = true;
-
-        // Slide the piece to the target so the move reads as an action, not a jump.
-        if (piece != null)
-        {
-            SetGlow(piece, false);
-            var from = piece.position;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.2f)
-            {
-                piece.position = Vector3.Lerp(from, toPos, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t)));
-                yield return null;
-            }
-            piece.position = toPos;
-        }
+        if (_busy || _board == null)
+            return;
+        _busy = true;
+        _interactor.SetInputEnabled(false);
 
         var thinkTime = TimeSpan.FromSeconds(Time.time - _cardShownTime);
-        var result = _trainer.Answer(move, thinkTime);
+        var result = _trainer.Answer(uci, thinkTime);
         KaissaProgress.Save(_trainer.ExportProgress());
+
+        // Render the position after the move so click and drag both show the move being made.
+        var afterFen = ApplyMove(_board.Fen, uci);
+        if (afterFen != null)
+            RenderBoard(BoardView.FromFen(afterFen));
 
         var color = result.Correct ? CorrectColor : WrongColor;
         HighlightSolution(result.Solutions.Count > 0 ? result.Solutions[0] : null, color);
@@ -141,62 +81,30 @@ public sealed class KaissaBoardController : MonoBehaviour
             : $"Missed — best was {string.Join(", ", result.Solutions)}";
         _ratingText.text = $"Rating {result.PlayerRating:0}  ({result.PlayerRatingChange:+0;-0})";
 
-        var clip = result.Correct ? _correctClip : _wrongClip;
-        if (KaissaSettings.Sound && clip != null) _audio.PlayOneShot(clip);
+        if (result.Correct) _audio.PlayCorrect();
+        else _audio.PlayWrong();
 
-        yield return new WaitForSeconds(result.Correct ? 0.9f : 1.6f);
+        StartCoroutine(NextAfterDelay(result.Correct ? 0.9f : 1.6f));
+    }
 
+    private static string ApplyMove(string fen, string uci)
+    {
+        try
+        {
+            var game = ChessGame.FromFen(fen);
+            if (game.TryMakeMove(uci))
+                return game.Fen;
+        }
+        catch { /* fall through */ }
+        return null;
+    }
+
+    private IEnumerator NextAfterDelay(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
         _feedbackText.text = string.Empty;
-        _awaitingFeedback = false;
+        _busy = false;
         DealNext();
-    }
-
-    private void Deselect()
-    {
-        if (_selectedPiece != null)
-        {
-            _selectedPiece.position -= Vector3.up * 0.35f;
-            SetGlow(_selectedPiece, false);
-        }
-        ClearHints();
-        _originSquare = null;
-        _selectedPiece = null;
-    }
-
-    private void ShowHints(string origin)
-    {
-        ClearHints();
-        var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-        var color = new Color(0.30f, 0.90f, 0.45f);
-
-        foreach (var uci in _legalMoves)
-        {
-            if (!uci.StartsWith(origin, StringComparison.Ordinal) || uci.Length < 4)
-                continue;
-            int file = uci[2] - 'a';
-            int rank = uci[3] - '1';
-
-            var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Destroy(disc.GetComponent<Collider>()); // let clicks pass through to the tile
-            disc.transform.SetParent(_boardRoot);
-            disc.transform.localScale = new Vector3(0.34f, 0.03f, 0.34f);
-            disc.transform.position = new Vector3(file, 0.28f, rank);
-            var mat = new Material(shader);
-            mat.color = color;
-            mat.SetColor("_BaseColor", color);
-            mat.EnableKeyword("_EMISSION");
-            mat.SetColor("_EmissionColor", color * 0.6f);
-            disc.GetComponent<Renderer>().material = mat;
-            _hints.Add(disc);
-        }
-    }
-
-    private void ClearHints()
-    {
-        foreach (var hint in _hints)
-            if (hint != null)
-                Destroy(hint);
-        _hints.Clear();
     }
 
     private void DealNext()
@@ -205,34 +113,17 @@ public sealed class KaissaBoardController : MonoBehaviour
         if (card == null)
         {
             _titleText.text = "No more cards.";
+            _interactor.SetInputEnabled(false);
             return;
         }
 
         _board = card.Board;
-        _legalMoves = card.LegalMoves;
-        ClearHints();
         _cardShownTime = Time.time;
         _titleText.text = $"{card.PatternName}\n{card.Prompt}";
         _ratingText.text = $"Rating {card.PlayerRating:0}";
         RenderBoard(_board);
         Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
-    }
-
-    private static void SetGlow(Transform piece, bool on)
-    {
-        foreach (var renderer in piece.GetComponentsInChildren<Renderer>())
-        {
-            var m = renderer.material;
-            if (on)
-            {
-                m.EnableKeyword("_EMISSION");
-                m.SetColor("_EmissionColor", new Color(0.9f, 0.8f, 0.3f) * 0.8f);
-            }
-            else
-            {
-                m.SetColor("_EmissionColor", Color.black);
-            }
-        }
+        _interactor.OnBoardRendered(_boardRoot, _board, lastMoveUci: null, humanCanMove: true);
     }
 
     private void HighlightSolution(string uciSolution, Color color)
@@ -246,14 +137,6 @@ public sealed class KaissaBoardController : MonoBehaviour
             if (tile != null)
                 Paint(tile.gameObject, color);
         }
-    }
-
-    private char PieceAt(string square)
-    {
-        foreach (var p in _board.Pieces)
-            if (p.Square == square)
-                return p.Piece;
-        return '\0';
     }
 
     private void RenderBoard(BoardView board)
@@ -330,32 +213,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         rt.anchoredPosition = pos;
         rt.sizeDelta = sizeDelta;
         return text;
-    }
-
-    private void BuildAudio()
-    {
-        _audio = gameObject.AddComponent<AudioSource>();
-        _audio.playOnAwake = false;
-        _selectClip = Tone(440f, 0.08f);
-        _correctClip = Tone(880f, 0.18f);
-        _wrongClip = Tone(160f, 0.25f);
-    }
-
-    private static AudioClip Tone(float frequency, float duration)
-    {
-        const int sampleRate = 44100;
-        int samples = Mathf.Max(1, (int)(sampleRate * duration));
-        var data = new float[samples];
-        for (int i = 0; i < samples; i++)
-        {
-            float t = (float)i / samples;
-            float envelope = Mathf.Exp(-4f * t); // quick decay
-            data[i] = Mathf.Sin(2f * Mathf.PI * frequency * i / sampleRate) * envelope * 0.5f;
-        }
-
-        var clip = AudioClip.Create("tone", samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
     }
 
     private static void Paint(GameObject go, Color color)

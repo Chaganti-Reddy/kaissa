@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.6 (alpha) — 2026-07-03
+
+- Training no longer accepts illegal moves. It now uses the same interaction layer as Play, which
+  validates moves against the position: an illegal move (for example a pawn pushed straight into an
+  enemy pawn) snaps back with an error sound instead of being played and graded "wrong." Training also
+  gains drag-to-move, legal-move dots, selected/last-move/check highlights, and the distinct sounds.
+- Installer upgrades are now near-silent: the shortcut is created without a "Select Additional Tasks"
+  prompt, so installing over an existing version shows only the progress and finished pages (no
+  welcome, directory, tasks, or ready pages). The Windows UAC prompt and SmartScreen warning are
+  operating-system prompts for unsigned apps and are not part of the installer.
+
 ## v0.1.5 (alpha) — 2026-07-03
 
 - New board interaction on Play vs bot, built as a reusable layer for all board screens:

@@ -7,7 +7,7 @@ using UnityEngine;
 public sealed class PieceAudio : MonoBehaviour
 {
     private AudioSource _source;
-    private AudioClip _select, _move, _capture, _castle, _check, _promote, _illegal, _gameEnd;
+    private AudioClip _select, _move, _capture, _castle, _check, _promote, _illegal, _gameEnd, _correct, _wrong;
 
     public static PieceAudio Attach(GameObject host)
     {
@@ -30,6 +30,8 @@ public sealed class PieceAudio : MonoBehaviour
         _promote = Sequence(new[] { (523f, 0f), (659f, 0.08f), (784f, 0.16f) }, 0.14f, 0.03f, 0.42f);
         _illegal = Tock(110f, 0.18f, 0.15f, 0.45f);
         _gameEnd = Sequence(new[] { (392f, 0f), (523f, 0.12f), (659f, 0.24f) }, 0.2f, 0.02f, 0.4f);
+        _correct = Sequence(new[] { (659f, 0f), (880f, 0.09f) }, 0.13f, 0.03f, 0.40f);
+        _wrong   = Sequence(new[] { (220f, 0f), (150f, 0.11f) }, 0.17f, 0.20f, 0.45f);
     }
 
     public void PlaySelect()  => Play(_select);
@@ -40,6 +42,8 @@ public sealed class PieceAudio : MonoBehaviour
     public void PlayPromote() => Play(_promote);
     public void PlayIllegal() => Play(_illegal);
     public void PlayGameEnd() => Play(_gameEnd);
+    public void PlayCorrect() => Play(_correct);
+    public void PlayWrong()   => Play(_wrong);
 
     private void Play(AudioClip clip)
     {
