@@ -11,10 +11,11 @@ public sealed class OpeningController : MonoBehaviour
     private OpeningLine _line;
     private OpeningTrainer _trainer;
     private Transform _boardRoot;
+    private BoardView _view;
     private Text _prompt;
 
-    private string _originSquare;
-    private Transform _selectedPiece;
+    private BoardInteractor _interactor;
+    private PieceAudio _audio;
 
     private void Start()
     {
@@ -26,6 +27,10 @@ public sealed class OpeningController : MonoBehaviour
         _prompt = Hud.Text(canvas, "", 26, TextAnchor.UpperCenter, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(1000f, 60f));
         Hud.Text(canvas, "Play the line. Esc — menu", 18, TextAnchor.LowerCenter, new Vector2(0.5f, 0f), new Vector2(0f, 30f), new Vector2(800f, 30f));
 
+        _audio = PieceAudio.Attach(gameObject);
+        _interactor = gameObject.AddComponent<BoardInteractor>();
+        _interactor.Init(uci => OnPlayerMove(uci), _audio);
+
         RenderBoard();
     }
 
@@ -33,52 +38,34 @@ public sealed class OpeningController : MonoBehaviour
     {
         if (_boardRoot != null)
             Destroy(_boardRoot.gameObject);
-        _boardRoot = Board3D.Render(BoardView.FromFen(_trainer.Fen));
+        _view = BoardView.FromFen(_trainer.Fen);
+        _boardRoot = Board3D.Render(_view);
         _prompt.text = _trainer.IsComplete
             ? $"{_line.Name}: complete!"
             : $"{_line.Name} — play {_trainer.ExpectedMove}";
+        _interactor.OnBoardRendered(_boardRoot, _view, lastMoveUci: null, humanCanMove: !_trainer.IsComplete);
     }
 
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-            return;
-        }
+    }
 
-        var mouse = Mouse.current;
-        if (_trainer.IsComplete || mouse == null || !mouse.leftButton.wasPressedThisFrame)
+    // The interactor only reports legal moves; here we additionally require the book move.
+    private void OnPlayerMove(string uci)
+    {
+        if (_trainer.IsComplete)
             return;
-
-        var ray = Camera.main!.ScreenPointToRay(mouse.position.ReadValue());
-        if (!Physics.Raycast(ray, out var hit))
-            return;
-
-        var name = hit.transform.name;
-        if (name.Length < 2)
-            return;
-        var square = name.Substring(name.Length - 2);
-
-        if (_originSquare == null)
+        if (_trainer.Play(uci))
         {
-            if (!name.StartsWith("pc_", StringComparison.Ordinal))
-                return;
-            if (char.IsUpper(name[3]) != BoardView.FromFen(_trainer.Fen).WhiteToMove)
-                return; // only the side to move
-            _originSquare = square;
-            _selectedPiece = hit.transform;
-            _selectedPiece.position += Vector3.up * 0.35f;
+            RenderBoard();
         }
         else
         {
-            var move = _originSquare + square;
-            _originSquare = null;
-            _selectedPiece = null;
-            if (_trainer.Play(move))
-                RenderBoard();
-            else
-                _prompt.text = $"{_line.Name} — not the book move. Play {_trainer.ExpectedMove}";
+            _audio.PlayWrong();
+            RenderBoard(); // reset piece positions on the current line position
+            _prompt.text = $"{_line.Name} — not the book move. Play {_trainer.ExpectedMove}";
         }
     }
 }

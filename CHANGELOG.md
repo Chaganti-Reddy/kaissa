@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.7 (alpha) — 2026-07-03
+
+- Puzzle Rush and Openings now use the same interaction layer as Play and Training: they reject
+  illegal moves (snap-back with an error sound) and gain drag-to-move, legal-move dots,
+  selected/last-move/check highlights, and distinct sounds; their pieces are normalized too. Every
+  move-making screen now shares this interaction (Endgames play through the Play screen).
+
 ## v0.1.6 (alpha) — 2026-07-03
 
 - Training no longer accepts illegal moves. It now uses the same interaction layer as Play, which

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
 using UnityEngine;
@@ -15,10 +16,10 @@ public sealed class RushController : MonoBehaviour
     private BoardView _board;
     private Scenario _current;
     private float _shownTime;
-
-    private string _originSquare;
-    private Transform _selectedPiece;
     private bool _busy;
+
+    private BoardInteractor _interactor;
+    private PieceAudio _audio;
 
     private Text _hudText;
     private Text _feedbackText;
@@ -34,6 +35,9 @@ public sealed class RushController : MonoBehaviour
         _font = Hud.Font;
         SetUpCameraAndLight();
         BuildHud();
+        _audio = PieceAudio.Attach(gameObject);
+        _interactor = gameObject.AddComponent<BoardInteractor>();
+        _interactor.Init(uci => OnPlayerMove(uci), _audio);
         _rush = RushSession.CreateDefault(startRating: 800, lives: 3);
         DealNext();
     }
@@ -41,58 +45,35 @@ public sealed class RushController : MonoBehaviour
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-            return;
-        }
-
-        var mouse = Mouse.current;
-        if (_busy || _rush.IsOver || _board == null || mouse == null || !mouse.leftButton.wasPressedThisFrame)
-            return;
-
-        var ray = Camera.main!.ScreenPointToRay(mouse.position.ReadValue());
-        if (!Physics.Raycast(ray, out var hit))
-            return;
-
-        var hitName = hit.transform.name;
-        if (hitName.Length < 2)
-            return;
-        var square = hitName.Substring(hitName.Length - 2);
-
-        if (_originSquare == null)
-        {
-            if (!hitName.StartsWith("pc_", StringComparison.Ordinal))
-                return;
-            if (char.IsUpper(hitName[3]) != _board.WhiteToMove)
-                return; // only the side to move
-            _originSquare = square;
-            _selectedPiece = hit.transform;
-            _selectedPiece.position += Vector3.up * 0.35f;
-        }
-        else if (square == _originSquare)
-        {
-            if (_selectedPiece != null) _selectedPiece.position -= Vector3.up * 0.35f;
-            _originSquare = null;
-            _selectedPiece = null;
-        }
-        else
-        {
-            Submit(_originSquare, square);
-        }
     }
 
-    private void Submit(string origin, string target)
+    // Called by the BoardInteractor only for legal moves; illegal ones are rejected before grading.
+    private void OnPlayerMove(string uci)
     {
-        var move = origin + target;
-        char moving = PieceAt(origin);
-        if ((moving == 'P' && target[1] == '8') || (moving == 'p' && target[1] == '1'))
-            move += "q";
+        if (_busy || _rush.IsOver || _board == null)
+            return;
+        _interactor.SetInputEnabled(false);
 
-        _originSquare = null;
-        _selectedPiece = null;
+        var result = _rush.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime));
 
-        var result = _rush.Submit(move, TimeSpan.FromSeconds(Time.time - _shownTime));
+        var afterFen = ApplyMove(_board.Fen, uci);
+        if (afterFen != null)
+            RenderBoard(BoardView.FromFen(afterFen));
+
         StartCoroutine(FeedbackThenNext(result));
+    }
+
+    private static string ApplyMove(string fen, string uci)
+    {
+        try
+        {
+            var game = ChessGame.FromFen(fen);
+            if (game.TryMakeMove(uci))
+                return game.Fen;
+        }
+        catch { /* fall through */ }
+        return null;
     }
 
     private IEnumerator FeedbackThenNext(RushResult result)
@@ -101,6 +82,9 @@ public sealed class RushController : MonoBehaviour
         var color = result.Correct ? CorrectColor : WrongColor;
         if (result.Solutions.Count > 0)
             HighlightSquares(result.Solutions[0], color);
+
+        if (result.Correct) _audio.PlayCorrect();
+        else _audio.PlayWrong();
 
         _feedbackText.color = color;
         _feedbackText.text = result.Correct ? "Correct!" : $"Missed — {string.Join(", ", result.Solutions)}";
@@ -132,18 +116,11 @@ public sealed class RushController : MonoBehaviour
         UpdateHud();
         RenderBoard(_board);
         Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
+        _interactor.OnBoardRendered(_boardRoot, _board, lastMoveUci: null, humanCanMove: true);
     }
 
     private void UpdateHud() =>
         _hudText.text = $"Score {_rush.Score}    Lives {_rush.Lives}    Streak {_rush.Streak}";
-
-    private char PieceAt(string square)
-    {
-        foreach (var p in _board.Pieces)
-            if (p.Square == square)
-                return p.Piece;
-        return '\0';
-    }
 
     private void HighlightSquares(string uci, Color color)
     {
@@ -188,17 +165,10 @@ public sealed class RushController : MonoBehaviour
             int rank = square.Square[1] - '1';
             bool white = char.IsUpper(square.Piece);
 
-            var piece = PieceModelLibrary.TryCreate(square.Piece, white) ?? PieceFactory.Create(square.Piece, white);
-            if (piece.GetComponent<Collider>() == null)
-            {
-                var capsule = piece.AddComponent<CapsuleCollider>();
-                capsule.center = new Vector3(0f, 0.6f, 0f);
-                capsule.height = 1.4f;
-                capsule.radius = 0.35f;
-            }
+            var piece = Pieces.Create(square.Piece, white);
             piece.name = $"pc_{square.Piece}_{square.Square}";
             piece.transform.SetParent(_boardRoot);
-            piece.transform.position = new Vector3(file, 0.12f, rank);
+            piece.transform.position = new Vector3(file, 0.075f, rank); // seat base on the tile surface
         }
     }
 
