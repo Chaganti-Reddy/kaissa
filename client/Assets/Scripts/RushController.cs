@@ -25,8 +25,6 @@ public sealed class RushController : MonoBehaviour
     private Text _feedbackText;
     private Font _font;
 
-    private static readonly Color LightSquare = new(0.87f, 0.80f, 0.64f);
-    private static readonly Color DarkSquare = new(0.36f, 0.26f, 0.19f);
     private static readonly Color CorrectColor = new(0.30f, 0.85f, 0.45f);
     private static readonly Color WrongColor = new(0.92f, 0.33f, 0.33f);
 
@@ -148,6 +146,7 @@ public sealed class RushController : MonoBehaviour
         Destroy(basePlate.GetComponent<Collider>());
         Paint(basePlate, new Color(0.08f, 0.08f, 0.10f));
 
+        var theme = Board3D.Themes[Mathf.Clamp(KaissaSettings.BoardTheme, 0, Board3D.Themes.Length - 1)];
         for (int file = 0; file < 8; file++)
         for (int rank = 0; rank < 8; rank++)
         {
@@ -156,7 +155,7 @@ public sealed class RushController : MonoBehaviour
             tile.transform.SetParent(_boardRoot);
             tile.transform.localScale = new Vector3(1f, 0.15f, 1f);
             tile.transform.position = new Vector3(file, 0f, rank);
-            Paint(tile, (file + rank) % 2 == 0 ? DarkSquare : LightSquare);
+            Paint(tile, (file + rank) % 2 == 0 ? theme.Dark : theme.Light);
         }
 
         foreach (var square in board.Pieces)

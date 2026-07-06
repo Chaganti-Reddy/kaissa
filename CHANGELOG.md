@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.8 (alpha) — 2026-07-03
+
+- Settings add move input (drag or click / click only) and auto-queen, alongside the existing sound,
+  board flip, board theme, and piece style options.
+- The board theme now applies to every screen. Play, Training, and Puzzle Rush previously always used
+  the brown board; they now honor the chosen theme like the Openings and Endgame screens.
+
 ## v0.1.7 (alpha) — 2026-07-03
 
 - Puzzle Rush and Openings now use the same interaction layer as Play and Training: they reject
