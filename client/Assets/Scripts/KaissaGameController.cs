@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
@@ -25,6 +26,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private Text _titleText;
     private Text _statusText;
+    private Text _moveListText;
     private Font _font;
 
     private Transform _pickerCanvas;
@@ -109,6 +111,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N: new game   ·   R: resign   ·   U: takeback";
         RenderBoard(_game.Board);
         _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
+        UpdateMoveList();
     }
 
     private void Update()
@@ -135,6 +138,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _lastMove = null;
         RenderBoard(_game.Board);
         _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
+        UpdateMoveList();
         _statusText.text = "Takeback — your move.   ·   N: new game   ·   R: resign   ·   U: takeback";
     }
 
@@ -201,6 +205,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
             _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove!;
             RenderBoard(outcome.Board);
+            UpdateMoveList();
             if (!string.IsNullOrEmpty(outcome.BotMove))
                 _audio.PlayMove(); // the bot's reply; check is cued by OnBoardRendered
 
@@ -294,6 +299,23 @@ public sealed class KaissaGameController : MonoBehaviour
             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -16f), new Vector2(1100f, 50f));
         _statusText = MakeText(canvas.transform, 22, TextAnchor.LowerCenter,
             new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 40f), new Vector2(1200f, 60f));
+        _moveListText = MakeText(canvas.transform, 18, TextAnchor.UpperRight,
+            new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-24f, -84f), new Vector2(240f, 760f));
+    }
+
+    private void UpdateMoveList()
+    {
+        if (_moveListText == null || _game == null)
+            return;
+        var moves = _game.MoveHistory;
+        var sb = new StringBuilder();
+        for (int i = 0; i < moves.Count; i += 2)
+        {
+            string w = moves[i];
+            string b = i + 1 < moves.Count ? moves[i + 1] : "";
+            sb.AppendLine($"{i / 2 + 1,2}. {w,-6}{b}");
+        }
+        _moveListText.text = sb.ToString();
     }
 
     private Text MakeText(Transform parent, int size, TextAnchor anchor, Vector2 anchorMinMax, Vector2 pivot, Vector2 pos, Vector2 sizeDelta)

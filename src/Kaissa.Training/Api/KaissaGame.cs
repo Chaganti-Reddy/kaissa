@@ -52,6 +52,9 @@ public sealed class KaissaGame : IAsyncDisposable
     /// <summary>Takes back the last full move (opponent reply + player move). False if nothing to undo.</summary>
     public bool TryUndo() => _session.TryUndoFullMove();
 
+    /// <summary>The moves played so far (UCI), oldest first.</summary>
+    public IReadOnlyList<string> MoveHistory => _session.MoveHistory;
+
     public bool IsGameOver => _session.IsGameOver;
     public string Result => _session.Result.ToString();
     public int OpponentElo => _session.OpponentElo;
