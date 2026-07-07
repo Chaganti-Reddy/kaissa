@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.13 (alpha) — 2026-07-07
+
+- Hover a piece to preview its legal moves without clicking.
+- Hint (press H) in Training and Puzzle Rush highlights the best move's from-square.
+- Takeback (press U) in Play vs bot: undoes your last move and the bot's reply.
+- Training shows a session summary on Esc — puzzles solved, accuracy, and rating change — with
+  keep-training / back-to-menu.
+- Daily Puzzle on the menu: the day's puzzle, solvable once and marked done until tomorrow.
+
 ## v0.1.12 (alpha) — 2026-07-07
 
 - First-run welcome: on first launch the menu shows a one-time prompt to find your level (calibrate)
