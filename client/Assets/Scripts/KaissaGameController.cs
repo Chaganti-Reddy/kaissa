@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Kaissa.Chess.Rules;
@@ -24,6 +25,14 @@ public sealed class KaissaGameController : MonoBehaviour
     private BoardInteractor _interactor;
     private PieceAudio _audio;
     private bool _whiteBottom = true;
+
+    // Post-game review walkthrough (step through the finished game).
+    private bool _reviewMode;
+    private int _reviewPly;
+    private string _gameStartFen;
+    private IReadOnlyList<string> _reviewMoves;
+    private IReadOnlyList<string> _reviewSan;
+    private Dictionary<int, GameReviewItem> _reviewMistakes;
 
     private Text _titleText;
     private Text _statusText;
@@ -97,6 +106,7 @@ public sealed class KaissaGameController : MonoBehaviour
         double playerRating = KaissaTrainer.CreateDefault(KaissaProgress.Load()).PlayerRating;
         var startFen = EndgameRoute.Fen; // set by the endgame picker, if any
         EndgameRoute.Fen = null;
+        _gameStartFen = startFen ?? ChessGame.StartFen; // for the review walkthrough replay
         try
         {
             _game = await KaissaGame.StartAsync(enginePath, Side.White, playerRating,
@@ -119,6 +129,22 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (Keyboard.current == null)
             return;
+
+        if (_reviewMode)
+        {
+            if (Keyboard.current.escapeKey.wasPressedThisFrame)
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+            else if (Keyboard.current.nKey.wasPressedThisFrame)
+                NewGame();
+            else if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
+            { _reviewPly = Mathf.Max(0, _reviewPly - 1); RenderReviewPosition(); }
+            else if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
+            { _reviewPly = Mathf.Min(_reviewMoves.Count, _reviewPly + 1); RenderReviewPosition(); }
+            else if (Keyboard.current.fKey.wasPressedThisFrame && _boardRoot != null)
+            { _whiteBottom = !_whiteBottom; Board3D.OrientCamera(_whiteBottom); }
+            return;
+        }
+
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
         else if (Keyboard.current.nKey.wasPressedThisFrame && _game != null && _pickerCanvas == null)
@@ -160,6 +186,7 @@ public sealed class KaissaGameController : MonoBehaviour
             var review = await _game.ReviewAsync();
             _statusText.text = $"You resigned. {review.Mistakes.Count} mistake(s); " +
                                $"{review.Practice.Count} added to practice.   ·   N: new game";
+            EnterReview(review);
         }
         catch (Exception e)
         {
@@ -171,6 +198,7 @@ public sealed class KaissaGameController : MonoBehaviour
     // Restart from the opponent picker without returning to the main menu.
     private void NewGame()
     {
+        _reviewMode = false;
         if (_game != null) { _ = _game.DisposeAsync(); _game = null; }
         _busy = false;
         _lastMove = null;
@@ -224,6 +252,7 @@ public sealed class KaissaGameController : MonoBehaviour
                 _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. " +
                                    $"{review.Mistakes.Count} mistake(s); {review.Practice.Count} added to practice.  " +
                                    "Press N for a new game.";
+                EnterReview(review);
             }
             else
             {
@@ -296,6 +325,63 @@ public sealed class KaissaGameController : MonoBehaviour
             sb.AppendLine($"{i / 2 + 1,2}. {w,-6}{b}");
         }
         _moveListText.text = sb.ToString();
+    }
+
+    // After a game, replace the move list with a review: each flagged mistake with the move played
+    // (SAN), the engine's best, its severity, and the centipawn loss.
+    private void ShowReview(GameReviewResult review)
+    {
+        if (_moveListText == null)
+            return;
+        var san = _game.MoveHistorySan();
+        var sb = new StringBuilder();
+        sb.AppendLine($"Review — {review.Mistakes.Count} mistake(s)");
+        sb.AppendLine();
+        foreach (var m in review.Mistakes)
+        {
+            int ply = (m.MoveNumber - 1) * 2; // player is White → even plies
+            string played = ply >= 0 && ply < san.Count ? san[ply] : m.PlayedMove;
+            sb.AppendLine($"{m.MoveNumber,2}. {played,-7}");
+            sb.AppendLine($"    best {m.BestMove}");
+            sb.AppendLine($"    {m.Quality} -{m.CentipawnLoss}");
+        }
+        _moveListText.text = sb.ToString();
+    }
+
+    // Enter the walkthrough: step through the finished game with ←/→, mistakes flagged.
+    private void EnterReview(GameReviewResult review)
+    {
+        ShowReview(review);
+        _reviewMoves = _game.MoveHistory;
+        _reviewSan = _game.MoveHistorySan();
+        _reviewMistakes = new Dictionary<int, GameReviewItem>();
+        foreach (var m in review.Mistakes)
+            _reviewMistakes[(m.MoveNumber - 1) * 2] = m; // player is White → even plies
+        _reviewPly = _reviewMoves.Count;
+        _reviewMode = true;
+        _interactor.SetInputEnabled(false);
+        RenderReviewPosition();
+    }
+
+    private void RenderReviewPosition()
+    {
+        RenderBoard(BoardView.FromFen(PositionAfter(_reviewPly)));
+        if (_reviewPly > 0)
+            BoardFx.LastMove(_boardRoot, _reviewMoves[_reviewPly - 1]);
+
+        string move = _reviewPly > 0 && _reviewPly - 1 < _reviewSan.Count ? _reviewSan[_reviewPly - 1] : "start";
+        string note = "";
+        if (_reviewPly > 0 && _reviewMistakes.TryGetValue(_reviewPly - 1, out var m))
+            note = $"   —   Mistake: best {m.BestMove} ({m.Quality})";
+        _statusText.text = $"Review {_reviewPly}/{_reviewMoves.Count}: {move}   (←/→ step · N new game){note}";
+    }
+
+    private string PositionAfter(int plyCount)
+    {
+        var game = ChessGame.FromFen(_gameStartFen);
+        for (int i = 0; i < plyCount && i < _reviewMoves.Count; i++)
+            game.TryMakeMove(_reviewMoves[i]);
+        return game.Fen;
     }
 
     // Net material from White's perspective (P1 N3 B3 R5 Q9).

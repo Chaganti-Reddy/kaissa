@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.19 (alpha) — 2026-07-07
+
+- Post-game review: when a game ends (or you resign), the side panel lists your mistakes — the move
+  played, the engine's best reply, its severity, and the centipawn loss.
+- Step through the finished game with ← / → : each position is shown with the move and any mistake
+  flagged, so you can see exactly where it turned.
+
 ## v0.1.18 (alpha) — 2026-07-07
 
 - Four more board themes: Marble, Coral, Ice, Midnight.
