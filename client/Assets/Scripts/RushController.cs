@@ -61,6 +61,7 @@ public sealed class RushController : MonoBehaviour
         _interactor.SetInputEnabled(false);
 
         var result = _rush.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime));
+        KaissaStreak.RecordToday();
 
         var afterFen = ApplyMove(_board.Fen, uci);
         if (afterFen != null)

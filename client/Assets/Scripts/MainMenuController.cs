@@ -112,7 +112,11 @@ public sealed class MainMenuController : MonoBehaviour
             var trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
             var stats = trainer.GetStats();
             if (stats.TotalAttempts > 0)
-                return $"Streak {stats.CurrentStreak}   ·   {trainer.DueCount()} due for review";
+            {
+                int days = KaissaStreak.CurrentDays();
+                int due = trainer.DueCount();
+                return days > 0 ? $"Streak {days}d   ·   {due} due for review" : $"{due} due for review";
+            }
         }
         catch { /* fall back to the tagline */ }
         return "Train. Play. Improve.";

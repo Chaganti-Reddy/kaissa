@@ -108,6 +108,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         _interactor.SetInputEnabled(false);
 
         var result = _themed.Submit(uci, TimeSpan.FromSeconds(Time.time - _cardShownTime));
+        KaissaStreak.RecordToday();
         var afterFen = ApplyMove(_themedScenario.Fen, uci);
         if (afterFen != null)
             RenderBoard(BoardView.FromFen(afterFen));
@@ -176,6 +177,7 @@ public sealed class KaissaBoardController : MonoBehaviour
 
         if (correct)
             KaissaSettings.DailyDone = DateTime.Now.ToString("yyyy-MM-dd");
+        KaissaStreak.RecordToday();
     }
 
     private void Update()
@@ -245,6 +247,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         KaissaProgress.Save(_trainer.ExportProgress());
         _answered++;
         if (result.Correct) _correct++;
+        KaissaStreak.RecordToday();
 
         // Render the position after the move so click and drag both show the move being made.
         var afterFen = ApplyMove(_board.Fen, uci);

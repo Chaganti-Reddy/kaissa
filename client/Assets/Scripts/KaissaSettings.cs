@@ -18,6 +18,8 @@ public static class KaissaSettings
         public bool moveHints = true;  // show legal-move dots + hover preview (off = train recall)
         public bool onboarded;        // has the player seen the first-run welcome
         public string dailyDone = ""; // yyyy-MM-dd of the last solved daily puzzle
+        public int dayStreak;         // consecutive days with training activity
+        public string lastActive = ""; // yyyy-MM-dd of the last active day
     }
 
     private static Data _data;
@@ -44,4 +46,6 @@ public static class KaissaSettings
     public static bool MoveHints { get => D.moveHints; set { D.moveHints = value; Save(); } }
     public static bool Onboarded { get => D.onboarded; set { D.onboarded = value; Save(); } }
     public static string DailyDone { get => D.dailyDone; set { D.dailyDone = value; Save(); } }
+    public static int DayStreak { get => D.dayStreak; set { D.dayStreak = value; Save(); } }
+    public static string LastActive { get => D.lastActive; set { D.lastActive = value; Save(); } }
 }
