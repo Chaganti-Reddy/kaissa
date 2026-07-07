@@ -51,6 +51,15 @@ public sealed class KaissaTrainer
             Kaissa.Chess.Rules.ChessGame.FromFen(_current.Fen).LegalUciMoves());
     }
 
+    /// <summary>The from-square of the current card's best move, as a hint (null if none yet).</summary>
+    public string? Hint()
+    {
+        if (_current is null || _current.Solutions.Count == 0)
+            return null;
+        var uci = _current.Solutions[0];
+        return uci.Length >= 2 ? uci.Substring(0, 2) : null;
+    }
+
     /// <summary>Grades the player's move for the current card and advances the schedule.</summary>
     public AnswerResult Answer(string move, TimeSpan thinkingTime)
     {

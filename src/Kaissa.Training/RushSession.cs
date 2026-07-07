@@ -64,6 +64,15 @@ public sealed class RushSession
         return _current;
     }
 
+    /// <summary>The from-square of the current puzzle's solution, as a hint (null if none).</summary>
+    public string? Hint()
+    {
+        if (_current is null || _current.Solutions.Count == 0)
+            return null;
+        var uci = _current.Solutions[0];
+        return uci.Length >= 2 ? uci.Substring(0, 2) : null;
+    }
+
     /// <summary>Grades the answer: a solve raises the score and difficulty; a miss costs a life.</summary>
     public RushResult Submit(string move, TimeSpan thinkingTime)
     {

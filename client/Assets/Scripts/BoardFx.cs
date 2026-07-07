@@ -51,6 +51,16 @@ public static class BoardFx
         Quad(root, square, SelectColor, SelectY, "fx_sel");
     }
 
+    private static readonly Color HintColor = new(1.00f, 0.78f, 0.25f, 0.60f);
+
+    // Highlights the from-square of a suggested move.
+    public static void HintSquare(Transform root, string square)
+    {
+        ClearByPrefix(root, "fx_hint");
+        if (square != null)
+            Quad(root, square, HintColor, SelectY, "fx_hint");
+    }
+
     public static void ClearPremove(Transform root) => ClearByPrefix(root, "fx_pre");
 
     // Shows a queued premove: the origin square, and the target too once chosen.

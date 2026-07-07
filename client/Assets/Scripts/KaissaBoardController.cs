@@ -48,8 +48,15 @@ public sealed class KaissaBoardController : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (Keyboard.current == null)
+            return;
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+        else if (Keyboard.current.hKey.wasPressedThisFrame && _trainer != null && !_busy && _boardRoot != null)
+        {
+            var sq = _trainer.Hint();
+            if (sq != null) BoardFx.HintSquare(_boardRoot, sq);
+        }
     }
 
     // Called by the BoardInteractor only for legal moves (illegal ones are rejected before this),
