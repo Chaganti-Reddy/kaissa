@@ -23,6 +23,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private BoardInteractor _interactor;
     private PieceAudio _audio;
+    private bool _whiteBottom = true;
 
     private Text _titleText;
     private Text _statusText;
@@ -108,7 +109,7 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         }
 
-        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N: new game   ·   R: resign   ·   U: takeback";
+        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N new · R resign · U takeback · F flip";
         RenderBoard(_game.Board);
         _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
         UpdateMoveList();
@@ -128,6 +129,11 @@ public sealed class KaissaGameController : MonoBehaviour
         else if (Keyboard.current.uKey.wasPressedThisFrame && _game != null && !_busy
                  && !_game.IsGameOver && _pickerCanvas == null)
             Takeback();
+        else if (Keyboard.current.fKey.wasPressedThisFrame && _boardRoot != null)
+        {
+            _whiteBottom = !_whiteBottom;
+            Board3D.OrientCamera(_whiteBottom);
+        }
     }
 
     // Take back the last full move (yours + the bot's reply) and continue from there.

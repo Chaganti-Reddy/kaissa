@@ -40,6 +40,7 @@ public sealed class KaissaBoardController : MonoBehaviour
 
     private BoardInteractor _interactor;
     private PieceAudio _audio;
+    private bool _whiteBottom = true;
 
     private Text _titleText;
     private Text _ratingText;
@@ -94,7 +95,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         _hintUsed = false;
         _cardShownTime = Time.time;
         RenderBoard(_board);
-        Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
+        _whiteBottom = !KaissaSettings.Flip || _board.WhiteToMove;
+        Board3D.OrientCamera(_whiteBottom);
         _titleText.text = $"Practice: {_themedPatternName}\n{_themedScenario.Prompt}";
         _ratingText.text = $"Score {_themed.Score}/{_themed.Attempts}   ·   Esc — menu";
         _interactor.OnBoardRendered(_boardRoot, _board, null, humanCanMove: true);
@@ -137,7 +139,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         _dailyScenario = DailyPuzzle.ForDate(ScenarioLibrary.LoadDefault(), DateTime.Today);
         _board = BoardView.FromFen(_dailyScenario.Fen);
         RenderBoard(_board);
-        Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
+        _whiteBottom = !KaissaSettings.Flip || _board.WhiteToMove;
+        Board3D.OrientCamera(_whiteBottom);
 
         _titleText.text = $"Daily puzzle — {today}\n{_dailyScenario.Prompt}";
         _ratingText.text = $"Puzzle {_dailyScenario.Rating}";
@@ -194,6 +197,11 @@ public sealed class KaissaBoardController : MonoBehaviour
         {
             var sq = _trainer.Hint();
             if (sq != null) { BoardFx.HintSquare(_boardRoot, sq); _hintUsed = true; }
+        }
+        else if (Keyboard.current.fKey.wasPressedThisFrame && !_summaryShown && _boardRoot != null)
+        {
+            _whiteBottom = !_whiteBottom;
+            Board3D.OrientCamera(_whiteBottom);
         }
     }
 
@@ -309,7 +317,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         _titleText.text = $"{card.PatternName}\n{card.Prompt}";
         _ratingText.text = $"Rating {card.PlayerRating:0}";
         RenderBoard(_board);
-        Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
+        _whiteBottom = !KaissaSettings.Flip || _board.WhiteToMove;
+        Board3D.OrientCamera(_whiteBottom);
         _interactor.OnBoardRendered(_boardRoot, _board, lastMoveUci: null, humanCanMove: true);
     }
 

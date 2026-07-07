@@ -20,6 +20,7 @@ public sealed class RushController : MonoBehaviour
 
     private BoardInteractor _interactor;
     private PieceAudio _audio;
+    private bool _whiteBottom = true;
 
     private Text _hudText;
     private Text _feedbackText;
@@ -50,6 +51,11 @@ public sealed class RushController : MonoBehaviour
         {
             var sq = _rush.Hint();
             if (sq != null) BoardFx.HintSquare(_boardRoot, sq);
+        }
+        else if (Keyboard.current.fKey.wasPressedThisFrame && _boardRoot != null)
+        {
+            _whiteBottom = !_whiteBottom;
+            Board3D.OrientCamera(_whiteBottom);
         }
     }
 
@@ -121,7 +127,8 @@ public sealed class RushController : MonoBehaviour
         _shownTime = Time.time;
         UpdateHud();
         RenderBoard(_board);
-        Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
+        _whiteBottom = !KaissaSettings.Flip || _board.WhiteToMove;
+        Board3D.OrientCamera(_whiteBottom);
         _interactor.OnBoardRendered(_boardRoot, _board, lastMoveUci: null, humanCanMove: true);
     }
 
