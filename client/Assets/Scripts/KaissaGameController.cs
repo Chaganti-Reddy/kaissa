@@ -313,7 +313,7 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (_moveListText == null || _game == null)
             return;
-        var moves = _game.MoveHistory;
+        var moves = _game.MoveHistorySan();
         var sb = new StringBuilder();
 
         int material = Material(_game.Board);

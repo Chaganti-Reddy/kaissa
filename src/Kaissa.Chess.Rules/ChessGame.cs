@@ -98,6 +98,15 @@ public sealed class ChessGame
         return null;
     }
 
+    /// <summary>The SAN form of a legal move given as UCI (e.g. "g1f3" -> "Nf3"), or null if illegal here.</summary>
+    public string? SanForUci(string uci)
+    {
+        foreach (var candidate in _board.Moves())
+            if (string.Equals(ToUci(candidate), uci, StringComparison.OrdinalIgnoreCase))
+                return candidate.San ?? ToUci(candidate);
+        return null;
+    }
+
     public bool IsCheck => _board.WhiteKingChecked || _board.BlackKingChecked;
 
     public bool IsGameOver => _board.IsEndGame;

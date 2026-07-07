@@ -32,6 +32,19 @@ public sealed class GameSession
 
     public string StartFen { get; }
     public IReadOnlyList<string> MoveHistory => _moves;
+
+    /// <summary>The move history in SAN (e4, Nf3, O-O, ...), rebuilt by replaying from the start.</summary>
+    public IReadOnlyList<string> MoveHistorySan()
+    {
+        var game = ChessGame.FromFen(StartFen);
+        var san = new List<string>(_moves.Count);
+        foreach (var uci in _moves)
+        {
+            san.Add(game.SanForUci(uci) ?? uci);
+            game.TryMakeMove(uci);
+        }
+        return san;
+    }
     public Side PlayerSide { get; }
     public double PlayerRating { get; private set; }
     public int OpponentElo => _opponentElo;

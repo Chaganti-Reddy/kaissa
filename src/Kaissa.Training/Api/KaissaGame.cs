@@ -55,6 +55,9 @@ public sealed class KaissaGame : IAsyncDisposable
     /// <summary>The moves played so far (UCI), oldest first.</summary>
     public IReadOnlyList<string> MoveHistory => _session.MoveHistory;
 
+    /// <summary>The moves played so far in SAN (e4, Nf3, O-O, ...), oldest first.</summary>
+    public IReadOnlyList<string> MoveHistorySan() => _session.MoveHistorySan();
+
     public bool IsGameOver => _session.IsGameOver;
     public string Result => _session.Result.ToString();
     public int OpponentElo => _session.OpponentElo;
