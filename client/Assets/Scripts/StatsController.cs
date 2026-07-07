@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using Kaissa.Training.Api;
 using UnityEngine;
@@ -56,17 +57,41 @@ public sealed class StatsController : MonoBehaviour
             return sb.ToString();
         }
 
-        sb.AppendLine($"Rating: {stats.Rating:0}");
-        sb.AppendLine($"Solved: {stats.TotalCorrect} / {stats.TotalAttempts}  ({stats.Accuracy:P0})");
-        sb.AppendLine($"Streak: {stats.CurrentStreak}   (best {stats.BestStreak})");
-        sb.AppendLine($"Patterns seen: {stats.PatternsSeen}");
-        sb.AppendLine();
-        sb.AppendLine("Mastery");
-        foreach (var row in trainer.Progress())
+        string trend = "";
+        if (stats.RatingHistory.Count > 0)
         {
-            sb.AppendLine(row.Seen
-                ? $"  {row.PatternName,-22} {row.StabilityDays,6:0}d   reps {row.Reps}   lapses {row.Lapses}"
-                : $"  {row.PatternName,-22} not yet seen");
+            int delta = (int)Math.Round(stats.Rating - stats.RatingHistory[0]);
+            trend = $"   ({delta:+0;-0} since start)";
+        }
+        sb.AppendLine($"Rating   {stats.Rating:0}{trend}");
+        sb.AppendLine($"Solved   {stats.TotalCorrect}/{stats.TotalAttempts}   ({stats.Accuracy:P0})");
+        sb.AppendLine($"Streak   {stats.CurrentStreak}   (best {stats.BestStreak})");
+        sb.AppendLine($"Patterns seen   {stats.PatternsSeen}");
+        sb.AppendLine();
+
+        var rows = trainer.Progress().ToList();
+        var seen = rows.Where(r => r.Seen).OrderByDescending(r => r.StabilityDays).ToList();
+        var unseen = rows.Where(r => !r.Seen).ToList();
+
+        if (seen.Count > 0)
+        {
+            sb.AppendLine("Strongest");
+            foreach (var r in seen.Take(3))
+                sb.AppendLine($"  {r.PatternName,-24} {r.StabilityDays,5:0}d");
+
+            var weak = seen.AsEnumerable().Reverse().Take(3).ToList();
+            if (weak.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("Needs work");
+                foreach (var r in weak)
+                    sb.AppendLine($"  {r.PatternName,-24} {r.StabilityDays,5:0}d   lapses {r.Lapses}");
+            }
+        }
+        if (unseen.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("Not yet seen: " + string.Join(", ", unseen.Select(r => r.PatternName)));
         }
 
         sb.AppendLine();
