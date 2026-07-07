@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.17 (alpha) — 2026-07-07
+
+- Play vs bot shows a move list (numbered moves) and the material balance.
+- Press F to flip the board view in Play, Training, and Puzzle Rush.
+- New Coordinates on/off setting for the a–h / 1–8 board labels.
+
 ## v0.1.16 (alpha) — 2026-07-07
 
 - Rank/file coordinates (a–h, 1–8) now show on every board — Play, Training, and Puzzle Rush
