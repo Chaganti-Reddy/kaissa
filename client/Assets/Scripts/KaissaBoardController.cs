@@ -33,6 +33,11 @@ public sealed class KaissaBoardController : MonoBehaviour
     private bool _hintUsed;
     private string _patternDesc = "";
 
+    private bool _themedMode;
+    private ThemedSession _themed;
+    private Scenario _themedScenario;
+    private string _themedPatternName = "";
+
     private BoardInteractor _interactor;
     private PieceAudio _audio;
 
@@ -61,10 +66,67 @@ public sealed class KaissaBoardController : MonoBehaviour
             DailyRoute.Active = false;
             StartDaily();
         }
+        else if (!string.IsNullOrEmpty(ThemeRoute.PatternId))
+        {
+            string pid = ThemeRoute.PatternId;
+            _themedPatternName = string.IsNullOrEmpty(ThemeRoute.PatternName) ? pid : ThemeRoute.PatternName;
+            ThemeRoute.PatternId = null;
+            ThemeRoute.PatternName = null;
+            StartThemed(pid);
+        }
         else
         {
             DealNext();
         }
+    }
+
+    private void StartThemed(string patternId)
+    {
+        _themedMode = true;
+        _themed = new ThemedSession(ScenarioLibrary.LoadDefault(), new PatternId(patternId), _trainer.PlayerRating);
+        ThemedNext();
+    }
+
+    private void ThemedNext()
+    {
+        _themedScenario = _themed.Next();
+        _board = BoardView.FromFen(_themedScenario.Fen);
+        _hintUsed = false;
+        _cardShownTime = Time.time;
+        RenderBoard(_board);
+        Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
+        _titleText.text = $"Practice: {_themedPatternName}\n{_themedScenario.Prompt}";
+        _ratingText.text = $"Score {_themed.Score}/{_themed.Attempts}   ·   Esc — menu";
+        _interactor.OnBoardRendered(_boardRoot, _board, null, humanCanMove: true);
+    }
+
+    private void OnThemedMove(string uci)
+    {
+        if (_busy || _board == null)
+            return;
+        _busy = true;
+        _interactor.SetInputEnabled(false);
+
+        var result = _themed.Submit(uci, TimeSpan.FromSeconds(Time.time - _cardShownTime));
+        var afterFen = ApplyMove(_themedScenario.Fen, uci);
+        if (afterFen != null)
+            RenderBoard(BoardView.FromFen(afterFen));
+
+        var color = result.Correct ? CorrectColor : WrongColor;
+        HighlightSolution(result.Solutions.Count > 0 ? result.Solutions[0] : null, color);
+        _feedbackText.color = color;
+        _feedbackText.text = result.Correct ? "Correct!" : $"Missed — best was {string.Join(", ", result.Solutions)}";
+        if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
+
+        StartCoroutine(ThemedNextAfter(result.Correct ? 0.9f : 1.6f));
+    }
+
+    private IEnumerator ThemedNextAfter(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        _feedbackText.text = string.Empty;
+        _busy = false;
+        ThemedNext();
     }
 
     private void StartDaily()
@@ -165,6 +227,11 @@ public sealed class KaissaBoardController : MonoBehaviour
         if (_dailyMode)
         {
             OnDailyMove(uci);
+            return;
+        }
+        if (_themedMode)
+        {
+            OnThemedMove(uci);
             return;
         }
         if (_busy || _board == null)

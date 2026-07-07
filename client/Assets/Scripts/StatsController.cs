@@ -22,10 +22,12 @@ public sealed class StatsController : MonoBehaviour
             cam.backgroundColor = new Color(0.05f, 0.06f, 0.09f);
         }
 
+        KaissaTrainer trainer = null;
         string content;
         try
         {
-            content = BuildReport();
+            trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
+            content = BuildReport(trainer);
         }
         catch (Exception e)
         {
@@ -34,14 +36,33 @@ public sealed class StatsController : MonoBehaviour
         }
 
         RenderText(font, content);
+        if (trainer != null)
+            AddPracticeButton(trainer);
     }
 
-    private static string BuildReport()
+    // A "Practice" button targeting the weakest seen pattern (lowest stability) → themed drill.
+    private static void AddPracticeButton(KaissaTrainer trainer)
     {
-        var saved = KaissaProgress.Load();
-        Debug.Log($"Stats: save file {(saved == null ? "MISSING" : $"found, {saved.Length} chars")} at {Application.persistentDataPath}");
+        var seen = trainer.Progress()
+            .Where(r => r.Seen)
+            .OrderBy(r => r.StabilityDays)
+            .ToList();
+        if (seen.Count == 0)
+            return;
+        var weakest = seen[0];
 
-        var trainer = KaissaTrainer.CreateDefault(saved);
+        var canvas = Hud.Canvas();
+        Hud.Button(canvas, $"Practice: {weakest.PatternName}", new Vector2(0f, -300f),
+            () =>
+            {
+                ThemeRoute.PatternId = weakest.PatternId;
+                ThemeRoute.PatternName = weakest.PatternName;
+                UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
+            }, 380f);
+    }
+
+    private static string BuildReport(KaissaTrainer trainer)
+    {
         var stats = trainer.GetStats();
 
         var sb = new StringBuilder();
