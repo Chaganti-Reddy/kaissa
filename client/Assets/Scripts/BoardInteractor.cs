@@ -96,7 +96,17 @@ public sealed class BoardInteractor : MonoBehaviour
             return;
         }
 
-        if (_grabbed != null && mouse.leftButton.isPressed && KaissaSettings.DragToMove)
+        // Handle the press/release first so a fresh click resets _pressPos before the drag check —
+        // otherwise a click while a piece is still selected compares against a stale press position
+        // and teleports the piece to the cursor.
+        if (mouse.leftButton.wasPressedThisFrame)
+            HandlePress(mouse);
+        else if (mouse.leftButton.wasReleasedThisFrame)
+            HandleRelease(mouse);
+
+        // Drag-follow only while the button is held and past the drag threshold from this press.
+        if (_grabbed != null && mouse.leftButton.isPressed && !mouse.leftButton.wasPressedThisFrame
+            && KaissaSettings.DragToMove)
         {
             var ground = GroundPoint(mouse);
             if (ground.HasValue)
@@ -111,11 +121,6 @@ public sealed class BoardInteractor : MonoBehaviour
                 }
             }
         }
-
-        if (mouse.leftButton.wasPressedThisFrame)
-            HandlePress(mouse);
-        else if (mouse.leftButton.wasReleasedThisFrame)
-            HandleRelease(mouse);
     }
 
     private void HandlePress(Mouse mouse)
