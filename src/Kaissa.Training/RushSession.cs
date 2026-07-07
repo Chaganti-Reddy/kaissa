@@ -73,8 +73,11 @@ public sealed class RushSession
         return uci.Length >= 2 ? uci.Substring(0, 2) : null;
     }
 
-    /// <summary>Grades the answer: a solve raises the score and difficulty; a miss costs a life.</summary>
-    public RushResult Submit(string move, TimeSpan thinkingTime)
+    /// <summary>
+    /// Grades the answer: a solve raises the score and difficulty; a miss costs a life. If a hint was
+    /// used the answer earns no score and breaks the streak, but does not cost a life.
+    /// </summary>
+    public RushResult Submit(string move, TimeSpan thinkingTime, bool assisted = false)
     {
         if (_current is null)
             throw new InvalidOperationException("Call Next() before Submit().");
@@ -82,7 +85,12 @@ public sealed class RushSession
             return new RushResult(false, Score, Lives, Streak, true, _current.Solutions);
 
         var attempt = _grader.Grade(_current, move, thinkingTime);
-        if (attempt.Correct)
+        bool correct = attempt.Correct && !assisted;
+        if (assisted)
+        {
+            Streak = 0; // hinted: no credit, but not a life lost
+        }
+        else if (attempt.Correct)
         {
             Score++;
             Streak++;
@@ -96,6 +104,6 @@ public sealed class RushSession
 
         var solutions = _current.Solutions;
         _current = null;
-        return new RushResult(attempt.Correct, Score, Lives, Streak, IsOver, solutions);
+        return new RushResult(correct, Score, Lives, Streak, IsOver, solutions);
     }
 }

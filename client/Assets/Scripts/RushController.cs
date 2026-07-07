@@ -21,6 +21,7 @@ public sealed class RushController : MonoBehaviour
     private BoardInteractor _interactor;
     private PieceAudio _audio;
     private bool _whiteBottom = true;
+    private bool _hintUsed;
 
     private Text _hudText;
     private Text _feedbackText;
@@ -50,7 +51,7 @@ public sealed class RushController : MonoBehaviour
         else if (Keyboard.current.hKey.wasPressedThisFrame && _rush != null && !_busy && !_rush.IsOver && _boardRoot != null)
         {
             var sq = _rush.Hint();
-            if (sq != null) BoardFx.HintSquare(_boardRoot, sq);
+            if (sq != null) { BoardFx.HintSquare(_boardRoot, sq); _hintUsed = true; }
         }
         else if (Keyboard.current.fKey.wasPressedThisFrame && _boardRoot != null)
         {
@@ -66,7 +67,7 @@ public sealed class RushController : MonoBehaviour
             return;
         _interactor.SetInputEnabled(false);
 
-        var result = _rush.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime));
+        var result = _rush.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime), _hintUsed);
         KaissaStreak.RecordToday();
 
         var afterFen = ApplyMove(_board.Fen, uci);
@@ -125,6 +126,7 @@ public sealed class RushController : MonoBehaviour
         _current = scenario;
         _board = BoardView.FromFen(scenario.Fen);
         _shownTime = Time.time;
+        _hintUsed = false;
         UpdateHud();
         RenderBoard(_board);
         _whiteBottom = !KaissaSettings.Flip || _board.WhiteToMove;
