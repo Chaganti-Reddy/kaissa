@@ -101,8 +101,8 @@ public static class Board3D
         var material = new Material(shader);
         material.color = color;
         material.SetColor("_BaseColor", color);
-        material.SetFloat("_Smoothness", 0.45f);
-        material.SetFloat("_Metallic", 0.05f);
+        material.SetFloat("_Smoothness", 0.12f); // matte tiles: no mirror hotspot to blow out
+        material.SetFloat("_Metallic", 0f);
         go.GetComponent<Renderer>().material = material;
     }
 

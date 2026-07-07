@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.10 (alpha) — 2026-07-07
+
+- Click-to-move no longer lifts the piece off the board. Selecting a piece now just highlights its square (the piece stays put) and the second click glides it to the target; only dragging lifts a piece. Fixes the "floating piece jumps to where I click" feel.
+- Fix the board's light squares blowing out to white on the side facing the key light. Tiles are now matte (no mirror hotspot), bloom only catches genuine highlights (higher threshold, lower intensity), and Neutral tonemapping compresses bright values so the board is evenly lit.
+
 ## v0.1.9 (alpha) — 2026-07-03
 
 - Pieces glide to their square instead of snapping, and a captured piece pops (scales out) as it is

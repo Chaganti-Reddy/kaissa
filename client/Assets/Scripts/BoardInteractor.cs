@@ -14,7 +14,6 @@ using UnityEngine.InputSystem;
 public sealed class BoardInteractor : MonoBehaviour
 {
     private const float TileTopY = 0.075f;
-    private const float LiftSelect = 0.30f;
     private const float LiftDrag = 0.45f;
     private const float DragThresholdPixels = 6f;
 
@@ -173,10 +172,7 @@ public sealed class BoardInteractor : MonoBehaviour
         _selected = square;
         _grabbed = FindPiece(square);
         if (_grabbed != null)
-        {
-            _restPos = _grabbed.position;
-            _grabbed.position = _restPos + Vector3.up * LiftSelect;
-        }
+            _restPos = _grabbed.position; // leave it on the board; only dragging lifts it
         BoardFx.Selected(_root, square);
         BoardFx.LegalTargets(_root, square, _legal, _board);
         _audio?.PlaySelect();

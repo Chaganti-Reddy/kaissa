@@ -54,3 +54,11 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+// Belt-and-suspenders: force-skip the Welcome and Ready-to-Install pages (the Disable* directives
+// are not always honored), so an upgrade goes straight to the progress bar and finished page.
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PageID = wpWelcome) or (PageID = wpReady);
+end;

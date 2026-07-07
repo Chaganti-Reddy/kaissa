@@ -220,6 +220,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         var material = new Material(shader);
         material.color = color;
         material.SetColor("_BaseColor", color);
+        material.SetFloat("_Smoothness", 0.12f); // matte tiles: no mirror hotspot to blow out
+        material.SetFloat("_Metallic", 0f);
         go.GetComponent<Renderer>().material = material;
     }
 
@@ -270,24 +272,30 @@ public sealed class KaissaBoardController : MonoBehaviour
         var profile = ScriptableObject.CreateInstance<VolumeProfile>();
         volume.profile = profile;
 
+        // Tonemapping compresses bright highlights so the light squares can't blow out to pure white.
+        var tonemapping = profile.Add<Tonemapping>(true);
+        tonemapping.mode.overrideState = true;
+        tonemapping.mode.value = TonemappingMode.Neutral;
+
+        // Gentle bloom with a high threshold so only genuine highlights glow, not lit tiles.
         var bloom = profile.Add<Bloom>(true);
         bloom.intensity.overrideState = true;
-        bloom.intensity.value = 0.7f;
+        bloom.intensity.value = 0.30f;
         bloom.threshold.overrideState = true;
-        bloom.threshold.value = 1.05f;
+        bloom.threshold.value = 1.40f;
 
         var vignette = profile.Add<Vignette>(true);
         vignette.intensity.overrideState = true;
-        vignette.intensity.value = 0.32f;
+        vignette.intensity.value = 0.30f;
         vignette.smoothness.overrideState = true;
         vignette.smoothness.value = 0.5f;
 
         var color = profile.Add<ColorAdjustments>(true);
         color.postExposure.overrideState = true;
-        color.postExposure.value = 0.15f;
+        color.postExposure.value = -0.05f; // was +0.15; slight pull-down to protect highlights
         color.contrast.overrideState = true;
-        color.contrast.value = 12f;
+        color.contrast.value = 8f;
         color.saturation.overrideState = true;
-        color.saturation.value = 8f;
+        color.saturation.value = 6f;
     }
 }

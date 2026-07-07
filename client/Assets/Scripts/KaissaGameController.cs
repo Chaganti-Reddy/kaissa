@@ -228,6 +228,8 @@ public sealed class KaissaGameController : MonoBehaviour
         var material = new Material(shader);
         material.color = color;
         material.SetColor("_BaseColor", color);
+        material.SetFloat("_Smoothness", 0.12f); // matte tiles: no mirror hotspot to blow out
+        material.SetFloat("_Metallic", 0f);
         go.GetComponent<Renderer>().material = material;
     }
 
@@ -272,9 +274,15 @@ public sealed class KaissaGameController : MonoBehaviour
         var profile = ScriptableObject.CreateInstance<VolumeProfile>();
         volume.profile = profile;
 
+        var tonemapping = profile.Add<Tonemapping>(true);
+        tonemapping.mode.overrideState = true;
+        tonemapping.mode.value = TonemappingMode.Neutral;
+
         var bloom = profile.Add<Bloom>(true);
         bloom.intensity.overrideState = true;
-        bloom.intensity.value = 0.6f;
+        bloom.intensity.value = 0.30f;
+        bloom.threshold.overrideState = true;
+        bloom.threshold.value = 1.40f;
 
         var vignette = profile.Add<Vignette>(true);
         vignette.intensity.overrideState = true;
