@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Kaissa.Chess.Rules;
 using Kaissa.Training.Api;
 using UnityEngine;
@@ -82,6 +83,42 @@ public sealed class BoardInteractor : MonoBehaviour
     }
 
     public void SetInputEnabled(bool enabled) => _humanCanMove = enabled;
+
+    // Animate a move made by someone else (the bot) on the current board: glide the piece and pop any
+    // capture, with sound. Completes when the glide ends, so the caller can then render the position.
+    public Task PlayVisualMoveAsync(string uci)
+    {
+        if (_root == null || _board == null || uci == null || uci.Length < 4)
+            return Task.CompletedTask;
+
+        var from = uci.Substring(0, 2);
+        var to = uci.Substring(2, 2);
+        var moving = FindPiece(from);
+        var captured = Occupied(to) ? FindPiece(to) : null;
+        PlayMoveSound(from, to, PieceCharAt(from), promo: uci.Length > 4);
+
+        var tcs = new TaskCompletionSource<bool>();
+        StartCoroutine(VisualMove(moving, captured, to, () => tcs.TrySetResult(true)));
+        return tcs.Task;
+    }
+
+    private IEnumerator VisualMove(Transform moving, Transform captured, string to, Action onDone)
+    {
+        if (captured != null)
+            StartCoroutine(Pop(captured));
+        if (moving != null)
+        {
+            var start = moving.position;
+            var target = new Vector3(to[0] - 'a', TileTopY, to[1] - '1');
+            for (float t = 0f; t < 1f; t += Time.deltaTime / MoveGlideSeconds)
+            {
+                moving.position = Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t)));
+                yield return null;
+            }
+            moving.position = target;
+        }
+        onDone?.Invoke();
+    }
 
     private void Update()
     {

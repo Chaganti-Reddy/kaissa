@@ -17,6 +17,7 @@ public static class KaissaSettings
         public bool dragToMove = true; // allow dragging a piece (click-to-move always works too)
         public bool moveHints = true;  // show legal-move dots + hover preview (off = train recall)
         public bool coordinates = true; // show a-h / 1-8 board edge labels
+        public int botSpeed = 1;        // bot move pacing: 0 Fast, 1 Normal, 2 Slow
         public bool onboarded;        // has the player seen the first-run welcome
         public string dailyDone = ""; // yyyy-MM-dd of the last solved daily puzzle
         public int dayStreak;         // consecutive days with training activity
@@ -46,6 +47,7 @@ public static class KaissaSettings
     public static bool DragToMove { get => D.dragToMove; set { D.dragToMove = value; Save(); } }
     public static bool MoveHints { get => D.moveHints; set { D.moveHints = value; Save(); } }
     public static bool Coordinates { get => D.coordinates; set { D.coordinates = value; Save(); } }
+    public static int BotSpeed { get => D.botSpeed; set { D.botSpeed = value; Save(); } }
     public static bool Onboarded { get => D.onboarded; set { D.onboarded = value; Save(); } }
     public static string DailyDone { get => D.dailyDone; set { D.dailyDone = value; Save(); } }
     public static int DayStreak { get => D.dayStreak; set { D.dayStreak = value; Save(); } }

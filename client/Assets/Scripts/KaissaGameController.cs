@@ -54,7 +54,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
         // An endgame position skips the picker and plays the adaptive opponent directly.
         if (EndgameRoute.Fen != null)
-            StartGame("Bot", null, 200);
+            StartGame("Bot", null);
         else
             ShowOpponentPicker();
     }
@@ -67,13 +67,13 @@ public sealed class KaissaGameController : MonoBehaviour
 
         float y = 200f;
         Hud.Button(_pickerCanvas, "Adaptive — matches your level", new Vector2(0f, y),
-            () => StartGame("Adaptive", null, 250), 480f);
+            () => StartGame("Adaptive", null), 480f);
         y -= 66f;
         foreach (var bot in BotRoster.All)
         {
             var b = bot;
             Hud.Button(_pickerCanvas, $"{b.Name}  ({b.Elo})", new Vector2(0f, y),
-                () => StartGame(b.Name, b.Elo, ThinkMsFor(b.Elo)), 480f);
+                () => StartGame(b.Name, b.Elo), 480f);
             y -= 66f;
         }
         y -= 10f;
@@ -81,16 +81,15 @@ public sealed class KaissaGameController : MonoBehaviour
             () => UnityEngine.SceneManagement.SceneManager.LoadScene("Menu"), 480f);
     }
 
-    private static int ThinkMsFor(int elo) => elo switch
+    // Bot think time is a pacing choice (Settings > Bot speed), independent of its strength (Elo).
+    private static int BotThinkMs() => KaissaSettings.BotSpeed switch
     {
-        <= 1400 => 150,
-        <= 1600 => 250,
-        <= 1900 => 400,
-        <= 2200 => 650,
-        _ => 1000,
+        0 => 250,   // Fast
+        2 => 1200,  // Slow
+        _ => 600,   // Normal
     };
 
-    private async void StartGame(string label, int? fixedElo, int thinkMs)
+    private async void StartGame(string label, int? fixedElo)
     {
         if (_pickerCanvas != null) { Destroy(_pickerCanvas.gameObject); _pickerCanvas = null; }
 
@@ -110,7 +109,7 @@ public sealed class KaissaGameController : MonoBehaviour
         try
         {
             _game = await KaissaGame.StartAsync(enginePath, Side.White, playerRating,
-                fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(thinkMs), fixedOpponentElo: fixedElo);
+                fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
         }
         catch (Exception e)
         {
@@ -238,10 +237,10 @@ public sealed class KaissaGameController : MonoBehaviour
             }
 
             _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove!;
+            if (!string.IsNullOrEmpty(outcome.BotMove))
+                await _interactor.PlayVisualMoveAsync(outcome.BotMove!); // glide the bot's move (with sound)
             RenderBoard(outcome.Board);
             UpdateMoveList();
-            if (!string.IsNullOrEmpty(outcome.BotMove))
-                _audio.PlayMove(); // the bot's reply; check is cued by OnBoardRendered
 
             if (outcome.IsGameOver)
             {

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.20 (alpha) — 2026-07-07
+
+- The bot's move now glides across the board (with a capture pop and sound) instead of teleporting,
+  so you can actually see what it played.
+- New "Bot speed" setting (Fast / Normal / Slow, default Normal) controls how long the bot takes to
+  move, independent of its strength.
+
 ## v0.1.19 (alpha) — 2026-07-07
 
 - Post-game review: when a game ends (or you resign), the side panel lists your mistakes — the move
