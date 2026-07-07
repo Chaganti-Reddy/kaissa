@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.18 (alpha) — 2026-07-07
+
+- Four more board themes: Marble, Coral, Ice, Midnight.
+- Play's move list now uses standard algebraic notation (e4, Nf3, O-O, exd5) instead of long UCI.
+- In Puzzle Rush, using a hint no longer scores or extends the streak (it also doesn't cost a life),
+  matching training — a hint is a nudge, not a free point.
+
 ## v0.1.17 (alpha) — 2026-07-07
 
 - Play vs bot shows a move list (numbered moves) and the material balance.
