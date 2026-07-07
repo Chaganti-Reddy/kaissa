@@ -315,6 +315,14 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         var moves = _game.MoveHistory;
         var sb = new StringBuilder();
+
+        int material = Material(_game.Board);
+        string mat = material == 0 ? "Material: even"
+            : material > 0 ? $"Material: White +{material}"
+            : $"Material: Black +{-material}";
+        sb.AppendLine(mat);
+        sb.AppendLine();
+
         for (int i = 0; i < moves.Count; i += 2)
         {
             string w = moves[i];
@@ -322,6 +330,21 @@ public sealed class KaissaGameController : MonoBehaviour
             sb.AppendLine($"{i / 2 + 1,2}. {w,-6}{b}");
         }
         _moveListText.text = sb.ToString();
+    }
+
+    // Net material from White's perspective (P1 N3 B3 R5 Q9).
+    private static int Material(BoardView board)
+    {
+        int sum = 0;
+        foreach (var p in board.Pieces)
+        {
+            int v = char.ToUpperInvariant(p.Piece) switch
+            {
+                'P' => 1, 'N' => 3, 'B' => 3, 'R' => 5, 'Q' => 9, _ => 0,
+            };
+            sum += char.IsUpper(p.Piece) ? v : -v;
+        }
+        return sum;
     }
 
     private Text MakeText(Transform parent, int size, TextAnchor anchor, Vector2 anchorMinMax, Vector2 pivot, Vector2 pos, Vector2 sizeDelta)
