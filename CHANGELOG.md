@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.11 (alpha) — 2026-07-07
+
+- Play vs bot starts with an opponent picker: Adaptive (matches your rating) or a fixed-strength bot— Rookie (1350), Casual (1500), Club Player (1800), Expert (2100), Master (2500). Stronger bots think longer, which also gives premove a real window. Endgames go straight to the adaptive opponent.
+
 ## v0.1.10 (alpha) — 2026-07-07
 
 - Click-to-move no longer lifts the piece off the board. Selecting a piece now just highlights its square (the piece stays put) and the second click glides it to the target; only dragging lifts a piece. Fixes the "floating piece jumps to where I click" feel.

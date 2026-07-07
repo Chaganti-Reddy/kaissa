@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Kaissa.Chess.Rules;
+using Kaissa.Training;
 using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -26,7 +27,9 @@ public sealed class KaissaGameController : MonoBehaviour
     private Text _statusText;
     private Font _font;
 
-    private async void Start()
+    private Transform _pickerCanvas;
+
+    private void Start()
     {
         _font = Hud.Font;
         SetUpCameraAndLight();
@@ -37,6 +40,48 @@ public sealed class KaissaGameController : MonoBehaviour
         _interactor.Init(uci => OnMove(uci), _audio);
         _interactor.AllowPremove = true; // queue a move while the bot is thinking
 
+        // An endgame position skips the picker and plays the adaptive opponent directly.
+        if (EndgameRoute.Fen != null)
+            StartGame("Bot", null, 200);
+        else
+            ShowOpponentPicker();
+    }
+
+    private void ShowOpponentPicker()
+    {
+        _pickerCanvas = Hud.Canvas();
+        Hud.Text(_pickerCanvas, "Choose your opponent", 34, TextAnchor.UpperCenter,
+            new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(900f, 50f));
+
+        float y = 200f;
+        Hud.Button(_pickerCanvas, "Adaptive — matches your level", new Vector2(0f, y),
+            () => StartGame("Adaptive", null, 250), 480f);
+        y -= 66f;
+        foreach (var bot in BotRoster.All)
+        {
+            var b = bot;
+            Hud.Button(_pickerCanvas, $"{b.Name}  ({b.Elo})", new Vector2(0f, y),
+                () => StartGame(b.Name, b.Elo, ThinkMsFor(b.Elo)), 480f);
+            y -= 66f;
+        }
+        y -= 10f;
+        Hud.Button(_pickerCanvas, "Back", new Vector2(0f, y),
+            () => UnityEngine.SceneManagement.SceneManager.LoadScene("Menu"), 480f);
+    }
+
+    private static int ThinkMsFor(int elo) => elo switch
+    {
+        <= 1400 => 150,
+        <= 1600 => 250,
+        <= 1900 => 400,
+        <= 2200 => 650,
+        _ => 1000,
+    };
+
+    private async void StartGame(string label, int? fixedElo, int thinkMs)
+    {
+        if (_pickerCanvas != null) { Destroy(_pickerCanvas.gameObject); _pickerCanvas = null; }
+
         var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
         if (!File.Exists(enginePath))
         {
@@ -44,14 +89,15 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         }
 
-        _titleText.text = "Play vs Bot";
+        _titleText.text = $"Play vs {label}";
         _statusText.text = "Starting engine...";
+        double playerRating = KaissaTrainer.CreateDefault(KaissaProgress.Load()).PlayerRating;
         var startFen = EndgameRoute.Fen; // set by the endgame picker, if any
         EndgameRoute.Fen = null;
         try
         {
-            _game = await KaissaGame.StartAsync(enginePath, Side.White, 1200,
-                fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(150));
+            _game = await KaissaGame.StartAsync(enginePath, Side.White, playerRating,
+                fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(thinkMs), fixedOpponentElo: fixedElo);
         }
         catch (Exception e)
         {
