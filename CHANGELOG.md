@@ -4,6 +4,11 @@
 
 - First-run welcome: on first launch the menu shows a one-time prompt to find your level (calibrate)
   or skip, so the puzzles and the adaptive bot start matched to you instead of a cold default.
+- Play vs bot: press N for a new game (re-pick opponent without leaving), and R to resign — a
+  resigned game is still reviewed into practice.
+- Snappier interaction feel: quicker piece glide, lower drag lift (less floaty), faster capture pop.
+- Calibration (find your level) now uses the same board interaction as every other screen — drag or
+  click with glide and legal-move validation — instead of the old floating-piece input.
 
 ## v0.1.11 (alpha) — 2026-07-07
 
