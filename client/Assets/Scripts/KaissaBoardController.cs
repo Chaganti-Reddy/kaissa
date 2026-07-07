@@ -31,6 +31,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     private bool _dailyMode;
     private Scenario _dailyScenario;
     private bool _hintUsed;
+    private string _patternDesc = "";
 
     private BoardInteractor _interactor;
     private PieceAudio _audio;
@@ -191,7 +192,7 @@ public sealed class KaissaBoardController : MonoBehaviour
             _feedbackText.text = $"With a hint — best was {string.Join(", ", result.Solutions)}. It'll come back soon.";
         else
             _feedbackText.text = result.Correct
-                ? $"Correct!  ({result.Grade})"
+                ? $"Correct!  {_patternDesc}"
                 : $"Missed — best was {string.Join(", ", result.Solutions)}";
         _ratingText.text = $"Rating {result.PlayerRating:0}  ({result.PlayerRatingChange:+0;-0})";
 
@@ -233,6 +234,7 @@ public sealed class KaissaBoardController : MonoBehaviour
 
         _board = card.Board;
         _hintUsed = false;
+        _patternDesc = card.PatternDescription;
         _cardShownTime = Time.time;
         _titleText.text = $"{card.PatternName}\n{card.Prompt}";
         _ratingText.text = $"Rating {card.PlayerRating:0}";
