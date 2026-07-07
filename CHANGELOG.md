@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.15 (alpha) — 2026-07-07
+
+- The menu shows your progress at a glance: a day streak and how many patterns are due for review.
+- Stats screen now shows your rating trend since you started, your strongest and needs-work patterns,
+  and a Practice button that drills your weakest motif.
+- A consecutive-days training streak that counts every day you train.
+
 ## v0.1.14 (alpha) — 2026-07-07
 
 - New "Move hints" setting: legal-move dots and the hover preview can be turned off to train recall.
