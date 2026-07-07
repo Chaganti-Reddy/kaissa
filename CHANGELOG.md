@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.14 (alpha) — 2026-07-07
+
+- New "Move hints" setting: legal-move dots and the hover preview can be turned off to train recall.
+  State cues (selected square, last move, check) always stay.
+- Using a hint in Training now counts as a lapse — no rating credit, and the pattern is resurfaced
+  soon. A hint is a nudge, not a free solve.
+- After a correct training solve, the position's motif is explained in one line, turning each solve
+  into a short lesson.
+
 ## v0.1.13 (alpha) — 2026-07-07
 
 - Hover a piece to preview its legal moves without clicking.
