@@ -33,8 +33,11 @@ public sealed class MainMenuController : MonoBehaviour
         }
 
         var canvas = BuildCanvas();
-        MakeText(canvas, "Kaissa", 72, new Vector2(0f, 240f), new Vector2(800f, 100f));
-        MakeText(canvas, "Train. Play. Improve.", 26, new Vector2(0f, 180f), new Vector2(800f, 50f));
+        MakeText(canvas, "Kaissa", 72, new Vector2(0f, 255f), new Vector2(800f, 100f));
+        MakeText(canvas, "Train. Play. Improve.", 26, new Vector2(0f, 198f), new Vector2(800f, 50f));
+
+        MakeButton(canvas, "Daily Puzzle", new Vector2(0f, 150f),
+            () => { DailyRoute.Active = true; SceneManager.LoadScene("SampleScene"); }, 260f);
 
         // Left column
         MakeButton(canvas, "Train", new Vector2(-170f, 90f), () => SceneManager.LoadScene("SampleScene"));

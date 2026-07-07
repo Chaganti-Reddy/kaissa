@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Kaissa.Chess.Rules;
+using Kaissa.Training;
 using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -27,6 +28,9 @@ public sealed class KaissaBoardController : MonoBehaviour
     private bool _summaryShown;
     private Transform _summaryCanvas;
 
+    private bool _dailyMode;
+    private Scenario _dailyScenario;
+
     private BoardInteractor _interactor;
     private PieceAudio _audio;
 
@@ -49,7 +53,65 @@ public sealed class KaissaBoardController : MonoBehaviour
         _audio = PieceAudio.Attach(gameObject);
         _interactor = gameObject.AddComponent<BoardInteractor>();
         _interactor.Init(uci => OnPlayerMove(uci), _audio);
-        DealNext();
+
+        if (DailyRoute.Active)
+        {
+            DailyRoute.Active = false;
+            StartDaily();
+        }
+        else
+        {
+            DealNext();
+        }
+    }
+
+    private void StartDaily()
+    {
+        _dailyMode = true;
+        string today = DateTime.Now.ToString("yyyy-MM-dd");
+        _dailyScenario = DailyPuzzle.ForDate(ScenarioLibrary.LoadDefault(), DateTime.Today);
+        _board = BoardView.FromFen(_dailyScenario.Fen);
+        RenderBoard(_board);
+        Board3D.OrientCamera(!KaissaSettings.Flip || _board.WhiteToMove);
+
+        _titleText.text = $"Daily puzzle — {today}\n{_dailyScenario.Prompt}";
+        _ratingText.text = $"Puzzle {_dailyScenario.Rating}";
+
+        bool alreadyDone = KaissaSettings.DailyDone == today;
+        if (alreadyDone)
+        {
+            _feedbackText.color = CorrectColor;
+            _feedbackText.text = "Already solved today. Come back tomorrow.   Esc — menu";
+            _interactor.OnBoardRendered(_boardRoot, _board, null, humanCanMove: false);
+        }
+        else
+        {
+            _cardShownTime = Time.time;
+            _interactor.OnBoardRendered(_boardRoot, _board, null, humanCanMove: true);
+        }
+    }
+
+    private void OnDailyMove(string uci)
+    {
+        _interactor.SetInputEnabled(false);
+
+        bool correct = false;
+        foreach (var s in _dailyScenario.Solutions)
+            if (string.Equals(s, uci, StringComparison.OrdinalIgnoreCase)) { correct = true; break; }
+
+        var afterFen = ApplyMove(_dailyScenario.Fen, uci);
+        if (afterFen != null)
+            RenderBoard(BoardView.FromFen(afterFen));
+
+        var color = correct ? CorrectColor : WrongColor;
+        HighlightSolution(_dailyScenario.Solutions.Count > 0 ? _dailyScenario.Solutions[0] : null, color);
+        _feedbackText.color = color;
+        _feedbackText.text = correct
+            ? "Correct! Daily solved. Come back tomorrow.   Esc — menu"
+            : $"Missed — best was {string.Join(", ", _dailyScenario.Solutions)}.   Esc — menu";
+
+        if (correct)
+            KaissaSettings.DailyDone = DateTime.Now.ToString("yyyy-MM-dd");
     }
 
     private void Update()
@@ -98,6 +160,11 @@ public sealed class KaissaBoardController : MonoBehaviour
     // so the trainer never grades an impossible move. Shows the played move, then grades and advances.
     private void OnPlayerMove(string uci)
     {
+        if (_dailyMode)
+        {
+            OnDailyMove(uci);
+            return;
+        }
         if (_busy || _board == null)
             return;
         _busy = true;
