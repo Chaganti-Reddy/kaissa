@@ -13,6 +13,10 @@ public static class Board3D
         ("Green", new Color(0.93f, 0.93f, 0.82f), new Color(0.46f, 0.58f, 0.34f)),
         ("Blue", new Color(0.86f, 0.89f, 0.92f), new Color(0.40f, 0.55f, 0.70f)),
         ("Slate", new Color(0.82f, 0.82f, 0.85f), new Color(0.28f, 0.30f, 0.36f)),
+        ("Marble", new Color(0.95f, 0.95f, 0.93f), new Color(0.55f, 0.55f, 0.58f)),
+        ("Coral", new Color(0.98f, 0.92f, 0.86f), new Color(0.78f, 0.44f, 0.40f)),
+        ("Ice", new Color(0.90f, 0.94f, 0.98f), new Color(0.50f, 0.64f, 0.80f)),
+        ("Midnight", new Color(0.60f, 0.65f, 0.80f), new Color(0.15f, 0.17f, 0.30f)),
     };
 
     /// <summary>Builds a full board with pieces from a BoardView; returns the root transform.</summary>
