@@ -106,7 +106,7 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         }
 
-        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N: new game";
+        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N: new game   ·   R: resign";
         RenderBoard(_game.Board);
         _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
     }
@@ -119,6 +119,29 @@ public sealed class KaissaGameController : MonoBehaviour
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
         else if (Keyboard.current.nKey.wasPressedThisFrame && _game != null && _pickerCanvas == null)
             NewGame();
+        else if (Keyboard.current.rKey.wasPressedThisFrame && _game != null && !_busy
+                 && !_game.IsGameOver && _pickerCanvas == null)
+            Resign();
+    }
+
+    // Resign the current game: stop accepting moves and still review what was played.
+    private async void Resign()
+    {
+        _busy = true;
+        _interactor.SetInputEnabled(false);
+        _audio.PlayGameEnd();
+        _statusText.text = "You resigned. Reviewing...";
+        try
+        {
+            var review = await _game.ReviewAsync();
+            _statusText.text = $"You resigned. {review.Mistakes.Count} mistake(s); " +
+                               $"{review.Practice.Count} added to practice.   ·   N: new game";
+        }
+        catch (Exception e)
+        {
+            _statusText.text = "You resigned.   ·   N: new game";
+            Debug.LogError(e);
+        }
     }
 
     // Restart from the opponent picker without returning to the main menu.
