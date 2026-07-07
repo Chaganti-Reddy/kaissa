@@ -106,15 +106,30 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         }
 
-        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.";
+        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N: new game";
         RenderBoard(_game.Board);
         _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
     }
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (Keyboard.current == null)
+            return;
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+        else if (Keyboard.current.nKey.wasPressedThisFrame && _game != null && _pickerCanvas == null)
+            NewGame();
+    }
+
+    // Restart from the opponent picker without returning to the main menu.
+    private void NewGame()
+    {
+        if (_game != null) { _ = _game.DisposeAsync(); _game = null; }
+        _busy = false;
+        _lastMove = null;
+        _interactor.SetInputEnabled(false);
+        if (_boardRoot != null) { Destroy(_boardRoot.gameObject); _boardRoot = null; }
+        ShowOpponentPicker();
     }
 
     // Invoked by the BoardInteractor with a fully-formed UCI move (including any promotion letter).
@@ -159,7 +174,8 @@ public sealed class KaissaGameController : MonoBehaviour
                 _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. Reviewing...";
                 var review = await _game.ReviewAsync();
                 _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. " +
-                                   $"{review.Mistakes.Count} mistake(s); {review.Practice.Count} added to practice.";
+                                   $"{review.Mistakes.Count} mistake(s); {review.Practice.Count} added to practice.  " +
+                                   "Press N for a new game.";
             }
             else
             {
