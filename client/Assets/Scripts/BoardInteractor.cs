@@ -37,6 +37,7 @@ public sealed class BoardInteractor : MonoBehaviour
     public bool AllowPremove;
     private (string from, string to)? _premove;
     private string _premoveFrom;
+    private string _hoverPreviewSquare;
 
     public void Init(Action<string> onMove, PieceAudio audio)
     {
@@ -54,6 +55,7 @@ public sealed class BoardInteractor : MonoBehaviour
         _selected = null;
         _grabbed = null;
         _dragging = false;
+        _hoverPreviewSquare = null;
 
         _legal = LegalMovesOf(board);
 
@@ -121,6 +123,20 @@ public sealed class BoardInteractor : MonoBehaviour
                 }
             }
         }
+
+        // Hover preview: peek a piece's legal moves without selecting (nothing held or selected).
+        if (_selected == null && !mouse.leftButton.isPressed)
+        {
+            string hover = null;
+            if (Raycast(mouse, out var sq, out bool isPc, out char pc) && isPc && char.IsUpper(pc) == _board.WhiteToMove)
+                hover = sq;
+            if (hover != _hoverPreviewSquare)
+            {
+                _hoverPreviewSquare = hover;
+                if (hover != null) BoardFx.LegalTargets(_root, hover, _legal, _board);
+                else BoardFx.ClearDots(_root);
+            }
+        }
     }
 
     private void HandlePress(Mouse mouse)
@@ -178,6 +194,7 @@ public sealed class BoardInteractor : MonoBehaviour
     {
         _selected = square;
         _grabbed = FindPiece(square);
+        _hoverPreviewSquare = null;
         if (_grabbed != null)
             _restPos = _grabbed.position; // leave it on the board; only dragging lifts it
         BoardFx.Selected(_root, square);
@@ -272,6 +289,7 @@ public sealed class BoardInteractor : MonoBehaviour
         _selected = null;
         _grabbed = null;
         _dragging = false;
+        _hoverPreviewSquare = null;
         BoardFx.ClearSelect(_root);
         BoardFx.ClearDots(_root);
         BoardFx.ClearHover(_root);
