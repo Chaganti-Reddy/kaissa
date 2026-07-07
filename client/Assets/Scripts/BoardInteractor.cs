@@ -125,7 +125,7 @@ public sealed class BoardInteractor : MonoBehaviour
         }
 
         // Hover preview: peek a piece's legal moves without selecting (nothing held or selected).
-        if (_selected == null && !mouse.leftButton.isPressed)
+        if (KaissaSettings.MoveHints && _selected == null && !mouse.leftButton.isPressed)
         {
             string hover = null;
             if (Raycast(mouse, out var sq, out bool isPc, out char pc) && isPc && char.IsUpper(pc) == _board.WhiteToMove)
@@ -198,7 +198,8 @@ public sealed class BoardInteractor : MonoBehaviour
         if (_grabbed != null)
             _restPos = _grabbed.position; // leave it on the board; only dragging lifts it
         BoardFx.Selected(_root, square);
-        BoardFx.LegalTargets(_root, square, _legal, _board);
+        if (KaissaSettings.MoveHints)
+            BoardFx.LegalTargets(_root, square, _legal, _board);
         _audio?.PlaySelect();
     }
 
