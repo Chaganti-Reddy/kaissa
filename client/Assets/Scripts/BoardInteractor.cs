@@ -14,8 +14,10 @@ using UnityEngine.InputSystem;
 public sealed class BoardInteractor : MonoBehaviour
 {
     private const float TileTopY = 0.075f;
-    private const float LiftDrag = 0.45f;
+    private const float LiftDrag = 0.28f;        // how high a dragged piece floats (lower = less detached)
     private const float DragThresholdPixels = 6f;
+    private const float MoveGlideSeconds = 0.11f; // slide-to-square duration (snappier reads better)
+    private const float CapturePopSeconds = 0.10f;
 
     private Action<string> _onMove;
     private PieceAudio _audio;
@@ -218,7 +220,7 @@ public sealed class BoardInteractor : MonoBehaviour
         {
             var start = moving.position;
             var target = new Vector3(to[0] - 'a', TileTopY, to[1] - '1');
-            const float dur = 0.14f;
+            const float dur = MoveGlideSeconds;
             for (float t = 0f; t < 1f; t += Time.deltaTime / dur)
             {
                 moving.position = Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t)));
@@ -236,7 +238,7 @@ public sealed class BoardInteractor : MonoBehaviour
     private static IEnumerator Pop(Transform piece)
     {
         var start = piece.localScale;
-        const float dur = 0.12f;
+        const float dur = CapturePopSeconds;
         for (float t = 0f; t < 1f; t += Time.deltaTime / dur)
         {
             if (piece == null) yield break;
