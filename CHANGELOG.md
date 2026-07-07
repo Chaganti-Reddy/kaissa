@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.16 (alpha) — 2026-07-07
+
+- Rank/file coordinates (a–h, 1–8) now show on every board — Play, Training, and Puzzle Rush
+  previously had none.
+- The menu marks the Daily Puzzle as done once you've solved today's.
+
 ## v0.1.15 (alpha) — 2026-07-07
 
 - The menu shows your progress at a glance: a day streak and how many patterns are due for review.

@@ -60,11 +60,12 @@ public static class Board3D
             Paint(tile, (file + rank) % 2 == 0 ? theme.Dark : theme.Light);
         }
 
-        AddCoordinateLabels(root);
+        AddCoordinates(root);
         return root;
     }
 
-    private static void AddCoordinateLabels(Transform root)
+    /// <summary>Adds a–h / 1–8 edge labels to a board root (public so all screens can match).</summary>
+    public static void AddCoordinates(Transform root)
     {
         var font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
         for (int f = 0; f < 8; f++)

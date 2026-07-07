@@ -278,6 +278,8 @@ public sealed class KaissaGameController : MonoBehaviour
             piece.transform.SetParent(_boardRoot);
             piece.transform.position = new Vector3(file, 0.075f, rank); // seat base on the tile surface
         }
+
+        Board3D.AddCoordinates(_boardRoot);
     }
 
     private void BuildHud()
