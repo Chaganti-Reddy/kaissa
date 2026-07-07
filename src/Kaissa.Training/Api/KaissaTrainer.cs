@@ -121,6 +121,17 @@ public sealed class KaissaTrainer
             _model.CurrentStreak, _model.BestStreak, _model.RatingHistory.ToList());
     }
 
+    /// <summary>How many seen patterns are due for review now (FSRS).</summary>
+    public int DueCount()
+    {
+        var now = DateTime.UtcNow;
+        int count = 0;
+        foreach (var card in _model.Cards)
+            if (card.Seen && card.DueUtc is { } due && due <= now)
+                count++;
+        return count;
+    }
+
     /// <summary>Serialised progress for the caller to persist.</summary>
     public string ExportProgress() => _model.ToJson();
 }

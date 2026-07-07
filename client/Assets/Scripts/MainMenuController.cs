@@ -1,3 +1,4 @@
+using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -34,7 +35,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         var canvas = BuildCanvas();
         MakeText(canvas, "Kaissa", 72, new Vector2(0f, 255f), new Vector2(800f, 100f));
-        MakeText(canvas, "Train. Play. Improve.", 26, new Vector2(0f, 198f), new Vector2(800f, 50f));
+        MakeText(canvas, SubtitleText(), 26, new Vector2(0f, 198f), new Vector2(900f, 50f));
 
         MakeButton(canvas, "Daily Puzzle", new Vector2(0f, 150f),
             () => { DailyRoute.Active = true; SceneManager.LoadScene("SampleScene"); }, 260f);
@@ -101,6 +102,20 @@ public sealed class MainMenuController : MonoBehaviour
 #else
         Application.Quit();
 #endif
+    }
+
+    // Returning players see their streak and how many patterns are due; new players see the tagline.
+    private static string SubtitleText()
+    {
+        try
+        {
+            var trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
+            var stats = trainer.GetStats();
+            if (stats.TotalAttempts > 0)
+                return $"Streak {stats.CurrentStreak}   ·   {trainer.DueCount()} due for review";
+        }
+        catch { /* fall back to the tagline */ }
+        return "Train. Play. Improve.";
     }
 
     private static void EnsureEventSystem()
