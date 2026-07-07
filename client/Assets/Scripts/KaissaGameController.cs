@@ -256,41 +256,7 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (_boardRoot != null)
             Destroy(_boardRoot.gameObject);
-        _boardRoot = new GameObject("Board").transform;
-
-        var basePlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        basePlate.name = "base";
-        basePlate.transform.SetParent(_boardRoot);
-        basePlate.transform.localScale = new Vector3(9.4f, 0.3f, 9.4f);
-        basePlate.transform.position = new Vector3(3.5f, -0.2f, 3.5f);
-        Destroy(basePlate.GetComponent<Collider>());
-        Paint(basePlate, new Color(0.08f, 0.08f, 0.10f));
-
-        var theme = Board3D.Themes[Mathf.Clamp(KaissaSettings.BoardTheme, 0, Board3D.Themes.Length - 1)];
-        for (int file = 0; file < 8; file++)
-        for (int rank = 0; rank < 8; rank++)
-        {
-            var tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            tile.name = $"sq_{(char)('a' + file)}{rank + 1}";
-            tile.transform.SetParent(_boardRoot);
-            tile.transform.localScale = new Vector3(1f, 0.15f, 1f);
-            tile.transform.position = new Vector3(file, 0f, rank);
-            Paint(tile, (file + rank) % 2 == 0 ? theme.Dark : theme.Light);
-        }
-
-        foreach (var square in board.Pieces)
-        {
-            int file = square.Square[0] - 'a';
-            int rank = square.Square[1] - '1';
-            bool white = char.IsUpper(square.Piece);
-
-            var piece = Pieces.Create(square.Piece, white);
-            piece.name = $"pc_{square.Piece}_{square.Square}";
-            piece.transform.SetParent(_boardRoot);
-            piece.transform.position = new Vector3(file, 0.075f, rank); // seat base on the tile surface
-        }
-
-        Board3D.AddCoordinates(_boardRoot);
+        _boardRoot = Board3D.Render(board); // shared base/tiles/theme/pieces/coordinates
     }
 
     private void BuildHud()
@@ -374,16 +340,6 @@ public sealed class KaissaGameController : MonoBehaviour
             _ = _game.DisposeAsync();
     }
 
-    private static void Paint(GameObject go, Color color)
-    {
-        var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-        var material = new Material(shader);
-        material.color = color;
-        material.SetColor("_BaseColor", color);
-        material.SetFloat("_Smoothness", 0.12f); // matte tiles: no mirror hotspot to blow out
-        material.SetFloat("_Metallic", 0f);
-        go.GetComponent<Renderer>().material = material;
-    }
 
     private static void SetUpCameraAndLight()
     {
