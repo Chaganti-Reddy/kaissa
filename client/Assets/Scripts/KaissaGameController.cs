@@ -106,7 +106,7 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         }
 
-        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N: new game   ·   R: resign";
+        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N: new game   ·   R: resign   ·   U: takeback";
         RenderBoard(_game.Board);
         _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
     }
@@ -122,6 +122,20 @@ public sealed class KaissaGameController : MonoBehaviour
         else if (Keyboard.current.rKey.wasPressedThisFrame && _game != null && !_busy
                  && !_game.IsGameOver && _pickerCanvas == null)
             Resign();
+        else if (Keyboard.current.uKey.wasPressedThisFrame && _game != null && !_busy
+                 && !_game.IsGameOver && _pickerCanvas == null)
+            Takeback();
+    }
+
+    // Take back the last full move (yours + the bot's reply) and continue from there.
+    private void Takeback()
+    {
+        if (!_game.TryUndo())
+            return;
+        _lastMove = null;
+        RenderBoard(_game.Board);
+        _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
+        _statusText.text = "Takeback — your move.   ·   N: new game   ·   R: resign   ·   U: takeback";
     }
 
     // Resign the current game: stop accepting moves and still review what was played.

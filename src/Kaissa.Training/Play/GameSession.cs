@@ -11,7 +11,7 @@ namespace Kaissa.Training.Play;
 public sealed class GameSession
 {
     private readonly AdaptiveOpponent _opponent;
-    private readonly ChessGame _game;
+    private ChessGame _game;
     private readonly int _opponentElo;
     private readonly List<string> _moves = new();
 
@@ -64,6 +64,26 @@ public sealed class GameSession
             return null;
         _moves.Add(move);
         return move;
+    }
+
+    /// <summary>
+    /// Takes back the last full move so it is the player's turn again: undoes the opponent's reply and
+    /// the player's move (or just the player's move if the opponent has not replied). Rebuilds the
+    /// position by replaying the remaining history. False if there is nothing to take back.
+    /// </summary>
+    public bool TryUndoFullMove()
+    {
+        if (_moves.Count == 0)
+            return false;
+
+        // If it is the player's turn, the last two plies are player+opponent; otherwise just the player's.
+        int removeCount = _game.SideToMove == PlayerSide ? Math.Min(2, _moves.Count) : 1;
+        _moves.RemoveRange(_moves.Count - removeCount, removeCount);
+
+        _game = ChessGame.FromFen(StartFen);
+        foreach (var m in _moves)
+            _game.TryMakeMove(m);
+        return true;
     }
 
     /// <summary>Once the game is over, updates the player's rating by the result against the opponent Elo.</summary>
