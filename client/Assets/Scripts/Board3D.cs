@@ -64,9 +64,12 @@ public static class Board3D
         return root;
     }
 
-    /// <summary>Adds a–h / 1–8 edge labels to a board root (public so all screens can match).</summary>
+    /// <summary>Adds a–h / 1–8 edge labels to a board root (public so all screens can match). No-op
+    /// when the coordinates setting is off.</summary>
     public static void AddCoordinates(Transform root)
     {
+        if (!KaissaSettings.Coordinates)
+            return;
         var font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
         for (int f = 0; f < 8; f++)
             Label(root, font, $"{(char)('a' + f)}", new Vector3(f, 0.12f, -0.75f));

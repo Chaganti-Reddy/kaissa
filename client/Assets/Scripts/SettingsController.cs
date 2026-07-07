@@ -47,6 +47,9 @@ public sealed class SettingsController : MonoBehaviour
         Hud.Button(_canvas, $"Pieces: {(KaissaSettings.UseModels ? "Modeled" : "Simple")}", new Vector2(0f, y),
             () => { KaissaSettings.UseModels = !KaissaSettings.UseModels; Build(); }, 380f);
         y -= 58f;
+        Hud.Button(_canvas, $"Coordinates: {(KaissaSettings.Coordinates ? "On" : "Off")}", new Vector2(0f, y),
+            () => { KaissaSettings.Coordinates = !KaissaSettings.Coordinates; Build(); }, 380f);
+        y -= 58f;
         Hud.Button(_canvas, _resetLabel, new Vector2(0f, y),
             () => { KaissaProgress.Clear(); _resetLabel = "Progress reset ✓"; Build(); }, 380f);
         y -= 58f;
