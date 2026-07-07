@@ -66,8 +66,12 @@ public sealed class TrainingSession
         return _current;
     }
 
-    /// <summary>Grades the player's move for the current scenario and updates the schedule.</summary>
-    public SubmitOutcome Submit(string move, TimeSpan thinkingTime)
+    /// <summary>
+    /// Grades the player's move for the current scenario and updates the schedule. If the answer was
+    /// assisted (a hint was used) it is treated as a lapse and earns no rating credit, so the pattern
+    /// is resurfaced soon — a hinted answer is not genuine recall.
+    /// </summary>
+    public SubmitOutcome Submit(string move, TimeSpan thinkingTime, bool assisted = false)
     {
         if (_current is null)
             throw new InvalidOperationException("Call Next() before Submit().");
@@ -75,27 +79,30 @@ public sealed class TrainingSession
         var scenario = _current;
         var attempt = _grader.Grade(scenario, move, thinkingTime);
 
+        bool correct = attempt.Correct && !assisted;
+        var rating = assisted ? Rating.Again : attempt.Rating;
+
         var card = _model.GetOrCreate(scenario.Pattern);
         var now = _clock.UtcNow;
         double elapsedDays = card.LastReviewUtc is { } last ? (now - last).TotalDays : 0;
 
-        var review = _scheduler.Review(card.State, elapsedDays, attempt.Rating);
+        var review = _scheduler.Review(card.State, elapsedDays, rating);
 
         card.State = review.State;
         card.LastReviewUtc = now;
         card.DueUtc = now.AddDays(review.IntervalDays);
         card.Reps++;
-        if (attempt.Rating == Rating.Again)
+        if (rating == Rating.Again)
             card.Lapses++;
 
         // Update the player's overall rating estimate from this attempt against the puzzle's rating.
-        _model.RatingEstimate = RatingEstimator.Update(_model.RatingEstimate, scenario.Rating, attempt.Correct);
-        _model.RecordResult(attempt.Correct, _model.RatingEstimate);
+        _model.RatingEstimate = RatingEstimator.Update(_model.RatingEstimate, scenario.Rating, correct);
+        _model.RecordResult(correct, _model.RatingEstimate);
 
         _current = null;
 
         return new SubmitOutcome(
-            scenario, attempt.Correct, attempt.Rating, review.IntervalDays, card.DueUtc.Value,
+            scenario, correct, rating, review.IntervalDays, card.DueUtc.Value,
             review.State.Stability, _model.RatingEstimate);
     }
 }

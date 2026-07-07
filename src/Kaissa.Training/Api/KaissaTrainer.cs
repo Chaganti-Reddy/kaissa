@@ -60,15 +60,18 @@ public sealed class KaissaTrainer
         return uci.Length >= 2 ? uci.Substring(0, 2) : null;
     }
 
-    /// <summary>Grades the player's move for the current card and advances the schedule.</summary>
-    public AnswerResult Answer(string move, TimeSpan thinkingTime)
+    /// <summary>
+    /// Grades the player's move for the current card and advances the schedule. Pass assisted = true
+    /// if a hint was used, so the answer counts as a lapse rather than a genuine solve.
+    /// </summary>
+    public AnswerResult Answer(string move, TimeSpan thinkingTime, bool assisted = false)
     {
         if (_current is null)
             throw new InvalidOperationException("Call NextCard() before Answer().");
 
         double before = _model.RatingEstimate;
         var solutions = _current.Solutions;
-        var outcome = _session.Submit(move, thinkingTime);
+        var outcome = _session.Submit(move, thinkingTime, assisted);
 
         return new AnswerResult(
             outcome.Correct,

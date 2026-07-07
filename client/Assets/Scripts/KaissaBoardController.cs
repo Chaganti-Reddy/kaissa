@@ -30,6 +30,7 @@ public sealed class KaissaBoardController : MonoBehaviour
 
     private bool _dailyMode;
     private Scenario _dailyScenario;
+    private bool _hintUsed;
 
     private BoardInteractor _interactor;
     private PieceAudio _audio;
@@ -127,7 +128,7 @@ public sealed class KaissaBoardController : MonoBehaviour
                  && !_summaryShown && _boardRoot != null)
         {
             var sq = _trainer.Hint();
-            if (sq != null) BoardFx.HintSquare(_boardRoot, sq);
+            if (sq != null) { BoardFx.HintSquare(_boardRoot, sq); _hintUsed = true; }
         }
     }
 
@@ -171,7 +172,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         _interactor.SetInputEnabled(false);
 
         var thinkTime = TimeSpan.FromSeconds(Time.time - _cardShownTime);
-        var result = _trainer.Answer(uci, thinkTime);
+        bool hinted = _hintUsed;
+        var result = _trainer.Answer(uci, thinkTime, hinted); // a hinted answer counts as a lapse
         KaissaProgress.Save(_trainer.ExportProgress());
         _answered++;
         if (result.Correct) _correct++;
@@ -185,9 +187,12 @@ public sealed class KaissaBoardController : MonoBehaviour
         HighlightSolution(result.Solutions.Count > 0 ? result.Solutions[0] : null, color);
 
         _feedbackText.color = color;
-        _feedbackText.text = result.Correct
-            ? $"Correct!  ({result.Grade})"
-            : $"Missed — best was {string.Join(", ", result.Solutions)}";
+        if (hinted)
+            _feedbackText.text = $"With a hint — best was {string.Join(", ", result.Solutions)}. It'll come back soon.";
+        else
+            _feedbackText.text = result.Correct
+                ? $"Correct!  ({result.Grade})"
+                : $"Missed — best was {string.Join(", ", result.Solutions)}";
         _ratingText.text = $"Rating {result.PlayerRating:0}  ({result.PlayerRatingChange:+0;-0})";
 
         if (result.Correct) _audio.PlayCorrect();
@@ -227,6 +232,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         }
 
         _board = card.Board;
+        _hintUsed = false;
         _cardShownTime = Time.time;
         _titleText.text = $"{card.PatternName}\n{card.Prompt}";
         _ratingText.text = $"Rating {card.PlayerRating:0}";
