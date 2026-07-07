@@ -16,6 +16,7 @@ public static class BoardFx
     private static readonly Color HoverColor    = new(1.00f, 1.00f, 1.00f, 0.22f);
     private static readonly Color DotColor      = new(0.20f, 0.80f, 0.35f, 0.85f);
     private static readonly Color CaptureColor  = new(0.90f, 0.30f, 0.25f, 0.40f);
+    private static readonly Color PremoveColor  = new(0.35f, 0.65f, 0.95f, 0.50f);
 
     // y offsets per layer to avoid z-fighting between stacked overlays.
     private const float LastMoveY = 0.078f, SelectY = 0.080f, CheckY = 0.082f, HoverY = 0.084f;
@@ -48,6 +49,17 @@ public static class BoardFx
     {
         ClearSelect(root);
         Quad(root, square, SelectColor, SelectY, "fx_sel");
+    }
+
+    public static void ClearPremove(Transform root) => ClearByPrefix(root, "fx_pre");
+
+    // Shows a queued premove: the origin square, and the target too once chosen.
+    public static void Premove(Transform root, string from, string to)
+    {
+        ClearByPrefix(root, "fx_pre");
+        Quad(root, from, PremoveColor, SelectY, "fx_pre");
+        if (to != null)
+            Quad(root, to, PremoveColor, SelectY, "fx_pre");
     }
 
     public static void Hover(Transform root, string square)

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.9 (alpha) — 2026-07-03
+
+- Pieces glide to their square instead of snapping, and a captured piece pops (scales out) as it is
+  taken. Applies to every board screen.
+- Premove on Play vs bot: queue a move during the bot's turn (the squares are highlighted). It plays
+  automatically when it becomes your move, or is discarded if it is no longer legal.
+
 ## v0.1.8 (alpha) — 2026-07-03
 
 - Settings add move input (drag or click / click only) and auto-queen, alongside the existing sound,

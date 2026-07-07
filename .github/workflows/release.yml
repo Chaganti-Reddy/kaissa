@@ -82,11 +82,33 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Installer build failed ($LASTEXITCODE)" }
           Get-ChildItem "$env:GITHUB_WORKSPACE\installer-out" | Format-Table -AutoSize
 
+      - name: Extract changelog section for this tag
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"   # e.g. v0.1.9
+          $lines = Get-Content "CHANGELOG.md"
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match ("^##\s+" + [regex]::Escape($tag) + "\b")) { $start = $i; break }
+          }
+          if ($start -ge 0) {
+            $body = New-Object System.Collections.Generic.List[string]
+            for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -match "^##\s") { break }
+              $body.Add($lines[$i])
+            }
+            ($body -join "`n").Trim() | Set-Content "release-notes.md"
+          } else {
+            "Release $tag. See CHANGELOG.md for details." | Set-Content "release-notes.md"
+          }
+          Get-Content "release-notes.md"
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             Kaissa-Windows-${{ github.ref_name }}.zip
             installer-out/Kaissa-Setup-${{ github.ref_name }}.exe
+          body_path: release-notes.md
           generate_release_notes: true
           fail_on_unmatched_files: false

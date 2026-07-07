@@ -35,6 +35,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _audio = PieceAudio.Attach(gameObject);
         _interactor = gameObject.AddComponent<BoardInteractor>();
         _interactor.Init(uci => OnMove(uci), _audio);
+        _interactor.AllowPremove = true; // queue a move while the bot is thinking
 
         var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
         if (!File.Exists(enginePath))
@@ -78,6 +79,16 @@ public sealed class KaissaGameController : MonoBehaviour
         _busy = true;
         _interactor.SetInputEnabled(false);
 
+        // Show the player's move at once and let a premove queue on the correct position while the
+        // bot thinks; the final board (after the bot replies) is rendered when PlayAsync returns.
+        var interFen = ApplyMove(_game.Board.Fen, uci);
+        if (interFen != null)
+        {
+            var interBoard = BoardView.FromFen(interFen);
+            RenderBoard(interBoard);
+            _interactor.OnBoardRendered(_boardRoot, interBoard, uci, humanCanMove: false);
+        }
+
         try
         {
             var outcome = await _game.PlayAsync(uci);
@@ -117,6 +128,18 @@ public sealed class KaissaGameController : MonoBehaviour
         }
 
         _busy = false;
+    }
+
+    private static string ApplyMove(string fen, string uci)
+    {
+        try
+        {
+            var game = ChessGame.FromFen(fen);
+            if (game.TryMakeMove(uci))
+                return game.Fen;
+        }
+        catch { /* fall through */ }
+        return null;
     }
 
     private void RenderBoard(BoardView board)

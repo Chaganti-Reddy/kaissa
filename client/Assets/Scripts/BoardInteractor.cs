@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Kaissa.Chess.Rules;
 using Kaissa.Training.Api;
@@ -31,6 +32,11 @@ public sealed class BoardInteractor : MonoBehaviour
     private bool _dragging;
     private Vector2 _pressPos;
 
+    // Premove (opponent's turn): queue one move that fires when it becomes the human's turn again.
+    public bool AllowPremove;
+    private (string from, string to)? _premove;
+    private string _premoveFrom;
+
     public void Init(Action<string> onMove, PieceAudio audio)
     {
         _onMove = onMove;
@@ -54,17 +60,40 @@ public sealed class BoardInteractor : MonoBehaviour
         BoardFx.Check(root, board);
         if (IsCheck(board))
             _audio?.PlayCheck();
+
+        if (humanCanMove && _premove.HasValue)
+        {
+            var pm = _premove.Value;
+            _premove = null;
+            _premoveFrom = null;
+            BoardFx.ClearPremove(root);
+            _selected = pm.from;
+            _grabbed = FindPiece(pm.from);
+            if (_grabbed != null) _restPos = _grabbed.position;
+            TryMove(pm.from, pm.to); // validates against the new position; illegal premoves are dropped
+        }
+        else if (!humanCanMove && _premove.HasValue)
+        {
+            BoardFx.Premove(root, _premove.Value.from, _premove.Value.to);
+        }
     }
 
     public void SetInputEnabled(bool enabled) => _humanCanMove = enabled;
 
     private void Update()
     {
-        if (_root == null || _board == null || !_humanCanMove)
+        if (_root == null || _board == null)
             return;
         var mouse = Mouse.current;
         if (mouse == null)
             return;
+
+        if (!_humanCanMove)
+        {
+            if (AllowPremove && mouse.leftButton.wasPressedThisFrame)
+                HandlePremoveInput(mouse);
+            return;
+        }
 
         if (_grabbed != null && mouse.leftButton.isPressed && KaissaSettings.DragToMove)
         {
@@ -169,16 +198,57 @@ public sealed class BoardInteractor : MonoBehaviour
 
         PlayMoveSound(from, to, pieceChar, promo);
 
+        // Grab references before clearing selection, then glide the piece to its square (and pop any
+        // captured piece) before committing, so the move reads as an action rather than a snap.
+        var moving = _grabbed;
+        var captured = Occupied(to) ? FindPiece(to) : null;
+        BoardFx.ClearSelect(_root);
+        BoardFx.ClearDots(_root);
+        BoardFx.ClearHover(_root);
+        _selected = null;
+        _grabbed = null;
+        _dragging = false;
+        _humanCanMove = false; // no input while the move animates
+
+        StartCoroutine(AnimateThenCommit(moving, captured, from, to, promo, char.IsUpper(pieceChar)));
+    }
+
+    private IEnumerator AnimateThenCommit(Transform moving, Transform captured, string from, string to, bool promo, bool white)
+    {
+        if (captured != null)
+            StartCoroutine(Pop(captured));
+
+        if (moving != null)
+        {
+            var start = moving.position;
+            var target = new Vector3(to[0] - 'a', TileTopY, to[1] - '1');
+            const float dur = 0.14f;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / dur)
+            {
+                moving.position = Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t)));
+                yield return null;
+            }
+            moving.position = target;
+        }
+
         if (promo)
-        {
-            Deselect(snapBack: false);
-            PromotionPicker.Ask(char.IsUpper(pieceChar), letter => _onMove?.Invoke(from + to + letter));
-        }
+            PromotionPicker.Ask(white, letter => _onMove?.Invoke(from + to + letter));
         else
-        {
-            Deselect(snapBack: false);
             _onMove?.Invoke(from + to);
+    }
+
+    private static IEnumerator Pop(Transform piece)
+    {
+        var start = piece.localScale;
+        const float dur = 0.12f;
+        for (float t = 0f; t < 1f; t += Time.deltaTime / dur)
+        {
+            if (piece == null) yield break;
+            piece.localScale = Vector3.Lerp(start, Vector3.zero, Mathf.Clamp01(t));
+            yield return null;
         }
+        if (piece != null)
+            piece.localScale = Vector3.zero;
     }
 
     private void PlayMoveSound(string from, string to, char pieceChar, bool promo)
@@ -202,6 +272,44 @@ public sealed class BoardInteractor : MonoBehaviour
         BoardFx.ClearSelect(_root);
         BoardFx.ClearDots(_root);
         BoardFx.ClearHover(_root);
+    }
+
+    private void HandlePremoveInput(Mouse mouse)
+    {
+        if (!Raycast(mouse, out var square, out bool isPiece, out char pieceChar))
+        {
+            CancelPremove();
+            return;
+        }
+        // The human is the side NOT to move during the opponent's turn.
+        bool humanPiece = isPiece && char.IsUpper(pieceChar) == !_board.WhiteToMove;
+
+        if (_premoveFrom == null)
+        {
+            if (humanPiece) { _premoveFrom = square; _premove = null; BoardFx.Premove(_root, square, null); }
+            else CancelPremove();
+        }
+        else if (square == _premoveFrom)
+        {
+            CancelPremove();
+        }
+        else if (humanPiece)
+        {
+            _premoveFrom = square; _premove = null; BoardFx.Premove(_root, square, null);
+        }
+        else
+        {
+            _premove = (_premoveFrom, square);
+            _premoveFrom = null;
+            BoardFx.Premove(_root, _premove.Value.from, _premove.Value.to);
+        }
+    }
+
+    private void CancelPremove()
+    {
+        _premove = null;
+        _premoveFrom = null;
+        BoardFx.ClearPremove(_root);
     }
 
     // ----- geometry / lookup helpers -----
