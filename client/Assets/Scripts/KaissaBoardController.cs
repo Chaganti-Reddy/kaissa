@@ -22,6 +22,11 @@ public sealed class KaissaBoardController : MonoBehaviour
     private float _cardShownTime;
     private bool _busy;
 
+    private int _answered, _correct;
+    private double _ratingStart;
+    private bool _summaryShown;
+    private Transform _summaryCanvas;
+
     private BoardInteractor _interactor;
     private PieceAudio _audio;
 
@@ -37,6 +42,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     {
         _font = Hud.Font;
         _trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
+        _ratingStart = _trainer.PlayerRating;
         SetUpCameraAndLight();
         BuildPostProcessing();
         BuildHud();
@@ -51,12 +57,41 @@ public sealed class KaissaBoardController : MonoBehaviour
         if (Keyboard.current == null)
             return;
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-        else if (Keyboard.current.hKey.wasPressedThisFrame && _trainer != null && !_busy && _boardRoot != null)
+        {
+            if (_answered > 0 && !_summaryShown) ShowSummary();
+            else UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+        }
+        else if (Keyboard.current.hKey.wasPressedThisFrame && _trainer != null && !_busy
+                 && !_summaryShown && _boardRoot != null)
         {
             var sq = _trainer.Hint();
             if (sq != null) BoardFx.HintSquare(_boardRoot, sq);
         }
+    }
+
+    private void ShowSummary()
+    {
+        _summaryShown = true;
+        _interactor.SetInputEnabled(false);
+        _summaryCanvas = Hud.Canvas();
+
+        var dim = new GameObject("dim").AddComponent<Image>();
+        dim.transform.SetParent(_summaryCanvas, false);
+        dim.color = new Color(0f, 0f, 0f, 0.78f);
+        var r = dim.rectTransform;
+        r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.offsetMin = Vector2.zero; r.offsetMax = Vector2.zero;
+
+        int pct = _answered > 0 ? Mathf.RoundToInt(100f * _correct / _answered) : 0;
+        double now = _trainer.PlayerRating;
+        int delta = Mathf.RoundToInt((float)(now - _ratingStart));
+        var center = new Vector2(0.5f, 0.5f);
+        Hud.Text(_summaryCanvas, "Session summary", 40, TextAnchor.MiddleCenter, center, new Vector2(0f, 150f), new Vector2(700f, 60f));
+        Hud.Text(_summaryCanvas, $"Solved {_correct}/{_answered}   ({pct}%)", 28, TextAnchor.MiddleCenter, center, new Vector2(0f, 85f), new Vector2(700f, 40f));
+        Hud.Text(_summaryCanvas, $"Rating {_ratingStart:0} → {now:0}   ({delta:+0;-0})", 28, TextAnchor.MiddleCenter, center, new Vector2(0f, 40f), new Vector2(700f, 40f));
+        Hud.Button(_summaryCanvas, "Keep training", new Vector2(0f, -40f),
+            () => { Destroy(_summaryCanvas.gameObject); _summaryCanvas = null; _summaryShown = false; _interactor.SetInputEnabled(true); }, 320f);
+        Hud.Button(_summaryCanvas, "Back to menu", new Vector2(0f, -110f),
+            () => UnityEngine.SceneManagement.SceneManager.LoadScene("Menu"), 320f);
     }
 
     // Called by the BoardInteractor only for legal moves (illegal ones are rejected before this),
@@ -71,6 +106,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         var thinkTime = TimeSpan.FromSeconds(Time.time - _cardShownTime);
         var result = _trainer.Answer(uci, thinkTime);
         KaissaProgress.Save(_trainer.ExportProgress());
+        _answered++;
+        if (result.Correct) _correct++;
 
         // Render the position after the move so click and drag both show the move being made.
         var afterFen = ApplyMove(_board.Fen, uci);
