@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.12 (alpha) — 2026-07-07
+
+- First-run welcome: on first launch the menu shows a one-time prompt to find your level (calibrate)
+  or skip, so the puzzles and the adaptive bot start matched to you instead of a cold default.
+
 ## v0.1.11 (alpha) — 2026-07-07
 
 - Play vs bot starts with an opponent picker: Adaptive (matches your rating) or a fixed-strength bot— Rookie (1350), Casual (1500), Club Player (1800), Expert (2100), Master (2500). Stronger bots think longer, which also gives premove a real window. Endgames go straight to the adaptive opponent.
