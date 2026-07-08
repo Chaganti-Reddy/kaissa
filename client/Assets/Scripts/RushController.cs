@@ -4,224 +4,206 @@ using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
-// Puzzle Rush screen: solve as many as possible before three misses. Reuses the board render and
-// click-to-move input; drives RushSession. Esc returns to the menu.
+// Puzzle Blitz: solve as many as possible before three misses. Redesigned in UI Toolkit + the 2D
+// board. Drives RushSession; a hint scores nothing and breaks the streak (but costs no life).
 public sealed class RushController : MonoBehaviour
 {
     private RushSession _rush;
-    private Transform _boardRoot;
-    private BoardView _board;
+    private Board2D _board;
+    private PieceAudio _audio;
     private Scenario _current;
     private float _shownTime;
     private bool _busy;
-
-    private BoardInteractor _interactor;
-    private PieceAudio _audio;
     private bool _whiteBottom = true;
     private bool _hintUsed;
+    private string _currentFen;
 
-    private Text _hudText;
-    private Text _feedbackText;
-    private Font _font;
+    private VisualElement _root;
+    private Label _scoreLabel;
+    private Label _livesLabel;
+    private Label _streakLabel;
+    private Label _feedbackLabel;
 
-    private static readonly Color CorrectColor = new(0.30f, 0.85f, 0.45f);
-    private static readonly Color WrongColor = new(0.92f, 0.33f, 0.33f);
+    private static readonly Color Good = new(0.30f, 0.85f, 0.45f, 0.55f);
+    private static readonly Color Bad = new(0.92f, 0.33f, 0.33f, 0.55f);
+    private static readonly Color HintCol = new(0.51f, 0.72f, 0.30f, 0.55f);
 
     private void Start()
     {
-        _font = Hud.Font;
-        SetUpCameraAndLight();
-        BuildHud();
+        EnsureEventSystem();
+        var cam = Camera.main;
+        if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
+
         _audio = PieceAudio.Attach(gameObject);
-        _interactor = gameObject.AddComponent<BoardInteractor>();
-        _interactor.Init(uci => OnPlayerMove(uci), _audio);
+        _board = new Board2D(uci => OnPlayerMove(uci));
         _rush = RushSession.CreateDefault(startRating: 800, lives: 3);
+
+        var doc = gameObject.AddComponent<UIDocument>();
+        doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
+        StartCoroutine(BuildUi(doc));
+    }
+
+    private IEnumerator BuildUi(UIDocument doc)
+    {
+        yield return null;
+        _root = doc.rootVisualElement;
+        _root.Clear();
+        _root.style.flexDirection = FlexDirection.Row;
+        _root.style.flexGrow = 1;
+        _root.style.backgroundColor = UiKit.Bg;
+
+        _root.Add(UiKit.NavRail("Rush"));
+        _root.Add(BuildCenter());
+        _root.Add(BuildRightRail());
         DealNext();
     }
 
-    private void Update()
+    private VisualElement BuildCenter()
     {
-        if (Keyboard.current == null)
-            return;
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-        else if (Keyboard.current.hKey.wasPressedThisFrame && _rush != null && !_busy && !_rush.IsOver && _boardRoot != null)
-        {
-            var sq = _rush.Hint();
-            if (sq != null) { BoardFx.HintSquare(_boardRoot, sq); _hintUsed = true; }
-        }
-        else if (Keyboard.current.fKey.wasPressedThisFrame && _boardRoot != null)
-        {
-            _whiteBottom = !_whiteBottom;
-            Board3D.OrientCamera(_whiteBottom);
-        }
+        var center = new VisualElement();
+        center.style.flexGrow = 1; center.style.alignItems = Align.Center;
+        UiKit.Pad(center, 22, 24, 22, 24);
+        var title = UiKit.Text_("Puzzle Blitz", 24, UiKit.Text, bold: true);
+        title.style.marginBottom = 12; center.Add(title);
+
+        var host = new VisualElement();
+        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0;
+        host.Add(_board.Root);
+        _board.Root.style.width = 480; _board.Root.style.height = 480;
+        center.Add(host);
+
+        _feedbackLabel = UiKit.Text_("", 16, UiKit.Dim, bold: true);
+        _feedbackLabel.style.marginTop = 12; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+        center.Add(_feedbackLabel);
+        return center;
     }
 
-    // Called by the BoardInteractor only for legal moves; illegal ones are rejected before grading.
-    private void OnPlayerMove(string uci)
+    private VisualElement BuildRightRail()
     {
-        if (_busy || _rush.IsOver || _board == null)
-            return;
-        _interactor.SetInputEnabled(false);
+        var rail = new VisualElement();
+        rail.style.width = 340; UiKit.Pad(rail, 24, 24, 24, 0);
 
-        var result = _rush.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime), _hintUsed);
-        KaissaStreak.RecordToday();
+        var panel = new VisualElement();
+        panel.style.backgroundColor = UiKit.Panel;
+        panel.style.borderTopWidth = panel.style.borderBottomWidth = panel.style.borderLeftWidth = panel.style.borderRightWidth = 1;
+        panel.style.borderTopColor = panel.style.borderBottomColor = panel.style.borderLeftColor = panel.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(panel, 12); UiKit.Pad(panel, 16);
 
-        var afterFen = ApplyMove(_board.Fen, uci);
-        if (afterFen != null)
-            RenderBoard(BoardView.FromFen(afterFen));
+        var row = UiKit.Row(Stat("Score", out _scoreLabel), Stat("Lives", out _livesLabel), Stat("Streak", out _streakLabel));
+        row.style.justifyContent = Justify.SpaceBetween;
+        panel.Add(row);
 
-        StartCoroutine(FeedbackThenNext(result));
+        var hint = UiKit.Ghost("Hint  (no score, breaks streak)", ShowHint, 13);
+        hint.style.marginTop = 16;
+        panel.Add(hint);
+        rail.Add(panel);
+        return rail;
     }
 
-    private static string ApplyMove(string fen, string uci)
+    private VisualElement Stat(string key, out Label value)
     {
-        try
-        {
-            var game = ChessGame.FromFen(fen);
-            if (game.TryMakeMove(uci))
-                return game.Fen;
-        }
-        catch { /* fall through */ }
-        return null;
-    }
-
-    private IEnumerator FeedbackThenNext(RushResult result)
-    {
-        _busy = true;
-        var color = result.Correct ? CorrectColor : WrongColor;
-        if (result.Solutions.Count > 0)
-            HighlightSquares(result.Solutions[0], color);
-
-        if (result.Correct) _audio.PlayCorrect();
-        else _audio.PlayWrong();
-
-        _feedbackText.color = color;
-        _feedbackText.text = result.Correct ? "Correct!" : $"Missed — {string.Join(", ", result.Solutions)}";
-        UpdateHud();
-
-        yield return new WaitForSeconds(result.Correct ? 0.6f : 1.3f);
-        _feedbackText.text = string.Empty;
-        _busy = false;
-
-        if (result.IsOver)
-        {
-            _hudText.text = $"Game over!  Score {result.Score}.   Esc — menu";
-            if (_boardRoot != null) Destroy(_boardRoot.gameObject);
-        }
-        else
-        {
-            DealNext();
-        }
+        var k = UiKit.Text_(key.ToUpperInvariant(), 11, UiKit.Mute, bold: true);
+        value = UiKit.Text_("0", 24, UiKit.Text, bold: true);
+        return UiKit.Col(k, value);
     }
 
     private void DealNext()
     {
         var scenario = _rush.Next();
-        if (scenario == null)
-            return;
+        if (scenario == null) return;
         _current = scenario;
-        _board = BoardView.FromFen(scenario.Fen);
         _shownTime = Time.time;
         _hintUsed = false;
+        _currentFen = scenario.Fen;
+        var board = BoardView.FromFen(scenario.Fen);
+        _whiteBottom = !KaissaSettings.Flip || board.WhiteToMove;
+        _board.Render(scenario.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
         UpdateHud();
-        RenderBoard(_board);
-        _whiteBottom = !KaissaSettings.Flip || _board.WhiteToMove;
-        Board3D.OrientCamera(_whiteBottom);
-        _interactor.OnBoardRendered(_boardRoot, _board, lastMoveUci: null, humanCanMove: true);
     }
 
-    private void UpdateHud() =>
-        _hudText.text = $"Score {_rush.Score}    Lives {_rush.Lives}    Streak {_rush.Streak}";
-
-    private void HighlightSquares(string uci, Color color)
+    private void OnPlayerMove(string uci)
     {
-        if (uci.Length < 4 || _boardRoot == null)
-            return;
-        foreach (var sq in new[] { uci.Substring(0, 2), uci.Substring(2, 2) })
+        if (_busy || _rush.IsOver) return;
+        var result = _rush.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime), _hintUsed);
+        KaissaStreak.RecordToday();
+
+        var afterFen = ApplyMove(_currentFen, uci);
+        if (afterFen != null) _board.Render(afterFen, false, uci, _whiteBottom);
+        if (result.Solutions.Count > 0) HighlightSolution(result.Solutions[0], result.Correct ? Good : Bad);
+        _feedbackLabel.style.color = result.Correct ? UiKit.GreenHi : UiKit.Danger;
+        _feedbackLabel.text = result.Correct ? "Correct!" : $"Missed — {string.Join(", ", result.Solutions)}";
+        if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
+        UpdateHud();
+
+        StartCoroutine(FeedbackThenNext(result.Correct ? 0.6f : 1.3f, result.IsOver, result.Score));
+    }
+
+    private IEnumerator FeedbackThenNext(float seconds, bool over, int score)
+    {
+        _busy = true;
+        yield return new WaitForSeconds(seconds);
+        _feedbackLabel.text = "";
+        _busy = false;
+        if (over)
         {
-            var tile = _boardRoot.Find($"sq_{sq}");
-            if (tile != null)
-                Paint(tile.gameObject, color);
+            _audio.PlayGameEnd();
+            _feedbackLabel.style.color = UiKit.Gold;
+            _feedbackLabel.text = $"Game over!  Score {score}.   Esc — menu";
+        }
+        else DealNext();
+    }
+
+    private void ShowHint()
+    {
+        if (_busy || _rush.IsOver) return;
+        var sq = _rush.Hint();
+        if (sq != null) { _board.HighlightSquare(sq, HintCol); _hintUsed = true; }
+    }
+
+    private void HighlightSolution(string uci, Color color)
+    {
+        if (string.IsNullOrEmpty(uci) || uci.Length < 4) return;
+        _board.HighlightSquare(uci.Substring(0, 2), color);
+        _board.HighlightSquare(uci.Substring(2, 2), color);
+    }
+
+    private void UpdateHud()
+    {
+        _scoreLabel.text = _rush.Score.ToString();
+        _livesLabel.text = _rush.Lives.ToString();
+        _streakLabel.text = _rush.Streak.ToString();
+    }
+
+    private static string ApplyMove(string fen, string uci)
+    {
+        try { var g = ChessGame.FromFen(fen); if (g.TryMakeMove(uci)) return g.Fen; }
+        catch { }
+        return null;
+    }
+
+    private void Update()
+    {
+        if (Keyboard.current == null) return;
+        if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        else if (Keyboard.current.hKey.wasPressedThisFrame) ShowHint();
+        else if (Keyboard.current.fKey.wasPressedThisFrame && _currentFen != null)
+        {
+            _whiteBottom = !_whiteBottom;
+            _board.Render(_currentFen, !_busy, null, _whiteBottom);
         }
     }
 
-    private void RenderBoard(BoardView board)
+    private static void EnsureEventSystem()
     {
-        if (_boardRoot != null)
-            Destroy(_boardRoot.gameObject);
-        _boardRoot = Board3D.Render(board); // shared base/tiles/theme/pieces/coordinates
-    }
-
-    private void BuildHud()
-    {
-        var canvasObj = new GameObject("HUD");
-        var canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
-        canvasObj.AddComponent<GraphicRaycaster>();
-
-        _hudText = MakeText(canvas.transform, 26, TextAnchor.UpperCenter,
-            new Vector2(0.5f, 1f), new Vector2(0f, -16f), new Vector2(1100f, 50f));
-        _feedbackText = MakeText(canvas.transform, 36, TextAnchor.LowerCenter,
-            new Vector2(0.5f, 0f), new Vector2(0f, 40f), new Vector2(1100f, 60f));
-    }
-
-    private Text MakeText(Transform parent, int size, TextAnchor anchor, Vector2 anchorMinMax, Vector2 pos, Vector2 sizeDelta)
-    {
-        var go = new GameObject("text");
-        go.transform.SetParent(parent, false);
-        var text = go.AddComponent<Text>();
-        text.font = _font;
-        text.fontSize = size;
-        text.alignment = anchor;
-        text.color = Color.white;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
-
-        var rt = text.rectTransform;
-        rt.anchorMin = rt.anchorMax = anchorMinMax;
-        rt.pivot = anchorMinMax;
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = sizeDelta;
-        return text;
-    }
-
-    private static void Paint(GameObject go, Color color)
-    {
-        var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-        var material = new Material(shader);
-        material.color = color;
-        material.SetColor("_BaseColor", color);
-        material.SetFloat("_Smoothness", 0.12f); // matte tiles: no mirror hotspot to blow out
-        material.SetFloat("_Metallic", 0f);
-        go.GetComponent<Renderer>().material = material;
-    }
-
-    private static void SetUpCameraAndLight()
-    {
-        var cam = Camera.main;
-        if (cam != null)
-        {
-            cam.transform.position = new Vector3(3.5f, 7.5f, -4.5f);
-            cam.transform.LookAt(new Vector3(3.5f, 0f, 3.2f));
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.05f, 0.06f, 0.09f);
-        }
-
-        if (UnityEngine.Object.FindAnyObjectByType<Light>() == null)
-        {
-            var lightObj = new GameObject("Sun");
-            var light = lightObj.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 1.15f;
-            light.shadows = LightShadows.Soft;
-            lightObj.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
-        }
-
-        SceneEnvironment.Apply();
+        if (UnityEngine.Object.FindAnyObjectByType<EventSystem>() != null) return;
+        var go = new GameObject("EventSystem");
+        go.AddComponent<EventSystem>();
+        go.AddComponent<InputSystemUIInputModule>();
     }
 }
