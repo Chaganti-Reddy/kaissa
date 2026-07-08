@@ -16,12 +16,11 @@ public sealed class OpeningController : MonoBehaviour
 
     private BoardInteractor _interactor;
     private PieceAudio _audio;
+    private Transform _pickerCanvas;
 
     private void Start()
     {
         Board3D.SetupScene();
-        _line = OpeningLibrary.All[0]; // Italian by default; a picker can choose later
-        _trainer = new OpeningTrainer(_line);
 
         var canvas = Hud.Canvas();
         _prompt = Hud.Text(canvas, "", 26, TextAnchor.UpperCenter, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(1000f, 60f));
@@ -31,6 +30,30 @@ public sealed class OpeningController : MonoBehaviour
         _interactor = gameObject.AddComponent<BoardInteractor>();
         _interactor.Init(uci => OnPlayerMove(uci), _audio);
 
+        ShowPicker();
+    }
+
+    private void ShowPicker()
+    {
+        _pickerCanvas = Hud.Canvas();
+        Hud.Text(_pickerCanvas, "Choose an opening", 32, TextAnchor.UpperCenter,
+            new Vector2(0.5f, 1f), new Vector2(0f, -60f), new Vector2(900f, 50f));
+        float y = 150f;
+        foreach (var line in OpeningLibrary.All)
+        {
+            var l = line;
+            Hud.Button(_pickerCanvas, l.Name, new Vector2(0f, y), () => StartLine(l), 460f);
+            y -= 62f;
+        }
+        Hud.Button(_pickerCanvas, "Back", new Vector2(0f, y),
+            () => UnityEngine.SceneManagement.SceneManager.LoadScene("Menu"), 460f);
+    }
+
+    private void StartLine(OpeningLine line)
+    {
+        if (_pickerCanvas != null) { Destroy(_pickerCanvas.gameObject); _pickerCanvas = null; }
+        _line = line;
+        _trainer = new OpeningTrainer(_line);
         RenderBoard();
     }
 
@@ -55,7 +78,7 @@ public sealed class OpeningController : MonoBehaviour
     // The interactor only reports legal moves; here we additionally require the book move.
     private void OnPlayerMove(string uci)
     {
-        if (_trainer.IsComplete)
+        if (_trainer == null || _trainer.IsComplete)
             return;
         if (_trainer.Play(uci))
         {
