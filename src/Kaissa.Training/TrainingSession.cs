@@ -60,8 +60,8 @@ public sealed class TrainingSession
         if (scenarios.Count == 0)
             return null;
 
-        // Pick a position near the player's level, avoiding an immediate repeat of the same one.
-        _current = _difficulty.Pick(scenarios, _model.RatingEstimate, _lastShown.GetValueOrDefault(id));
+        // Pick a position near the player's level on THIS pattern, avoiding an immediate repeat.
+        _current = _difficulty.Pick(scenarios, _model.PatternRating(id), _lastShown.GetValueOrDefault(id));
         _lastShown[id] = _current.Id;
         return _current;
     }
@@ -83,6 +83,8 @@ public sealed class TrainingSession
         var rating = assisted ? Rating.Again : attempt.Rating;
 
         var card = _model.GetOrCreate(scenario.Pattern);
+        if (!card.Seen)
+            card.Rating = _model.RatingEstimate; // seed a new pattern from the player's overall level
         var now = _clock.UtcNow;
         double elapsedDays = card.LastReviewUtc is { } last ? (now - last).TotalDays : 0;
 
@@ -95,7 +97,9 @@ public sealed class TrainingSession
         if (rating == Rating.Again)
             card.Lapses++;
 
-        // Update the player's overall rating estimate from this attempt against the puzzle's rating.
+        // Update this pattern's own rating, and the overall estimate (kept as an aggregate for
+        // display and for seeding the play-vs-bot strength).
+        card.Rating = RatingEstimator.Update(card.Rating, scenario.Rating, correct);
         _model.RatingEstimate = RatingEstimator.Update(_model.RatingEstimate, scenario.Rating, correct);
         _model.RecordResult(correct, _model.RatingEstimate);
 

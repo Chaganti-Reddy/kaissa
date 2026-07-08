@@ -13,6 +13,10 @@ public sealed class PatternCard
     public int Reps { get; set; }
     public int Lapses { get; set; }
 
+    /// <summary>The player's estimated strength on this specific pattern, on the puzzle-rating scale.
+    /// Selection uses this so each motif is drilled at its own difficulty, not the overall average.</summary>
+    public double Rating { get; set; } = RatingEstimator.Default;
+
     public bool Seen => State is not null;
 }
 
@@ -55,6 +59,11 @@ public sealed class SkillModel
 
     public bool Has(PatternId pattern) => _cards.ContainsKey(pattern);
 
+    /// <summary>The pattern's own rating if it has been met, else the overall estimate (a sensible
+    /// starting difficulty for a pattern the player has not seen yet).</summary>
+    public double PatternRating(PatternId pattern) =>
+        _cards.TryGetValue(pattern, out var card) && card.Seen ? card.Rating : RatingEstimate;
+
     public PatternCard GetOrCreate(PatternId pattern)
     {
         if (!_cards.TryGetValue(pattern, out var card))
@@ -83,6 +92,7 @@ public sealed class SkillModel
                 DueUtc = c.DueUtc,
                 Reps = c.Reps,
                 Lapses = c.Lapses,
+                Rating = c.Rating,
             }).ToList(),
         };
 
@@ -109,6 +119,9 @@ public sealed class SkillModel
                 DueUtc = card.DueUtc,
                 Reps = card.Reps,
                 Lapses = card.Lapses,
+                // Saves from before per-pattern ratings existed have no value; start such a pattern
+                // from the overall estimate so a calibrated player isn't reset to the default.
+                Rating = card.Rating ?? model.RatingEstimate,
             };
         }
 
@@ -133,5 +146,6 @@ public sealed class SkillModel
         public DateTime? DueUtc { get; init; }
         public int Reps { get; init; }
         public int Lapses { get; init; }
+        public double? Rating { get; init; } // nullable so pre-existing saves fall back to the overall rating
     }
 }
