@@ -372,6 +372,7 @@ public sealed class KaissaGameController : MonoBehaviour
         if (review.Practice.Count > 0)
             KaissaPractice.Add(review.Practice);
         SaveRating(); // the game adjusted the player's rating; keep it for next session
+        KaissaGameLog.Record(review.Accuracy); // track accuracy across games for Stats
 
         ShowReview(review);
         _reviewMoves = _game.MoveHistory;

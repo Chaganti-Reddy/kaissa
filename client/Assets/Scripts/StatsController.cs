@@ -69,6 +69,12 @@ public sealed class StatsController : MonoBehaviour
         sb.AppendLine("Your Progress");
         sb.AppendLine();
 
+        if (KaissaGameLog.Count > 0)
+        {
+            sb.AppendLine($"Games played   {KaissaGameLog.Count}   ·   avg accuracy {KaissaGameLog.Average:0.0}%");
+            sb.AppendLine();
+        }
+
         if (stats.TotalAttempts == 0)
         {
             sb.AppendLine("No progress yet.");
