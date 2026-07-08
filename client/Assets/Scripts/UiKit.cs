@@ -135,6 +135,7 @@ public static class UiKit
         rail.Add(NavItem("Learn", "Library", activeScene));
         rail.Add(NavItem("Endgames", "Endgame", activeScene));
         rail.Add(GroupLabel("Tools"));
+        rail.Add(NavItem("Analysis", "Analysis", activeScene));
         rail.Add(NavItem("Board Vision", "Vision", activeScene));
         rail.Add(NavItem("Coordinates", "Coordinate", activeScene));
         rail.Add(NavItem("Stats", "Stats", activeScene));
