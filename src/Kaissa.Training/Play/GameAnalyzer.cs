@@ -10,7 +10,8 @@ public sealed record MoveAssessment(
     string PlayedMove,
     string BestMove,
     int CentipawnLoss,
-    MoveQuality Quality);
+    MoveQuality Quality,
+    int BestEvalCp);
 
 /// <summary>
 /// Reviews the player's moves in a finished game with the engine, at full strength, producing a
@@ -77,7 +78,7 @@ public sealed class GameAnalyzer
         }
 
         int loss = Math.Max(0, bestCp - playedCp);
-        return new MoveAssessment(ply, fen, playedMove, before.BestMove, loss, MoveClassifier.Classify(loss));
+        return new MoveAssessment(ply, fen, playedMove, before.BestMove, loss, MoveClassifier.Classify(loss), bestCp);
     }
 
     private static bool game_SideWasWhite(string fen) =>

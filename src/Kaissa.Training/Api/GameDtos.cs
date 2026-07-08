@@ -23,4 +23,5 @@ public sealed record GameReviewItem(
 /// </summary>
 public sealed record GameReviewResult(
     IReadOnlyList<GameReviewItem> Mistakes,
-    IReadOnlyList<Scenario> Practice);
+    IReadOnlyList<Scenario> Practice,
+    double Accuracy);

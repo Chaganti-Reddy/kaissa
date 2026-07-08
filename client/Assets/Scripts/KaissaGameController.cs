@@ -183,7 +183,7 @@ public sealed class KaissaGameController : MonoBehaviour
         try
         {
             var review = await _game.ReviewAsync();
-            _statusText.text = $"You resigned. {review.Mistakes.Count} mistake(s); " +
+            _statusText.text = $"You resigned. {review.Accuracy:0.0}% accuracy, {review.Mistakes.Count} mistake(s); " +
                                $"{review.Practice.Count} added to practice.   ·   N: new game";
             EnterReview(review);
         }
@@ -249,8 +249,8 @@ public sealed class KaissaGameController : MonoBehaviour
                 _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. Reviewing...";
                 var review = await _game.ReviewAsync();
                 _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. " +
-                                   $"{review.Mistakes.Count} mistake(s); {review.Practice.Count} added to practice.  " +
-                                   "Press N for a new game.";
+                                   $"{review.Accuracy:0.0}% accuracy, {review.Mistakes.Count} mistake(s); " +
+                                   $"{review.Practice.Count} added to practice.  Press N for a new game.";
                 EnterReview(review);
             }
             else
@@ -334,7 +334,8 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         var san = _game.MoveHistorySan();
         var sb = new StringBuilder();
-        sb.AppendLine($"Review — {review.Mistakes.Count} mistake(s)");
+        sb.AppendLine($"Review — {review.Accuracy:0.0}% accuracy");
+        sb.AppendLine($"{review.Mistakes.Count} mistake(s)");
         sb.AppendLine();
         foreach (var m in review.Mistakes)
         {

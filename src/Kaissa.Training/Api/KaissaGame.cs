@@ -95,7 +95,8 @@ public sealed class KaissaGame : IAsyncDisposable
             .Select(a => new GameReviewItem(a.Ply / 2 + 1, a.PlayedMove, a.BestMove, a.Quality.ToString(), a.CentipawnLoss))
             .ToList();
 
-        return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments));
+        double accuracy = AccuracyModel.GameAccuracy(assessments);
+        return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy);
     }
 
     public ValueTask DisposeAsync() => _engine.DisposeAsync();
