@@ -1,86 +1,88 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using Kaissa.Training.Api;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
-// Insights screen: loads saved progress and shows headline stats plus per-pattern mastery.
-// Read-only; Esc returns to the menu.
+// Progress / insights screen, redesigned in UI Toolkit. Loads saved progress and shows headline stats,
+// per-pattern strengths, and a button to drill the weakest pattern. Read-only.
 public sealed class StatsController : MonoBehaviour
 {
     private void Start()
     {
-        var font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font
-                   ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
-
+        EnsureEventSystem();
         var cam = Camera.main;
-        if (cam != null)
-        {
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.05f, 0.06f, 0.09f);
-        }
+        if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
+        var doc = gameObject.AddComponent<UIDocument>();
+        doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
+        StartCoroutine(Build(doc));
+    }
+
+    private IEnumerator Build(UIDocument doc)
+    {
+        yield return null;
+        var root = doc.rootVisualElement;
+        root.Clear();
+        root.style.flexDirection = FlexDirection.Row; root.style.flexGrow = 1; root.style.backgroundColor = UiKit.Bg;
+        root.Add(UiKit.NavRail("Stats"));
+
+        var main = new VisualElement();
+        main.style.flexGrow = 1; UiKit.Pad(main, 26, 34, 34, 34);
+        main.Add(UiKit.Text_("Your Progress", 26, UiKit.Text, bold: true));
 
         KaissaTrainer trainer = null;
         string content;
-        try
-        {
-            trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
-            content = BuildReport(trainer);
-        }
-        catch (Exception e)
-        {
-            content = "Error building stats:\n" + e.Message;
-            Debug.LogError(e);
-        }
+        try { trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load()); content = BuildReport(trainer); }
+        catch (Exception e) { content = "Error building stats:\n" + e.Message; Debug.LogError(e); }
 
-        RenderText(font, content);
+        var panel = new VisualElement();
+        panel.style.backgroundColor = UiKit.Panel;
+        panel.style.borderTopWidth = panel.style.borderBottomWidth = panel.style.borderLeftWidth = panel.style.borderRightWidth = 1;
+        panel.style.borderTopColor = panel.style.borderBottomColor = panel.style.borderLeftColor = panel.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(panel, 12); UiKit.Pad(panel, 20); panel.style.marginTop = 16; panel.style.maxWidth = 720;
+
+        var text = UiKit.Text_(content, 15, UiKit.Dim);
+        text.style.whiteSpace = WhiteSpace.Normal;
+        panel.Add(text);
+        main.Add(panel);
+
         if (trainer != null)
-            AddPracticeButton(trainer);
+            AddPracticeButton(main, trainer);
+        root.Add(main);
     }
 
-    // A "Practice" button targeting the weakest seen pattern (lowest stability) → themed drill.
-    private static void AddPracticeButton(KaissaTrainer trainer)
+    private static void AddPracticeButton(VisualElement main, KaissaTrainer trainer)
     {
-        var seen = trainer.Progress()
-            .Where(r => r.Seen)
-            .OrderBy(r => r.StabilityDays)
-            .ToList();
-        if (seen.Count == 0)
-            return;
+        var seen = trainer.Progress().Where(r => r.Seen).OrderBy(r => r.StabilityDays).ToList();
+        if (seen.Count == 0) return;
         var weakest = seen[0];
-
-        var canvas = Hud.Canvas();
-        Hud.Button(canvas, $"Practice: {weakest.PatternName}", new Vector2(0f, -300f),
-            () =>
-            {
-                ThemeRoute.PatternId = weakest.PatternId;
-                ThemeRoute.PatternName = weakest.PatternName;
-                UnityEngine.SceneManagement.SceneManager.LoadScene("SampleScene");
-            }, 380f);
+        var btn = UiKit.Primary($"Practice: {weakest.PatternName}", () =>
+        {
+            ThemeRoute.PatternId = weakest.PatternId;
+            ThemeRoute.PatternName = weakest.PatternName;
+            SceneManager.LoadScene("SampleScene");
+        }, 15);
+        btn.style.marginTop = 16; btn.style.alignSelf = Align.FlexStart;
+        main.Add(btn);
     }
 
     private static string BuildReport(KaissaTrainer trainer)
     {
         var stats = trainer.GetStats();
-
         var sb = new StringBuilder();
-        sb.AppendLine("Your Progress");
-        sb.AppendLine();
 
         if (KaissaGameLog.Count > 0)
-        {
-            sb.AppendLine($"Games played   {KaissaGameLog.Count}   ·   avg accuracy {KaissaGameLog.Average:0.0}%");
-            sb.AppendLine();
-        }
+            sb.AppendLine($"Games played   {KaissaGameLog.Count}   ·   avg accuracy {KaissaGameLog.Average:0.0}%").AppendLine();
 
         if (stats.TotalAttempts == 0)
         {
-            sb.AppendLine("No progress yet.");
-            sb.AppendLine("Train some puzzles first — progress saves automatically.");
-            sb.AppendLine();
-            sb.AppendLine("Esc - back to menu");
+            sb.AppendLine("No puzzle progress yet. Train some puzzles — progress saves automatically.");
             return sb.ToString();
         }
 
@@ -99,73 +101,34 @@ public sealed class StatsController : MonoBehaviour
         var rows = trainer.Progress().ToList();
         var seen = rows.Where(r => r.Seen).OrderByDescending(r => r.StabilityDays).ToList();
         var unseen = rows.Where(r => !r.Seen).ToList();
-
         if (seen.Count > 0)
         {
             sb.AppendLine("Strongest");
-            foreach (var r in seen.Take(3))
-                sb.AppendLine($"  {r.PatternName,-24} {r.StabilityDays,5:0}d");
-
+            foreach (var r in seen.Take(3)) sb.AppendLine($"  {r.PatternName,-24} {r.StabilityDays,5:0}d");
             var weak = seen.AsEnumerable().Reverse().Take(3).ToList();
-            if (weak.Count > 0)
-            {
-                sb.AppendLine();
-                sb.AppendLine("Needs work");
-                foreach (var r in weak)
-                    sb.AppendLine($"  {r.PatternName,-24} {r.StabilityDays,5:0}d   lapses {r.Lapses}");
-            }
+            sb.AppendLine();
+            sb.AppendLine("Needs work");
+            foreach (var r in weak) sb.AppendLine($"  {r.PatternName,-24} {r.StabilityDays,5:0}d   lapses {r.Lapses}");
         }
         if (unseen.Count > 0)
         {
             sb.AppendLine();
             sb.AppendLine("Not yet seen: " + string.Join(", ", unseen.Select(r => r.PatternName)));
         }
-
-        sb.AppendLine();
-        sb.AppendLine("Esc - back to menu");
         return sb.ToString();
     }
 
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
+            SceneManager.LoadScene("Menu");
     }
 
-    private static void RenderText(Font font, string content)
+    private static void EnsureEventSystem()
     {
-        var canvasObj = new GameObject("HUD");
-        var canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
-        canvasObj.AddComponent<GraphicRaycaster>();
-
-        // Dark panel so the screen region is clearly rendering.
-        var panelObj = new GameObject("panel");
-        panelObj.transform.SetParent(canvas.transform, false);
-        var panel = panelObj.AddComponent<Image>();
-        panel.color = new Color(0.10f, 0.11f, 0.15f, 0.95f);
-        var prt = panel.rectTransform;
-        prt.anchorMin = Vector2.zero;
-        prt.anchorMax = Vector2.one;
-        prt.offsetMin = new Vector2(30f, 30f);
-        prt.offsetMax = new Vector2(-30f, -30f);
-
-        var textObj = new GameObject("stats");
-        textObj.transform.SetParent(panel.transform, false);
-        var text = textObj.AddComponent<Text>();
-        text.font = font;
-        text.fontSize = 22;
-        text.alignment = TextAnchor.UpperLeft;
-        text.color = Color.white;
-        text.text = content;
-        text.horizontalOverflow = HorizontalWrapMode.Wrap;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
-
-        var rt = text.rectTransform;
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = new Vector2(30f, 30f);
-        rt.offsetMax = new Vector2(-30f, -30f);
+        if (UnityEngine.Object.FindAnyObjectByType<EventSystem>() != null) return;
+        var go = new GameObject("EventSystem");
+        go.AddComponent<EventSystem>();
+        go.AddComponent<InputSystemUIInputModule>();
     }
 }
