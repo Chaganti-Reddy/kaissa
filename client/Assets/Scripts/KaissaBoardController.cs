@@ -55,6 +55,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     {
         _font = Hud.Font;
         _trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
+        KaissaPractice.FoldInto(_trainer); // schedule positions from the player's own game mistakes
         _ratingStart = _trainer.PlayerRating;
         SetUpCameraAndLight();
         BuildPostProcessing();

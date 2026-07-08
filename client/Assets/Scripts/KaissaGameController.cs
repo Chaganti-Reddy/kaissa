@@ -351,6 +351,11 @@ public sealed class KaissaGameController : MonoBehaviour
     // Enter the walkthrough: step through the finished game with ←/→, mistakes flagged.
     private void EnterReview(GameReviewResult review)
     {
+        // Persist the positions from this game's mistakes so they are drilled in training (the
+        // play-to-train fusion). This is what the "added to practice" count refers to.
+        if (review.Practice.Count > 0)
+            KaissaPractice.Add(review.Practice);
+
         ShowReview(review);
         _reviewMoves = _game.MoveHistory;
         _reviewSan = _game.MoveHistorySan();
