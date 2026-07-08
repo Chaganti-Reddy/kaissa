@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
@@ -135,7 +136,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     private void StartDaily()
     {
         _dailyMode = true;
-        string today = DateTime.Now.ToString("yyyy-MM-dd");
+        string today = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         _dailyScenario = DailyPuzzle.ForDate(ScenarioLibrary.LoadDefault(), DateTime.Today);
         _board = BoardView.FromFen(_dailyScenario.Fen);
         RenderBoard(_board);
@@ -179,7 +180,7 @@ public sealed class KaissaBoardController : MonoBehaviour
             : $"Missed — best was {string.Join(", ", _dailyScenario.Solutions)}.   Esc — menu";
 
         if (correct)
-            KaissaSettings.DailyDone = DateTime.Now.ToString("yyyy-MM-dd");
+            KaissaSettings.DailyDone = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         KaissaStreak.RecordToday();
     }
 

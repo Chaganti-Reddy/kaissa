@@ -37,7 +37,7 @@ public sealed class MainMenuController : MonoBehaviour
         MakeText(canvas, "Kaissa", 72, new Vector2(0f, 255f), new Vector2(800f, 100f));
         MakeText(canvas, SubtitleText(), 26, new Vector2(0f, 198f), new Vector2(900f, 50f));
 
-        bool dailyDone = KaissaSettings.DailyDone == System.DateTime.Now.ToString("yyyy-MM-dd");
+        bool dailyDone = KaissaSettings.DailyDone == System.DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
         MakeButton(canvas, dailyDone ? "Daily Puzzle  (done)" : "Daily Puzzle", new Vector2(0f, 150f),
             () => { DailyRoute.Active = true; SceneManager.LoadScene("SampleScene"); }, 260f);
 
