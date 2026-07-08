@@ -21,6 +21,9 @@ public static class GamePractice
     private static readonly PatternId PinPattern = new("tactic.pin");
     private static readonly PatternId SkewerPattern = new("tactic.skewer");
     private static readonly PatternId DiscoveredPattern = new("tactic.discovered_attack");
+    private static readonly PatternId DoubleCheckPattern = new("tactic.double_check");
+    private static readonly PatternId BackRankPattern = new("checkmate.back_rank");
+    private static readonly PatternId SmotheredPattern = new("checkmate.smothered");
 
     /// <summary>The full pattern (with metadata) for a game-practice scenario's pattern id.</summary>
     public static Pattern PatternFor(PatternId id) =>
@@ -52,6 +55,9 @@ public static class GamePractice
         Motif.Pin => PinPattern,
         Motif.Skewer => SkewerPattern,
         Motif.HangingPiece => HangingPattern,
-        _ => FromYourGames.Id,
+        Motif.DoubleCheck => DoubleCheckPattern,
+        Motif.BackRankMate => BackRankPattern,
+        Motif.SmotheredMate => SmotheredPattern,
+        _ => FromYourGames.Id, // generic checkmate and anything unclassified
     };
 }

@@ -75,7 +75,17 @@ public sealed class MotifTests
     [Fact]
     public void Delivering_mate_is_classified_as_checkmate()
     {
-        Assert.Equal(Motif.Checkmate, MotifClassifier.Classify("6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8"));
+        // A queen mate with king support, on no particular geometry, is a plain checkmate.
+        Assert.Equal(Motif.Checkmate, MotifClassifier.Classify("7k/Q7/5K2/8/8/8/8/8 w - - 0 1", "a7g7"));
+    }
+
+    [Theory]
+    [InlineData("6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8", Motif.BackRankMate)]
+    [InlineData("6rk/6pp/8/6N1/8/8/8/K7 w - - 0 1", "g5f7", Motif.SmotheredMate)]
+    [InlineData("4k3/8/4N3/8/8/8/8/4R1K1 w - - 0 1", "e6c7", Motif.DoubleCheck)]
+    public void Forcing_motifs_are_classified(string fen, string move, Motif expected)
+    {
+        Assert.Equal(expected, MotifClassifier.Classify(fen, move));
     }
 
     [Fact]
@@ -92,7 +102,10 @@ public sealed class MotifTests
     [InlineData("3k3q/8/8/8/8/8/8/R3K3 w - - 0 1", "a1a8", "tactic.skewer")]
     [InlineData("7q/8/7k/8/3N4/8/8/B3K3 w - - 0 1", "d4e6", "tactic.discovered_attack")]
     [InlineData("4k3/8/8/3b4/8/8/8/3RK3 w - - 0 1", "d1d5", "tactic.hanging_piece")]
-    [InlineData("6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8", "tactic.from_your_games")]
+    [InlineData("6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8", "checkmate.back_rank")]
+    [InlineData("6rk/6pp/8/6N1/8/8/8/K7 w - - 0 1", "g5f7", "checkmate.smothered")]
+    [InlineData("4k3/8/4N3/8/8/8/8/4R1K1 w - - 0 1", "e6c7", "tactic.double_check")]
+    [InlineData("7k/Q7/5K2/8/8/8/8/8 w - - 0 1", "a7g7", "tactic.from_your_games")]
     public void A_missed_move_routes_to_the_pattern_for_its_motif(string fen, string best, string expectedPattern)
     {
         var assessment = new MoveAssessment(0, fen, "0000", best, 900, MoveQuality.Blunder, 0);
