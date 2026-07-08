@@ -257,7 +257,7 @@ GameObject:
   - component: {fileID: 572466672}
   - component: {fileID: 572466671}
   m_Layer: 0
-  m_Name: Custom
+  m_Name: Library
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -272,9 +272,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 572466670}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c5a17b0e4d2f4c9a8b6e1f0a2d3c4e5f, type: 3}
+  m_Script: {fileID: 11500000, guid: b2c3d4e5f60718293a4b5c6d7e8f9012, type: 3}
   m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CustomController
+  m_EditorClassIdentifier: Assembly-CSharp::LibraryController
 --- !u!4 &572466672
 Transform:
   m_ObjectHideFlags: 0

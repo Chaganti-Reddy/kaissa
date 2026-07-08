@@ -55,7 +55,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         // First-run calibration, custom practice, settings
         MakeButton(canvas, "Calibrate", new Vector2(-185f, -200f), () => SceneManager.LoadScene("Calibrate"), 170f);
-        MakeButton(canvas, "Practice", new Vector2(0f, -200f), () => SceneManager.LoadScene("Custom"), 170f);
+        MakeButton(canvas, "Learn", new Vector2(0f, -200f), () => SceneManager.LoadScene("Library"), 170f);
         MakeButton(canvas, "Settings", new Vector2(185f, -200f), () => SceneManager.LoadScene("Settings"), 170f);
 
         MakeButton(canvas, "Quit", new Vector2(0f, -270f), Quit, 200f);
