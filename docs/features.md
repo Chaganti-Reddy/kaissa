@@ -5,53 +5,56 @@ do not chase — see `docs/vision.md`). Live human-vs-human matchmaking is out o
 else is fair game, and our differentiator is the adaptive, spaced, implicit-learning core that
 threads through all of it.
 
-Legend: ✅ built (core) · 🎨 needs client UI · ⏳ planned · 🚫 out of scope
+Legend: ✅ built (core + client) · 🎨 core built, client UI still pending · ⏳ planned · 🚫 out of scope
 
 ## Training and puzzles
 
-- ✅🎨 Adaptive spaced puzzle trainer (FSRS, per-pattern, difficulty-matched) — *our core edge*
-- ✅🎨 Puzzle Rush (timed / lives, escalating difficulty) — `RushSession`
-- ✅ Daily puzzle (deterministic by date) — `DailyPuzzle`
-- ✅🎨 Themed practice (drill one pattern on demand) — `ThemedSession`
-- ✅🎨 Puzzle by rating range / custom sets — `ScenarioLibrary.ByRatingRange` + `PuzzleSetSession`
-- ✅🎨 "Weakness report" → auto-generated practice set (uses the skill model; beyond chess.com) — `WeaknessReport`
+- ✅ Adaptive spaced puzzle trainer (FSRS, per-pattern, difficulty-matched) — *our core edge*
+- ✅ Puzzle Rush (timed / lives, escalating difficulty) — `RushSession`
+- ✅ Daily puzzle (deterministic by date, marked done until tomorrow) — `DailyPuzzle`
+- ✅ Themed practice — pick any pattern to drill from the menu (Practice) — `ThemedSession`
+- 🎨 Puzzle by rating range / custom sets — `ScenarioLibrary.ByRatingRange` + `PuzzleSetSession`
+- ✅ "Weakness report" → practice the weakest motif from Stats (uses the skill model; beyond chess.com) — `WeaknessReport`
 
 ## Playing
 
-- ✅🎨 Play vs adaptive bot (Stockfish capped to your level) — `KaissaGame`
-- ✅🎨 Bot personalities / fixed-Elo opponents — `BotRoster` + `KaissaGame` fixed Elo
-- ✅🎨 Play from a position / play out endgames vs engine — `KaissaGame(fen)` + `EndgameLibrary`
+- ✅ Play vs adaptive bot (Stockfish capped to your level) — `KaissaGame`
+- ✅ Bot personalities / fixed-Elo opponents, with a bot-speed setting — `BotRoster` + `KaissaGame` fixed Elo
+- ✅ Play from a position / play out endgames vs engine — `KaissaGame(fen)` + `EndgameLibrary`
 - 🚫 Live online multiplayer (out of scope by design)
 
 ## Analysis and improvement
 
-- ✅🎨 Post-game review (best move, mistake grading) — `GameAnalyzer`
-- ✅🎨 Mistakes → spaced practice, tagged by motif — *fusion, beyond chess.com* — `GamePractice`
-- ✅🎨 Position/line analysis (engine eval + best line) — `KaissaAnalysis`
+- ✅ Post-game review (mistake list, best reply, severity, centipawn loss) with move-by-move walkthrough — `GameAnalyzer`
+- ✅ Mistakes → spaced practice, tagged by motif — *fusion, beyond chess.com* — `GamePractice`
+- ✅ Position/line analysis (engine eval + best line) — `KaissaAnalysis`
 - ⏳ Accuracy / insights per game
 
 ## Learning content
 
-- ✅🎨 Endgame trainer (K+Q, K+R, K+P opposition, promotion) — play out vs engine — `EndgameLibrary`
-- ✅🎨 Opening trainer (learn lines move by move) — `OpeningLibrary` / `OpeningTrainer`
+- ✅ Endgame trainer (K+Q, K+R, K+P opposition, promotion) — pick and play out vs engine — `EndgameLibrary`
+- ✅ Opening trainer — pick a line and play it move by move — `OpeningLibrary` / `OpeningTrainer`
 - ⏳ Pattern library browser (see/learn each motif)
 
 ## Stats and motivation
 
-- ✅🎨 Progress / mastery map (per-pattern) — `KaissaTrainer.Progress()`
-- ✅🎨 Player stats + rating history, streaks, accuracy — `KaissaTrainer.GetStats()`
-- ⏳ Goals / daily streak / reminders
+- ✅ Progress / mastery map (per-pattern) — `KaissaTrainer.Progress()`
+- ✅ Player stats + rating history, streaks, accuracy — `KaissaTrainer.GetStats()`
+- ✅ Day streak on the menu; patterns-due count surfaced — `KaissaStreak`
+- ⏳ Goals / reminders
 
 ## Vision and drills
 
-- ✅🎨 Board-vision trainer (light/dark square drill) — `BoardVision` / `VisionSession`
-- ✅🎨 Coordinate trainer (find the named square) — `Coordinates` / `CoordinateSession`
+- ✅ Board-vision trainer (light/dark square drill) — `BoardVision` / `VisionSession`
+- ✅ Coordinate trainer (find the named square) — `Coordinates` / `CoordinateSession`
 
 ## Platform / meta
 
-- ✅🎨 Onboarding + rating calibration — `CalibrationSession`
-- ✅🎨 Settings (sound, board flip, board theme, piece style, reset) — `KaissaSettings` + Settings screen
-- ✅🎨 Cosmetic board themes + piece style (modelled/procedural); more sets = drop-in. Never pay-to-win.
+- ✅ Onboarding + rating calibration — `CalibrationSession`
+- ✅ Settings (sound, move input, move hints, auto-queen, bot speed, board flip, board theme, piece style, coordinates, reset) — `KaissaSettings` + Settings screen
+- ✅ Shared board interaction on every screen — drag or click, legal-move dots, highlights, sounds, premove, glide animation, promotion picker
+- ✅ F1 controls help overlay, on every screen
+- ✅ Cosmetic board themes (eight) + piece style (modelled/procedural); more sets = drop-in. Never pay-to-win.
 - ⏳ Cloud sync (v1.5), ML weakness prediction + generated content (v2)
 - ⏳ Mobile (embed engine for iOS)
 

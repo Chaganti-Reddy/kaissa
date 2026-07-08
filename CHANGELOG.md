@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.21 (alpha) — 2026-07-08
+
+- Openings: the screen now lists the opening lines and you pick which one to train, instead of
+  always loading the first.
+- Custom practice: a new Practice entry on the menu lets you pick any pattern and drill it on
+  demand (themed mode), rather than only the adaptive loop or your weakest motif.
+- Press F1 on any screen for a controls cheat-sheet (move, flip, hint, review, resign, and the
+  per-screen keys).
+
 ## v0.1.20 (alpha) — 2026-07-07
 
 - The bot's move now glides across the board (with a capture pop and sound) instead of teleporting,

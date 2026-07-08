@@ -10,7 +10,7 @@ The name is a placeholder and may change.
 
 ## Status
 
-Alpha. The learning core is complete and tested, and there is a playable Unity client on desktop covering training, puzzle rush, play-vs-bot, endgames, openings, review, stats, and calibration. Visuals are functional and still being polished; a real modelled piece set and full UX pass are pending. See [`docs/`](docs/).
+Alpha. The learning core is complete and tested, and there is a playable Unity client on desktop covering training, puzzle rush, daily puzzle, themed/custom practice, play-vs-bot, endgames, openings, post-game review, stats, board-vision and coordinate drills, and calibration. Visuals are functional and still being polished; a real modelled piece set and full UX pass are pending. See [`docs/`](docs/).
 
 ## Build and run
 
