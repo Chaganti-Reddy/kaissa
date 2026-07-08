@@ -348,6 +348,18 @@ public sealed class KaissaGameController : MonoBehaviour
         _moveListText.text = sb.ToString();
     }
 
+    // A finished game moved the player's rating (Stockfish is capped to it). Persist it into the same
+    // saved progress the puzzles use, preserving existing cards, so play and training share one rating.
+    private void SaveRating()
+    {
+        if (_game == null)
+            return;
+        var saved = KaissaProgress.Load();
+        var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();
+        model.RatingEstimate = _game.PlayerRating;
+        KaissaProgress.Save(model.ToJson());
+    }
+
     // Enter the walkthrough: step through the finished game with ←/→, mistakes flagged.
     private void EnterReview(GameReviewResult review)
     {
@@ -355,6 +367,7 @@ public sealed class KaissaGameController : MonoBehaviour
         // play-to-train fusion). This is what the "added to practice" count refers to.
         if (review.Practice.Count > 0)
             KaissaPractice.Add(review.Practice);
+        SaveRating(); // the game adjusted the player's rating; keep it for next session
 
         ShowReview(review);
         _reviewMoves = _game.MoveHistory;
