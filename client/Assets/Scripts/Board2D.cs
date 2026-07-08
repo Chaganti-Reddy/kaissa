@@ -13,6 +13,11 @@ public sealed class Board2D
 {
     public readonly VisualElement Root = new();
 
+    // When set, a click reports the clicked square (e.g. "e4") instead of making a move — used by the
+    // coordinate drill. When true (default) edge coordinate labels show, honoring the global setting.
+    public Action<string> SquareClickHandler;
+    public bool ShowCoordinates = true;
+
     private readonly Action<string> _onMove;
 
     private string _fen;
@@ -134,8 +139,16 @@ public sealed class Board2D
                 if (char.ToUpperInvariant(p) == 'K') { if (white) { wkF = f; wkR = r; } else { bkF = f; bkR = r; } }
             }
 
-            _rowOverlays[row, col].Clear();
-            _rowOverlays[row, col].style.backgroundColor = new Color(0, 0, 0, 0);
+            var ovel = _rowOverlays[row, col];
+            ovel.Clear();
+            ovel.style.backgroundColor = new Color(0, 0, 0, 0);
+
+            if (ShowCoordinates && KaissaSettings.Coordinates)
+            {
+                Color coText = dark ? Light : Dark;
+                if (row == 7) ovel.Add(Coord($"{(char)('a' + f)}", coText, TextAnchor.LowerRight));
+                if (col == 0) ovel.Add(Coord($"{r + 1}", coText, TextAnchor.UpperLeft));
+            }
         }
 
         // last-move highlight
@@ -153,6 +166,25 @@ public sealed class Board2D
             if (whiteToMove && wkF >= 0) Highlight((wkF, wkR), Check);
             if (!whiteToMove && bkF >= 0) Highlight((bkF, bkR), Check);
         }
+    }
+
+    private static Label Coord(string s, Color c, TextAnchor anchor)
+    {
+        var l = new Label(s);
+        l.pickingMode = PickingMode.Ignore;
+        l.style.position = Position.Absolute;
+        l.style.fontSize = 11; l.style.color = c;
+        l.style.unityFontStyleAndWeight = FontStyle.Bold;
+        if (anchor == TextAnchor.LowerRight) { l.style.right = 3; l.style.bottom = 1; }
+        else { l.style.left = 3; l.style.top = 1; }
+        return l;
+    }
+
+    // Highlight a square by name (e.g. a hint's from-square, or a solution) on top of the current render.
+    public void HighlightSquare(string sq, Color c)
+    {
+        if (!string.IsNullOrEmpty(sq) && sq.Length >= 2)
+            Highlight(Sq(sq.Substring(0, 2)), c);
     }
 
     private void Highlight((int f, int r) sq, Color c)
@@ -181,8 +213,9 @@ public sealed class Board2D
 
     private void OnCellClicked(int row, int col)
     {
-        if (!_canMove) return;
         var (f, r) = ToBoard(row, col);
+        if (SquareClickHandler != null) { SquareClickHandler(Uci((f, r))); return; }
+        if (!_canMove) return;
         var game = SafeGame(_fen);
         if (game == null) return;
 
