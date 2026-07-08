@@ -9,7 +9,7 @@ Legend: ✅ built (core + client) · 🎨 core built, client UI still pending ·
 
 ## Training and puzzles
 
-- ✅ Adaptive spaced puzzle trainer (FSRS, per-pattern, difficulty-matched) — *our core edge*
+- ✅ Adaptive spaced puzzle trainer (FSRS; each pattern drilled at its own rating) — *our core edge*
 - ✅ Puzzle Rush (timed / lives, escalating difficulty) — `RushSession`
 - ✅ Daily puzzle (deterministic by date, marked done until tomorrow) — `DailyPuzzle`
 - ✅ Themed practice — pick any pattern to drill from the menu (Practice) — `ThemedSession`
@@ -25,7 +25,7 @@ Legend: ✅ built (core + client) · 🎨 core built, client UI still pending ·
 
 ## Analysis and improvement
 
-- ✅ Post-game review (mistake list, best reply, severity, centipawn loss) with move-by-move walkthrough — `GameAnalyzer`
+- ✅ Post-game review (mistake list, best reply, severity, centipawn loss, accuracy % by phase) with move-by-move walkthrough — `GameAnalyzer` / `AccuracyModel`
 - ✅ Mistakes → spaced practice, tagged by motif — *fusion, beyond chess.com* — `GamePractice`
 - ✅ Position/line analysis (engine eval + best line) — `KaissaAnalysis`
 - ⏳ Accuracy / insights per game
@@ -33,7 +33,8 @@ Legend: ✅ built (core + client) · 🎨 core built, client UI still pending ·
 ## Learning content
 
 - ✅ Endgame trainer (K+Q, K+R, K+P opposition, promotion) — pick and play out vs engine — `EndgameLibrary`
-- ✅ Opening trainer — pick a line and play it move by move — `OpeningLibrary` / `OpeningTrainer`
+- ✅ Opening repertoire trainer — recall your own moves, spaced-repetition scheduled per decision,
+  deviations flagged — `OpeningRepertoire` / `RepertoireSession`
 - ✅ Pattern library browser (Learn) — browse each motif, see an example position, drill it — `ScenarioLibrary`
 
 ## Stats and motivation

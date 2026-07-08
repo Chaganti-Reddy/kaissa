@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.1.23 (alpha) — 2026-07-08
+
+- Openings is now a spaced-repetition repertoire trainer. You recall only your own moves; each is
+  scheduled for review on its own, and a wrong move shows the book move and comes back sooner. This
+  replaces the single-line walkthrough.
+- Training adapts per pattern: each motif is drilled at its own difficulty instead of one overall
+  level, so weak motifs get easier positions and strong ones get harder.
+- Play vs bot: the post-game review reports your accuracy as a percentage, broken down by opening,
+  middlegame, and endgame.
+- Your rating now updates and is saved after a game against the bot, so play and puzzles share one
+  rating. Mistakes from your games are now saved and scheduled as practice — previously the "added
+  to practice" count had no effect.
+- Missed double checks and back-rank or smothered mates in your games are recognised and routed to
+  the matching pattern for practice.
+
 ## v0.1.22 (alpha) — 2026-07-08
 
 - New Learn screen: a pattern library. Browse every motif, read what it trains, see an example
