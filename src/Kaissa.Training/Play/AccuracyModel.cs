@@ -1,5 +1,8 @@
 namespace Kaissa.Training.Play;
 
+/// <summary>Accuracy (0–100) per game phase; a value is null when the player made no moves in it.</summary>
+public sealed record PhaseAccuracy(double? Opening, double? Middlegame, double? Endgame);
+
 /// <summary>
 /// Turns per-move centipawn losses into a game accuracy percentage (0–100), the way chess sites
 /// report it. The model is the widely-used Lichess formula: each evaluation is mapped to an expected
@@ -23,6 +26,19 @@ public static class AccuracyModel
         double drop = Math.Max(0.0, winPercentDrop);
         double acc = 103.1668 * Math.Exp(-0.04354 * drop) - 3.1669;
         return Math.Max(0.0, Math.Min(100.0, acc));
+    }
+
+    /// <summary>Accuracy split by game phase; a phase is null when the player made no moves in it.</summary>
+    public static PhaseAccuracy ByPhase(IEnumerable<MoveAssessment> playerMoves)
+    {
+        var moves = playerMoves.ToList();
+        double? For(GamePhase phase)
+        {
+            var subset = moves.Where(m => GamePhaseClassifier.Classify(m.Fen, m.Ply) == phase).ToList();
+            return subset.Count == 0 ? (double?)null : GameAccuracy(subset);
+        }
+
+        return new PhaseAccuracy(For(GamePhase.Opening), For(GamePhase.Middlegame), For(GamePhase.Endgame));
     }
 
     /// <summary>

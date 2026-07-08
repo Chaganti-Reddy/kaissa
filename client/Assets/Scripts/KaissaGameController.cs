@@ -335,6 +335,10 @@ public sealed class KaissaGameController : MonoBehaviour
         var san = _game.MoveHistorySan();
         var sb = new StringBuilder();
         sb.AppendLine($"Review — {review.Accuracy:0.0}% accuracy");
+        var ph = review.PhaseAccuracy;
+        if (ph.Opening is { } op) sb.AppendLine($"  opening    {op:0}%");
+        if (ph.Middlegame is { } mid) sb.AppendLine($"  middlegame {mid:0}%");
+        if (ph.Endgame is { } eg) sb.AppendLine($"  endgame    {eg:0}%");
         sb.AppendLine($"{review.Mistakes.Count} mistake(s)");
         sb.AppendLine();
         foreach (var m in review.Mistakes)

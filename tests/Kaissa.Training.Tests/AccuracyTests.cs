@@ -41,6 +41,30 @@ public class AccuracyTests
         }
     }
 
+    private const string Start = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    private const string KingAndPawn = "8/8/8/4k3/8/8/4P3/4K3 w - - 0 1";
+
+    private static MoveAssessment MoveAt(string fen, int ply, int loss = 0) =>
+        new(ply, fen, "e2e4", "e2e4", loss, MoveQuality.Best, 0);
+
+    [Fact]
+    public void Phases_are_classified_by_material_and_move_number()
+    {
+        Assert.Equal(GamePhase.Opening, GamePhaseClassifier.Classify(Start, 0));
+        Assert.Equal(GamePhase.Middlegame, GamePhaseClassifier.Classify(Start, 30));
+        Assert.Equal(GamePhase.Endgame, GamePhaseClassifier.Classify(KingAndPawn, 60));
+    }
+
+    [Fact]
+    public void Accuracy_by_phase_groups_moves_and_leaves_empty_phases_null()
+    {
+        var moves = new[] { MoveAt(Start, 2), MoveAt(KingAndPawn, 60) };
+        var byPhase = AccuracyModel.ByPhase(moves);
+        Assert.NotNull(byPhase.Opening);
+        Assert.NotNull(byPhase.Endgame);
+        Assert.Null(byPhase.Middlegame); // no move fell in the middlegame
+    }
+
     [Fact]
     public void The_same_centipawn_loss_hurts_less_when_the_position_is_already_lopsided()
     {

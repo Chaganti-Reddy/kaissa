@@ -96,7 +96,10 @@ public sealed class KaissaGame : IAsyncDisposable
             .ToList();
 
         double accuracy = AccuracyModel.GameAccuracy(assessments);
-        return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy);
+        // Player-perspective evaluation after each of the player's moves — the curve for a future graph.
+        var evalSeries = assessments.Select(a => a.BestEvalCp - a.CentipawnLoss).ToList();
+        var phaseAccuracy = AccuracyModel.ByPhase(assessments);
+        return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy, evalSeries, phaseAccuracy);
     }
 
     public ValueTask DisposeAsync() => _engine.DisposeAsync();

@@ -24,4 +24,6 @@ public sealed record GameReviewItem(
 public sealed record GameReviewResult(
     IReadOnlyList<GameReviewItem> Mistakes,
     IReadOnlyList<Scenario> Practice,
-    double Accuracy);
+    double Accuracy,
+    IReadOnlyList<int> EvalSeries,
+    Kaissa.Training.Play.PhaseAccuracy PhaseAccuracy);
