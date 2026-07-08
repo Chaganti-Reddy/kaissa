@@ -1,94 +1,211 @@
+using System.Collections;
 using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
-// The home screen: a title and buttons to enter Training or Play. Built in code (Canvas +
-// EventSystem) so no scene wiring is needed beyond adding the scenes to Build Settings.
+// The home screen, rebuilt in UI Toolkit: a chess.com-style left nav rail + a card grid. Buttons load
+// the mode scenes. Built in code via UiKit so the look stays consistent without a stylesheet asset.
 public sealed class MainMenuController : MonoBehaviour
 {
-    private Font _font;
     private static bool _appliedWindowMode;
+    private VisualElement _root;
 
     private void Start()
     {
-        // Apply the saved window mode (maximized by default) once per run, so returning to the menu
-        // doesn't fight a manual resize. A maximized window still has a title bar, so no fullscreen trap.
-        if (!_appliedWindowMode)
-        {
-            WindowMode.Apply();
-            _appliedWindowMode = true;
-        }
-
-        _font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
+        if (!_appliedWindowMode) { WindowMode.Apply(); _appliedWindowMode = true; }
         EnsureEventSystem();
 
         var cam = Camera.main;
-        if (cam != null)
-        {
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.05f, 0.06f, 0.09f);
-        }
+        if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
-        var canvas = BuildCanvas();
-        MakeText(canvas, "Kaissa", 72, new Vector2(0f, 255f), new Vector2(800f, 100f));
-        MakeText(canvas, SubtitleText(), 26, new Vector2(0f, 198f), new Vector2(900f, 50f));
-
-        bool dailyDone = KaissaSettings.DailyDone == System.DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-        MakeButton(canvas, dailyDone ? "Daily Puzzle  (done)" : "Daily Puzzle", new Vector2(0f, 150f),
-            () => { DailyRoute.Active = true; SceneManager.LoadScene("SampleScene"); }, 260f);
-
-        // Left column
-        MakeButton(canvas, "Train", new Vector2(-170f, 90f), () => SceneManager.LoadScene("SampleScene"));
-        MakeButton(canvas, "Puzzle Rush", new Vector2(-170f, 20f), () => SceneManager.LoadScene("Rush"));
-        MakeButton(canvas, "Play vs Bot", new Vector2(-170f, -50f), () => SceneManager.LoadScene("Play"));
-        MakeButton(canvas, "Progress", new Vector2(-170f, -120f), () => SceneManager.LoadScene("Stats"));
-
-        // Right column
-        MakeButton(canvas, "Endgames", new Vector2(170f, 90f), () => SceneManager.LoadScene("Endgame"));
-        MakeButton(canvas, "Openings", new Vector2(170f, 20f), () => SceneManager.LoadScene("Opening"));
-        MakeButton(canvas, "Board Vision", new Vector2(170f, -50f), () => SceneManager.LoadScene("Vision"));
-        MakeButton(canvas, "Coordinates", new Vector2(170f, -120f), () => SceneManager.LoadScene("Coordinate"));
-
-        // First-run calibration, custom practice, settings
-        MakeButton(canvas, "Calibrate", new Vector2(-185f, -200f), () => SceneManager.LoadScene("Calibrate"), 170f);
-        MakeButton(canvas, "Learn", new Vector2(0f, -200f), () => SceneManager.LoadScene("Library"), 170f);
-        MakeButton(canvas, "Settings", new Vector2(185f, -200f), () => SceneManager.LoadScene("Settings"), 170f);
-
-        MakeButton(canvas, "Quit", new Vector2(0f, -270f), Quit, 200f);
-
-        if (!KaissaSettings.Onboarded)
-            BuildWelcome(canvas);
+        var doc = gameObject.AddComponent<UIDocument>();
+        doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
+        StartCoroutine(Build(doc));
     }
 
-    // First-run welcome: steer a new player to calibration so puzzles and the bot match their level.
-    private void BuildWelcome(Transform canvas)
+    private IEnumerator Build(UIDocument doc)
     {
-        var dim = new GameObject("welcome").AddComponent<Image>();
-        dim.transform.SetParent(canvas, false);
-        dim.color = new Color(0f, 0f, 0f, 0.72f);
-        var drt = dim.rectTransform;
-        drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one;
-        drt.offsetMin = Vector2.zero; drt.offsetMax = Vector2.zero;
+        yield return null; // let the document create its root
+        _root = doc.rootVisualElement;
+        _root.Clear();
+        _root.style.flexDirection = FlexDirection.Row;
+        _root.style.flexGrow = 1;
+        _root.style.backgroundColor = UiKit.Bg;
 
-        var panel = new GameObject("panel").AddComponent<Image>();
-        panel.transform.SetParent(dim.transform, false);
-        panel.color = new Color(0.12f, 0.13f, 0.17f, 1f);
-        var prt = panel.rectTransform;
-        prt.anchorMin = prt.anchorMax = prt.pivot = new Vector2(0.5f, 0.5f);
-        prt.sizeDelta = new Vector2(660f, 340f);
-        prt.anchoredPosition = Vector2.zero;
+        _root.Add(BuildRail());
+        _root.Add(BuildMain());
 
-        MakeText(panel.transform, "Welcome to Kaissa", 40, new Vector2(0f, 120f), new Vector2(620f, 60f));
-        MakeText(panel.transform, "Let's find your level so the puzzles and the\nbot match you. It takes about a minute.",
-            22, new Vector2(0f, 45f), new Vector2(620f, 80f));
-        MakeButton(panel.transform, "Find my level", new Vector2(0f, -45f),
-            () => { KaissaSettings.Onboarded = true; SceneManager.LoadScene("Calibrate"); }, 320f);
-        MakeButton(panel.transform, "Skip for now", new Vector2(0f, -120f),
-            () => { KaissaSettings.Onboarded = true; Destroy(dim.gameObject); }, 320f);
+        if (!KaissaSettings.Onboarded)
+            _root.Add(BuildWelcome());
+    }
+
+    // ---- left nav rail ----
+    private VisualElement BuildRail()
+    {
+        var rail = new VisualElement();
+        rail.style.width = 200;
+        rail.style.backgroundColor = UiKit.Rail;
+        rail.style.borderRightWidth = 1;
+        rail.style.borderRightColor = UiKit.Line;
+        UiKit.Pad(rail, 14, 10, 14, 10);
+
+        var mark = UiKit.Text_("♞  Kaissa", 22, UiKit.GreenHi, bold: true);
+        UiKit.Pad(mark, 6, 8, 16, 8);
+        rail.Add(mark);
+
+        rail.Add(Nav("Home", null, active: true));
+        rail.Add(Nav("Play", "Play"));
+        rail.Add(GroupLabel("Train"));
+        rail.Add(Nav("Puzzles", "SampleScene"));
+        rail.Add(Nav("Puzzle Blitz", "Rush"));
+        rail.Add(Nav("Openings", "Opening"));
+        rail.Add(Nav("Learn", "Library"));
+        rail.Add(Nav("Endgames", "Endgame"));
+        rail.Add(GroupLabel("Tools"));
+        rail.Add(Nav("Board Vision", "Vision"));
+        rail.Add(Nav("Coordinates", "Coordinate"));
+        rail.Add(Nav("Stats", "Stats"));
+
+        var spacer = new VisualElement();
+        spacer.style.flexGrow = 1;
+        rail.Add(spacer);
+
+        rail.Add(Nav("Calibrate", "Calibrate"));
+        rail.Add(Nav("Settings", "Settings"));
+        return rail;
+    }
+
+    private VisualElement GroupLabel(string text)
+    {
+        var l = UiKit.Text_(text.ToUpperInvariant(), 11, UiKit.Mute, bold: true);
+        l.style.letterSpacing = 1.2f;
+        UiKit.Pad(l, 14, 10, 5, 10);
+        return l;
+    }
+
+    private VisualElement Nav(string label, string scene, bool active = false)
+    {
+        var item = UiKit.Row(UiKit.Text_(label, 15, active ? UiKit.Text : UiKit.Dim, bold: true));
+        UiKit.Pad(item, 10); UiKit.Radius(item, 6);
+        item.style.marginBottom = 1;
+        var idle = active ? UiKit.Hex(0x3d, 0x3a, 0x36) : new Color(0, 0, 0, 0);
+        item.style.backgroundColor = idle;
+        item.RegisterCallback<MouseEnterEvent>(_ => { if (!active) item.style.backgroundColor = UiKit.Panel2; });
+        item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = idle);
+        if (scene != null)
+            item.RegisterCallback<ClickEvent>(_ => SceneManager.LoadScene(scene));
+        return item;
+    }
+
+    // ---- main content ----
+    private VisualElement BuildMain()
+    {
+        var main = new VisualElement();
+        main.style.flexGrow = 1;
+        UiKit.Pad(main, 26, 34, 40, 34);
+
+        var top = UiKit.Row();
+        top.style.justifyContent = Justify.SpaceBetween;
+        top.style.marginBottom = 22;
+        top.Add(UiKit.Text_("Welcome back", 26, UiKit.Text, bold: true));
+        top.Add(BuildChips());
+        main.Add(top);
+
+        var grid = new VisualElement();
+        grid.style.flexDirection = FlexDirection.Row;
+        grid.style.flexWrap = Wrap.Wrap;
+        grid.Add(Card("Play vs the bot", "An engine capped to your level. Your mistakes come back as puzzles.", "Play", hero: true));
+        grid.Add(Card("Daily puzzle", "One position a day. Solve it to keep your streak.", "SampleScene", daily: true));
+        grid.Add(Card("Puzzles", "Adaptive, spaced practice across 15 patterns.", "SampleScene"));
+        grid.Add(Card("Puzzle Blitz", "Solve as many as you can before three misses.", "Rush"));
+        grid.Add(Card("Openings", "Drill your repertoire — recall your moves, spaced.", "Opening"));
+        grid.Add(Card("Learn patterns", "Browse each motif with an example, then drill it.", "Library"));
+        main.Add(grid);
+        return main;
+    }
+
+    private VisualElement BuildChips()
+    {
+        var chips = UiKit.Row();
+        try
+        {
+            var trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
+            var stats = trainer.GetStats();
+            if (stats.TotalAttempts > 0)
+            {
+                int days = KaissaStreak.CurrentDays();
+                if (days > 0) chips.Add(UiKit.Chip($"Streak {days}d", UiKit.Green));
+                chips.Add(UiKit.Chip($"{trainer.DueCount()} due for review", UiKit.Gold));
+            }
+        }
+        catch { /* new player — no chips */ }
+        return chips;
+    }
+
+    private VisualElement Card(string title, string desc, string scene, bool hero = false, bool daily = false)
+    {
+        var t = UiKit.Text_(title, hero ? 22 : 17, UiKit.Text, bold: true);
+        var d = UiKit.Text_(desc, 13, UiKit.Dim);
+        d.style.marginTop = 8;
+        var c = UiKit.Col(t, d);
+        c.style.backgroundColor = hero ? UiKit.Hex(0x35, 0x4a, 0x2f) : UiKit.Panel;
+        c.style.borderTopWidth = c.style.borderBottomWidth = c.style.borderLeftWidth = c.style.borderRightWidth = 1;
+        c.style.borderTopColor = c.style.borderBottomColor = c.style.borderLeftColor = c.style.borderRightColor =
+            hero ? UiKit.Hex(0x4c, 0x6b, 0x3f) : UiKit.Line;
+        UiKit.Pad(c, 18); UiKit.Radius(c, 12);
+        c.style.marginRight = 14; c.style.marginBottom = 14;
+        c.style.flexBasis = Length.Percent(hero ? 64 : 30);
+        c.style.minWidth = 220;
+        if (hero)
+        {
+            var btn = UiKit.Primary("Play", () => Go(scene, daily));
+            btn.style.marginTop = 12;
+            btn.style.alignSelf = Align.FlexStart;
+            c.Add(btn);
+        }
+        c.RegisterCallback<ClickEvent>(_ => Go(scene, daily));
+        return c;
+    }
+
+    private static void Go(string scene, bool daily)
+    {
+        if (daily) DailyRoute.Active = true;
+        SceneManager.LoadScene(scene);
+    }
+
+    // ---- first-run welcome overlay ----
+    private VisualElement BuildWelcome()
+    {
+        var dim = new VisualElement();
+        dim.style.position = Position.Absolute;
+        dim.style.left = 0; dim.style.top = 0; dim.style.right = 0; dim.style.bottom = 0;
+        dim.style.backgroundColor = new Color(0, 0, 0, 0.72f);
+        dim.style.alignItems = Align.Center;
+        dim.style.justifyContent = Justify.Center;
+
+        var panel = new VisualElement();
+        panel.style.width = 520;
+        panel.style.backgroundColor = UiKit.Panel;
+        UiKit.Pad(panel, 30); UiKit.Radius(panel, 14);
+        panel.style.alignItems = Align.Center;
+
+        panel.Add(UiKit.Text_("Welcome to Kaissa", 30, UiKit.Text, bold: true));
+        var msg = UiKit.Text_("Find your level so the puzzles and the bot match you. It takes about a minute.", 16, UiKit.Dim);
+        msg.style.unityTextAlign = TextAnchor.MiddleCenter; msg.style.marginTop = 12; msg.style.marginBottom = 22;
+        panel.Add(msg);
+
+        var find = UiKit.Primary("Find my level", () => { KaissaSettings.Onboarded = true; SceneManager.LoadScene("Calibrate"); }, 16);
+        find.style.marginBottom = 10; find.style.width = 300;
+        var skip = UiKit.Ghost("Skip for now", () => { KaissaSettings.Onboarded = true; _root.Remove(dim); });
+        skip.style.width = 300;
+        panel.Add(find); panel.Add(skip);
+
+        dim.Add(panel);
+        return dim;
     }
 
     private void Update()
@@ -106,90 +223,12 @@ public sealed class MainMenuController : MonoBehaviour
 #endif
     }
 
-    // Returning players see their streak and how many patterns are due; new players see the tagline.
-    private static string SubtitleText()
-    {
-        try
-        {
-            var trainer = KaissaTrainer.CreateDefault(KaissaProgress.Load());
-            var stats = trainer.GetStats();
-            if (stats.TotalAttempts > 0)
-            {
-                int days = KaissaStreak.CurrentDays();
-                int due = trainer.DueCount();
-                return days > 0 ? $"Streak {days}d   ·   {due} due for review" : $"{due} due for review";
-            }
-        }
-        catch { /* fall back to the tagline */ }
-        return "Train. Play. Improve.";
-    }
-
     private static void EnsureEventSystem()
     {
         if (Object.FindAnyObjectByType<EventSystem>() != null)
             return;
         var go = new GameObject("EventSystem");
         go.AddComponent<EventSystem>();
-        go.AddComponent<InputSystemUIInputModule>(); // project uses the new Input System
-    }
-
-    private static Transform BuildCanvas()
-    {
-        var canvasObj = new GameObject("Menu");
-        var canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
-        canvasObj.AddComponent<GraphicRaycaster>();
-        return canvas.transform;
-    }
-
-    private void MakeText(Transform parent, string content, int size, Vector2 pos, Vector2 sizeDelta)
-    {
-        var go = new GameObject("text");
-        go.transform.SetParent(parent, false);
-        var text = go.AddComponent<Text>();
-        text.font = _font;
-        text.text = content;
-        text.fontSize = size;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = Color.white;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
-
-        var rt = text.rectTransform;
-        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = sizeDelta;
-    }
-
-    private void MakeButton(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick, float width = 300f)
-    {
-        var go = new GameObject(label);
-        go.transform.SetParent(parent, false);
-        var image = go.AddComponent<Image>();
-        image.color = new Color(0.16f, 0.17f, 0.22f);
-
-        var rt = image.rectTransform;
-        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = new Vector2(width, 64f);
-
-        var button = go.AddComponent<Button>();
-        button.onClick.AddListener(onClick);
-
-        var textObj = new GameObject("text");
-        textObj.transform.SetParent(go.transform, false);
-        var text = textObj.AddComponent<Text>();
-        text.font = _font;
-        text.text = label;
-        text.fontSize = 28;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = Color.white;
-
-        var trt = text.rectTransform;
-        trt.anchorMin = Vector2.zero;
-        trt.anchorMax = Vector2.one;
-        trt.offsetMin = Vector2.zero;
-        trt.offsetMax = Vector2.zero;
+        go.AddComponent<InputSystemUIInputModule>();
     }
 }
