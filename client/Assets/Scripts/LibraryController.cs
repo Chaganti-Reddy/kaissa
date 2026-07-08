@@ -1,98 +1,124 @@
+using System.Collections;
 using System.Linq;
 using Kaissa.Training;
 using Kaissa.Training.Api;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
-// Pattern library: browse each motif, read what it trains, see an example position, then drill it.
-// Drilling hands the pattern to the training scene via ThemeRoute (the same path Practice used).
+// Pattern library ("Learn"), redesigned: a list of motifs on the left; selecting one shows what it
+// trains, an example position on the 2D board, and a button to drill it (themed mode via ThemeRoute).
 public sealed class LibraryController : MonoBehaviour
 {
     private ScenarioLibrary _lib;
-    private Transform _listCanvas;
-    private Transform _detailCanvas;
-    private Transform _boardRoot;
-    private bool _inDetail;
+    private Board2D _board;
+    private Label _name;
+    private Label _desc;
+    private VisualElement _drillHost;
+    private PatternId _selected;
 
     private void Start()
     {
-        Board3D.SetupScene();
+        EnsureEventSystem();
+        var cam = Camera.main;
+        if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
+
         _lib = ScenarioLibrary.LoadDefault();
-        ShowList();
+        _board = new Board2D(null); // display only
+
+        var doc = gameObject.AddComponent<UIDocument>();
+        doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
+        StartCoroutine(Build(doc));
     }
 
-    private void ShowList()
+    private IEnumerator Build(UIDocument doc)
     {
-        ClearDetail();
-        _inDetail = false;
-        _listCanvas = Hud.Canvas();
-        Hud.Text(_listCanvas, "Pattern library", 44, TextAnchor.UpperCenter,
-            new Vector2(0.5f, 1f), new Vector2(0f, -30f), new Vector2(900f, 60f));
+        yield return null;
+        var root = doc.rootVisualElement;
+        root.Clear();
+        root.style.flexDirection = FlexDirection.Row; root.style.flexGrow = 1; root.style.backgroundColor = UiKit.Bg;
+        root.Add(UiKit.NavRail("Library"));
 
-        var ids = _lib.Patterns;
-        const float top = 150f, step = 56f;
-        int half = (ids.Count + 1) / 2;
-        for (int i = 0; i < ids.Count; i++)
+        // pattern list
+        var listCol = new VisualElement();
+        listCol.style.width = 240; UiKit.Pad(listCol, 24, 8, 24, 16);
+        listCol.Add(UiKit.Text_("Patterns", 20, UiKit.Text, bold: true));
+        var scroll = new ScrollView(); scroll.style.marginTop = 10;
+        foreach (var id in _lib.Patterns)
         {
-            var id = ids[i];
-            string name = _lib.Describe(id).Name;
-            float x = i < half ? -240f : 240f;
-            float y = top - (i % half) * step;
-            Hud.Button(_listCanvas, name, new Vector2(x, y), () => ShowDetail(id), 440f);
+            var pid = id;
+            var name = _lib.Describe(pid).Name;
+            var item = UiKit.Row(UiKit.Text_(name, 14, UiKit.Dim, bold: true));
+            UiKit.Pad(item, 9, 10, 9, 10); UiKit.Radius(item, 6);
+            item.RegisterCallback<MouseEnterEvent>(_ => item.style.backgroundColor = UiKit.Panel2);
+            item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = new Color(0, 0, 0, 0));
+            item.RegisterCallback<ClickEvent>(_ => Select(pid));
+            scroll.Add(item);
         }
+        listCol.Add(scroll);
+        root.Add(listCol);
 
-        Hud.Text(_listCanvas, "Esc — menu", 18, TextAnchor.LowerCenter,
-            new Vector2(0.5f, 0f), new Vector2(0f, 30f), new Vector2(400f, 30f));
+        // detail
+        var detail = new VisualElement();
+        detail.style.flexGrow = 1; detail.style.alignItems = Align.Center; UiKit.Pad(detail, 24, 24, 24, 24);
+        _name = UiKit.Text_("Select a pattern", 24, UiKit.Text, bold: true);
+        detail.Add(_name);
+        _desc = UiKit.Text_("", 14, UiKit.Dim);
+        _desc.style.marginTop = 6; _desc.style.marginBottom = 14; _desc.style.maxWidth = 460; _desc.style.unityTextAlign = TextAnchor.MiddleCenter;
+        detail.Add(_desc);
+
+        var host = new VisualElement();
+        host.style.width = 420; host.style.height = 420; host.style.flexShrink = 0;
+        host.Add(_board.Root);
+        _board.Root.style.width = 420; _board.Root.style.height = 420;
+        detail.Add(host);
+
+        _drillHost = new VisualElement(); _drillHost.style.marginTop = 16;
+        detail.Add(_drillHost);
+        root.Add(detail);
+
+        if (_lib.Patterns.Count > 0) Select(_lib.Patterns[0]);
     }
 
-    private void ShowDetail(PatternId id)
+    private void Select(PatternId id)
     {
-        if (_listCanvas != null) { Destroy(_listCanvas.gameObject); _listCanvas = null; }
-        _inDetail = true;
+        _selected = id;
+        var p = _lib.Describe(id);
+        _name.text = p.Name;
+        _desc.text = p.Description;
 
-        var pattern = _lib.Describe(id);
         var example = _lib.ForPattern(id).FirstOrDefault();
         if (example != null)
         {
             var view = BoardView.FromFen(example.Fen);
-            _boardRoot = Board3D.Render(view);
-            Board3D.OrientCamera(view.WhiteToMove);
+            _board.Render(example.Fen, canMove: false, lastMove: null, whiteBottom: view.WhiteToMove);
         }
 
-        _detailCanvas = Hud.Canvas();
-        Hud.Text(_detailCanvas, pattern.Name, 40, TextAnchor.UpperCenter,
-            new Vector2(0.5f, 1f), new Vector2(0f, -30f), new Vector2(1000f, 56f));
-        var desc = Hud.Text(_detailCanvas, pattern.Description, 24, TextAnchor.UpperCenter,
-            new Vector2(0.5f, 1f), new Vector2(0f, -92f), new Vector2(760f, 120f));
-        desc.horizontalOverflow = HorizontalWrapMode.Wrap;
-
-        if (example != null && !string.IsNullOrEmpty(example.Prompt))
-            Hud.Text(_detailCanvas, example.Prompt, 20, TextAnchor.LowerCenter,
-                new Vector2(0.5f, 0f), new Vector2(0f, 150f), new Vector2(760f, 40f));
-
-        Hud.Button(_detailCanvas, "Drill this pattern", new Vector2(-130f, 70f), () =>
+        _drillHost.Clear();
+        var drill = UiKit.Primary("Drill this pattern", () =>
         {
-            ThemeRoute.PatternId = id.Value;
-            ThemeRoute.PatternName = pattern.Name;
+            ThemeRoute.PatternId = _selected.Value;
+            ThemeRoute.PatternName = p.Name;
             SceneManager.LoadScene("SampleScene");
-        }, 260f);
-        Hud.Button(_detailCanvas, "Back", new Vector2(130f, 70f), ShowList, 200f);
-    }
-
-    private void ClearDetail()
-    {
-        if (_detailCanvas != null) { Destroy(_detailCanvas.gameObject); _detailCanvas = null; }
-        if (_boardRoot != null) { Destroy(_boardRoot.gameObject); _boardRoot = null; }
+        }, 15);
+        drill.style.width = 260;
+        _drillHost.Add(drill);
     }
 
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            if (_inDetail) ShowList();
-            else SceneManager.LoadScene("Menu");
-        }
+            SceneManager.LoadScene("Menu");
+    }
+
+    private static void EnsureEventSystem()
+    {
+        if (UnityEngine.Object.FindAnyObjectByType<EventSystem>() != null) return;
+        var go = new GameObject("EventSystem");
+        go.AddComponent<EventSystem>();
+        go.AddComponent<InputSystemUIInputModule>();
     }
 }
