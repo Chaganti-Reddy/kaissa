@@ -1,32 +1,31 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
-using UnityEngine.UI;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
-// Play a full game against the adaptive bot (desktop). Drives KaissaGame, which runs Stockfish
-// from StreamingAssets. Click a piece then a target to move; the bot replies; the rating updates
-// and the game is reviewed at the end. Self-contained (builds its own scene/HUD) so it can run in
-// its own scene. Placeholder visuals, like the training screen.
+// Play a full game vs the adaptive bot, in the redesigned chess.com-style UI (UI Toolkit + the 2D
+// board). Drives KaissaGame (Stockfish from StreamingAssets); keeps the rating update, review,
+// walkthrough and practice-fusion logic — only the view changed from the old 3D/UGUI screen.
 public sealed class KaissaGameController : MonoBehaviour
 {
     private KaissaGame _game;
-    private Transform _boardRoot;
+    private Board2D _board;
+    private PieceAudio _audio;
     private bool _busy;
     private string _lastMove;
-
-    private BoardInteractor _interactor;
-    private PieceAudio _audio;
     private bool _whiteBottom = true;
+    private string _currentFen = ChessGame.StartFen;
+    private bool _canMove;
 
-    // Post-game review walkthrough (step through the finished game).
+    // review walkthrough
     private bool _reviewMode;
     private int _reviewPly;
     private string _gameStartFen;
@@ -34,78 +33,194 @@ public sealed class KaissaGameController : MonoBehaviour
     private IReadOnlyList<string> _reviewSan;
     private Dictionary<int, GameReviewItem> _reviewMistakes;
 
-    private Text _titleText;
-    private Text _statusText;
-    private Text _moveListText;
-    private Font _font;
-
-    private Transform _pickerCanvas;
+    private VisualElement _root;
+    private VisualElement _movesBody;
+    private Label _titleLabel;
+    private Label _statusLabel;
+    private Label _matLabel;
+    private Label _topName;
+    private Label _botName;
 
     private void Start()
     {
-        _font = Hud.Font;
-        SetUpCameraAndLight();
-        BuildPostProcessing();
-        BuildHud();
-        _audio = PieceAudio.Attach(gameObject);
-        _interactor = gameObject.AddComponent<BoardInteractor>();
-        _interactor.Init(uci => OnMove(uci), _audio);
-        _interactor.AllowPremove = true; // queue a move while the bot is thinking
+        EnsureEventSystem();
+        var cam = Camera.main;
+        if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
-        // An endgame position skips the picker and plays the adaptive opponent directly.
+        _audio = PieceAudio.Attach(gameObject);
+        _board = new Board2D(uci => OnMove(uci));
+
+        var doc = gameObject.AddComponent<UIDocument>();
+        doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
+        StartCoroutine(BuildUi(doc));
+    }
+
+    private System.Collections.IEnumerator BuildUi(UIDocument doc)
+    {
+        yield return null;
+        _root = doc.rootVisualElement;
+        _root.Clear();
+        _root.style.flexDirection = FlexDirection.Row;
+        _root.style.flexGrow = 1;
+        _root.style.backgroundColor = UiKit.Bg;
+
+        _root.Add(UiKit.NavRail("Play"));
+        _root.Add(BuildCenter());
+        _root.Add(BuildRightRail());
+
         if (EndgameRoute.Fen != null)
             StartGame("Bot", null);
         else
-            ShowOpponentPicker();
+            ShowPicker();
     }
 
-    private void ShowOpponentPicker()
+    private VisualElement BuildCenter()
     {
-        _pickerCanvas = Hud.Canvas();
-        Hud.Text(_pickerCanvas, "Choose your opponent", 34, TextAnchor.UpperCenter,
-            new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(900f, 50f));
+        var center = new VisualElement();
+        center.style.flexGrow = 1;
+        center.style.alignItems = Align.Center;
+        UiKit.Pad(center, 24, 24, 24, 24);
 
-        float y = 200f;
-        Hud.Button(_pickerCanvas, "Adaptive — matches your level", new Vector2(0f, y),
-            () => StartGame("Adaptive", null), 480f);
-        y -= 66f;
+        _titleLabel = UiKit.Text_("Play vs Bot", 24, UiKit.Text, bold: true);
+        _titleLabel.style.marginBottom = 12;
+        center.Add(_titleLabel);
+
+        _botName = UiKit.Text_("Bot", 15, UiKit.Dim, bold: true);
+        var top = Strip(_botName);
+        center.Add(top);
+
+        var host = new VisualElement();
+        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0;
+        host.Add(_board.Root);
+        _board.Root.style.width = 480; _board.Root.style.height = 480;
+        center.Add(host);
+
+        _topName = UiKit.Text_("you", 15, UiKit.Text, bold: true);
+        center.Add(Strip(_topName));
+
+        _statusLabel = UiKit.Text_("", 15, UiKit.Dim);
+        _statusLabel.style.marginTop = 12;
+        _statusLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+        center.Add(_statusLabel);
+        return center;
+    }
+
+    private VisualElement Strip(Label name)
+    {
+        var av = UiKit.Text_("♟", 18, UiKit.Dim, bold: true);
+        av.style.marginRight = 8;
+        var s = UiKit.Row(av, name);
+        s.style.width = 480; UiKit.Pad(s, 6, 4, 6, 4);
+        return s;
+    }
+
+    private VisualElement BuildRightRail()
+    {
+        var rail = new VisualElement();
+        rail.style.width = 340;
+        UiKit.Pad(rail, 24, 24, 24, 0);
+
+        var panel = new VisualElement();
+        panel.style.backgroundColor = UiKit.Panel;
+        panel.style.borderTopWidth = panel.style.borderBottomWidth = panel.style.borderLeftWidth = panel.style.borderRightWidth = 1;
+        panel.style.borderTopColor = panel.style.borderBottomColor = panel.style.borderLeftColor = panel.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(panel, 12);
+
+        var hd = UiKit.Row(UiKit.Text_("Moves", 15, UiKit.Text, bold: true));
+        hd.style.justifyContent = Justify.SpaceBetween;
+        _matLabel = UiKit.Text_("", 13, UiKit.Mute, bold: true);
+        hd.Add(_matLabel);
+        UiKit.Pad(hd, 14, 16, 14, 16);
+        hd.style.borderBottomWidth = 1; hd.style.borderBottomColor = UiKit.Line;
+        panel.Add(hd);
+
+        var scroll = new ScrollView();
+        scroll.style.maxHeight = 300;
+        _movesBody = scroll.contentContainer;
+        panel.Add(scroll);
+
+        var ctrls = UiKit.Row(
+            Ctrl("Takeback", Takeback), Ctrl("Resign", Resign), Ctrl("Flip", Flip), Ctrl("New", NewGame));
+        UiKit.Pad(ctrls, 12, 12, 12, 12);
+        ctrls.style.borderTopWidth = 1; ctrls.style.borderTopColor = UiKit.Line;
+        panel.Add(ctrls);
+
+        rail.Add(panel);
+        return rail;
+    }
+
+    private VisualElement Ctrl(string label, Action onClick)
+    {
+        var b = UiKit.Ghost(label, onClick, 12);
+        b.style.flexGrow = 1; b.style.marginLeft = 3; b.style.marginRight = 3;
+        return b;
+    }
+
+    // ---- opponent picker overlay ----
+    private void ShowPicker()
+    {
+        var dim = Overlay();
+        var panel = OverlayPanel();
+        panel.Add(UiKit.Text_("Choose your opponent", 24, UiKit.Text, bold: true));
+        var spacer = new VisualElement(); spacer.style.height = 14; panel.Add(spacer);
+
+        panel.Add(PickBtn("Adaptive — matches your level", () => { _root.Remove(dim); StartGame("Adaptive", null); }));
         foreach (var bot in BotRoster.All)
         {
             var b = bot;
-            Hud.Button(_pickerCanvas, $"{b.Name}  ({b.Elo})", new Vector2(0f, y),
-                () => StartGame(b.Name, b.Elo), 480f);
-            y -= 66f;
+            panel.Add(PickBtn($"{b.Name}  ({b.Elo})", () => { _root.Remove(dim); StartGame(b.Name, b.Elo); }));
         }
-        y -= 10f;
-        Hud.Button(_pickerCanvas, "Back", new Vector2(0f, y),
-            () => UnityEngine.SceneManagement.SceneManager.LoadScene("Menu"), 480f);
+        var back = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu"));
+        back.style.marginTop = 8; back.style.width = 360;
+        panel.Add(back);
+
+        dim.Add(panel);
+        _root.Add(dim);
     }
 
-    // Bot think time is a pacing choice (Settings > Bot speed), independent of its strength (Elo).
-    private static int BotThinkMs() => KaissaSettings.BotSpeed switch
+    private VisualElement PickBtn(string label, Action onClick)
     {
-        0 => 250,   // Fast
-        2 => 1200,  // Slow
-        _ => 600,   // Normal
-    };
+        var b = UiKit.Primary(label, onClick, 15);
+        b.style.width = 360; b.style.marginBottom = 8;
+        return b;
+    }
+
+    private VisualElement Overlay()
+    {
+        var dim = new VisualElement();
+        dim.style.position = Position.Absolute;
+        dim.style.left = 0; dim.style.top = 0; dim.style.right = 0; dim.style.bottom = 0;
+        dim.style.backgroundColor = new Color(0, 0, 0, 0.72f);
+        dim.style.alignItems = Align.Center; dim.style.justifyContent = Justify.Center;
+        return dim;
+    }
+
+    private VisualElement OverlayPanel()
+    {
+        var p = new VisualElement();
+        p.style.backgroundColor = UiKit.Panel;
+        UiKit.Pad(p, 28); UiKit.Radius(p, 14);
+        p.style.alignItems = Align.Center;
+        return p;
+    }
+
+    private static int BotThinkMs() => KaissaSettings.BotSpeed switch { 0 => 250, 2 => 1200, _ => 600 };
 
     private async void StartGame(string label, int? fixedElo)
     {
-        if (_pickerCanvas != null) { Destroy(_pickerCanvas.gameObject); _pickerCanvas = null; }
-
         var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
         if (!File.Exists(enginePath))
         {
-            _statusText.text = "Stockfish not found. Run scripts/build-unity-plugins.ps1.";
+            _statusLabel.text = "Stockfish not found. Run scripts/build-unity-plugins.ps1.";
             return;
         }
 
-        _titleText.text = $"Play vs {label}";
-        _statusText.text = "Starting engine...";
+        _titleLabel.text = $"Play vs {label}";
+        _statusLabel.text = "Starting engine...";
         double playerRating = KaissaTrainer.CreateDefault(KaissaProgress.Load()).PlayerRating;
-        var startFen = EndgameRoute.Fen; // set by the endgame picker, if any
+        var startFen = EndgameRoute.Fen;
         EndgameRoute.Fen = null;
-        _gameStartFen = startFen ?? ChessGame.StartFen; // for the review walkthrough replay
+        _gameStartFen = startFen ?? ChessGame.StartFen;
         try
         {
             _game = await KaissaGame.StartAsync(enginePath, Side.White, playerRating,
@@ -113,159 +228,118 @@ public sealed class KaissaGameController : MonoBehaviour
         }
         catch (Exception e)
         {
-            _statusText.text = "Engine failed to start (see Console).";
+            _statusLabel.text = "Engine failed to start (see Console).";
             Debug.LogError(e);
             return;
         }
 
-        _statusText.text = $"You are White. Bot ~{_game.OpponentElo} Elo. Your move.   ·   N new · R resign · U takeback · F flip";
-        RenderBoard(_game.Board);
-        _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
+        _botName.text = $"{label}  ~{_game.OpponentElo}";
+        _statusLabel.text = "You are White. Your move.   ·   N new · R resign · U takeback · F flip";
+        _lastMove = null;
+        RenderBoard(_game.Board.Fen, canMove: true);
         UpdateMoveList();
     }
 
-    private void Update()
-    {
-        if (Keyboard.current == null)
-            return;
-
-        if (_reviewMode)
-        {
-            if (Keyboard.current.escapeKey.wasPressedThisFrame)
-                UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-            else if (Keyboard.current.nKey.wasPressedThisFrame)
-                NewGame();
-            else if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
-            { _reviewPly = Mathf.Max(0, _reviewPly - 1); RenderReviewPosition(); }
-            else if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
-            { _reviewPly = Mathf.Min(_reviewMoves.Count, _reviewPly + 1); RenderReviewPosition(); }
-            else if (Keyboard.current.fKey.wasPressedThisFrame && _boardRoot != null)
-            { _whiteBottom = !_whiteBottom; Board3D.OrientCamera(_whiteBottom); }
-            return;
-        }
-
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
-        else if (Keyboard.current.nKey.wasPressedThisFrame && _game != null && _pickerCanvas == null)
-            NewGame();
-        else if (Keyboard.current.rKey.wasPressedThisFrame && _game != null && !_busy
-                 && !_game.IsGameOver && _pickerCanvas == null)
-            Resign();
-        else if (Keyboard.current.uKey.wasPressedThisFrame && _game != null && !_busy
-                 && !_game.IsGameOver && _pickerCanvas == null)
-            Takeback();
-        else if (Keyboard.current.fKey.wasPressedThisFrame && _boardRoot != null)
-        {
-            _whiteBottom = !_whiteBottom;
-            Board3D.OrientCamera(_whiteBottom);
-        }
-    }
-
-    // Take back the last full move (yours + the bot's reply) and continue from there.
-    private void Takeback()
-    {
-        if (!_game.TryUndo())
-            return;
-        _lastMove = null;
-        RenderBoard(_game.Board);
-        _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
-        UpdateMoveList();
-        _statusText.text = "Takeback — your move.   ·   N: new game   ·   R: resign   ·   U: takeback";
-    }
-
-    // Resign the current game: stop accepting moves and still review what was played.
-    private async void Resign()
-    {
-        _busy = true;
-        _interactor.SetInputEnabled(false);
-        _audio.PlayGameEnd();
-        _statusText.text = "You resigned. Reviewing...";
-        try
-        {
-            var review = await _game.ReviewAsync();
-            _statusText.text = $"You resigned. {review.Accuracy:0.0}% accuracy, {review.Mistakes.Count} mistake(s); " +
-                               $"{review.Practice.Count} added to practice.   ·   N: new game";
-            EnterReview(review);
-        }
-        catch (Exception e)
-        {
-            _statusText.text = "You resigned.   ·   N: new game";
-            Debug.LogError(e);
-        }
-    }
-
-    // Restart from the opponent picker without returning to the main menu.
-    private void NewGame()
-    {
-        _reviewMode = false;
-        if (_game != null) { _ = _game.DisposeAsync(); _game = null; }
-        _busy = false;
-        _lastMove = null;
-        _interactor.SetInputEnabled(false);
-        if (_boardRoot != null) { Destroy(_boardRoot.gameObject); _boardRoot = null; }
-        ShowOpponentPicker();
-    }
-
-    // Invoked by the BoardInteractor with a fully-formed UCI move (including any promotion letter).
     private async void OnMove(string uci)
     {
         if (_busy || _game == null)
             return;
         _busy = true;
-        _interactor.SetInputEnabled(false);
 
-        // Show the player's move at once and let a premove queue on the correct position while the
-        // bot thinks; the final board (after the bot replies) is rendered when PlayAsync returns.
         var interFen = ApplyMove(_game.Board.Fen, uci);
         if (interFen != null)
-        {
-            var interBoard = BoardView.FromFen(interFen);
-            RenderBoard(interBoard);
-            _interactor.OnBoardRendered(_boardRoot, interBoard, uci, humanCanMove: false);
-        }
+            RenderBoard(interFen, canMove: false);
+        _audio.PlayMove();
 
         try
         {
             var outcome = await _game.PlayAsync(uci);
             if (!outcome.Accepted)
             {
-                _statusText.text = "Illegal move — try again.";
-                RenderBoard(_game.Board);
-                _interactor.OnBoardRendered(_boardRoot, _game.Board, _lastMove, humanCanMove: true);
+                _statusLabel.text = "Illegal move — try again.";
+                RenderBoard(_game.Board.Fen, canMove: true);
                 _busy = false;
                 return;
             }
 
-            _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove!;
-            if (!string.IsNullOrEmpty(outcome.BotMove))
-                await _interactor.PlayVisualMoveAsync(outcome.BotMove!); // glide the bot's move (with sound)
-            RenderBoard(outcome.Board);
+            _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove;
+            RenderBoard(outcome.Board.Fen, canMove: !outcome.IsGameOver);
             UpdateMoveList();
 
             if (outcome.IsGameOver)
             {
                 _audio.PlayGameEnd();
-                _interactor.OnBoardRendered(_boardRoot, outcome.Board, _lastMove, humanCanMove: false);
-                _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. Reviewing...";
+                _statusLabel.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. Reviewing...";
                 var review = await _game.ReviewAsync();
-                _statusText.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. " +
-                                   $"{review.Accuracy:0.0}% accuracy, {review.Mistakes.Count} mistake(s); " +
-                                   $"{review.Practice.Count} added to practice.  Press N for a new game.";
+                _statusLabel.text = $"Game over: {outcome.Result}. {review.Accuracy:0.0}% accuracy, " +
+                                    $"{review.Mistakes.Count} mistake(s); {review.Practice.Count} to practice.  N: new game";
                 EnterReview(review);
             }
             else
             {
-                _statusText.text = $"Bot played {outcome.BotMove}. Your move.";
-                _interactor.OnBoardRendered(_boardRoot, outcome.Board, _lastMove, humanCanMove: true);
+                _statusLabel.text = $"Bot played {outcome.BotMove}. Your move.";
             }
         }
         catch (Exception e)
         {
-            _statusText.text = "Engine error (see Console).";
+            _statusLabel.text = "Engine error (see Console).";
             Debug.LogError(e);
         }
-
         _busy = false;
+    }
+
+    private void Takeback()
+    {
+        if (_game == null || _busy || _reviewMode || _game.IsGameOver || !_game.TryUndo())
+            return;
+        _lastMove = null;
+        RenderBoard(_game.Board.Fen, canMove: true);
+        UpdateMoveList();
+        _statusLabel.text = "Takeback — your move.";
+    }
+
+    private async void Resign()
+    {
+        if (_game == null || _busy || _reviewMode || _game.IsGameOver)
+            return;
+        _busy = true;
+        _audio.PlayGameEnd();
+        _statusLabel.text = "You resigned. Reviewing...";
+        try
+        {
+            var review = await _game.ReviewAsync();
+            _statusLabel.text = $"You resigned. {review.Accuracy:0.0}% accuracy, {review.Mistakes.Count} mistake(s); " +
+                                $"{review.Practice.Count} to practice.  N: new game";
+            EnterReview(review);
+        }
+        catch (Exception e)
+        {
+            _statusLabel.text = "You resigned.  N: new game";
+            Debug.LogError(e);
+        }
+    }
+
+    private void NewGame()
+    {
+        _reviewMode = false;
+        if (_game != null) { _ = _game.DisposeAsync(); _game = null; }
+        _busy = false;
+        _lastMove = null;
+        ShowPicker();
+    }
+
+    private void Flip()
+    {
+        _whiteBottom = !_whiteBottom;
+        if (_reviewMode) RenderReviewPosition();
+        else RenderBoard(_currentFen, _canMove);
+    }
+
+    private void RenderBoard(string fen, bool canMove)
+    {
+        _currentFen = fen;
+        _canMove = canMove;
+        _board.Render(fen, canMove, _lastMove, _whiteBottom);
     }
 
     private static string ApplyMove(string fen, string uci)
@@ -276,127 +350,67 @@ public sealed class KaissaGameController : MonoBehaviour
             if (game.TryMakeMove(uci))
                 return game.Fen;
         }
-        catch { /* fall through */ }
+        catch { }
         return null;
-    }
-
-    private void RenderBoard(BoardView board)
-    {
-        if (_boardRoot != null)
-            Destroy(_boardRoot.gameObject);
-        _boardRoot = Board3D.Render(board); // shared base/tiles/theme/pieces/coordinates
-    }
-
-    private void BuildHud()
-    {
-        var canvasObj = new GameObject("HUD");
-        var canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
-        canvasObj.AddComponent<GraphicRaycaster>();
-
-        _titleText = MakeText(canvas.transform, 26, TextAnchor.UpperCenter,
-            new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -16f), new Vector2(1100f, 50f));
-        _statusText = MakeText(canvas.transform, 22, TextAnchor.LowerCenter,
-            new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 40f), new Vector2(1200f, 60f));
-        _moveListText = MakeText(canvas.transform, 18, TextAnchor.UpperRight,
-            new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-24f, -84f), new Vector2(240f, 760f));
     }
 
     private void UpdateMoveList()
     {
-        if (_moveListText == null || _game == null)
+        if (_movesBody == null || _game == null)
             return;
-        var moves = _game.MoveHistorySan();
-        var sb = new StringBuilder();
+        _movesBody.Clear();
 
         int material = Material(_game.Board);
-        string mat = material == 0 ? "Material: even"
-            : material > 0 ? $"Material: White +{material}"
-            : $"Material: Black +{-material}";
-        sb.AppendLine(mat);
-        sb.AppendLine();
+        _matLabel.text = material == 0 ? "even" : material > 0 ? $"White +{material}" : $"Black +{-material}";
 
+        var moves = _game.MoveHistorySan();
         for (int i = 0; i < moves.Count; i += 2)
         {
             string w = moves[i];
             string b = i + 1 < moves.Count ? moves[i + 1] : "";
-            sb.AppendLine($"{i / 2 + 1,2}. {w,-6}{b}");
+            var row = UiKit.Row(
+                Cell($"{i / 2 + 1}.", 40, UiKit.Mute),
+                Cell(w, 120, UiKit.Text),
+                Cell(b, 120, UiKit.Text));
+            if ((i / 2) % 2 == 1) row.style.backgroundColor = UiKit.Panel3;
+            UiKit.Pad(row, 6, 12, 6, 12);
+            _movesBody.Add(row);
         }
-        _moveListText.text = sb.ToString();
     }
 
-    // After a game, replace the move list with a review: each flagged mistake with the move played
-    // (SAN), the engine's best, its severity, and the centipawn loss.
-    private void ShowReview(GameReviewResult review)
+    private static Label Cell(string s, float w, Color c)
     {
-        if (_moveListText == null)
-            return;
-        var san = _game.MoveHistorySan();
-        var sb = new StringBuilder();
-        sb.AppendLine($"Review — {review.Accuracy:0.0}% accuracy");
-        var ph = review.PhaseAccuracy;
-        if (ph.Opening is { } op) sb.AppendLine($"  opening    {op:0}%");
-        if (ph.Middlegame is { } mid) sb.AppendLine($"  middlegame {mid:0}%");
-        if (ph.Endgame is { } eg) sb.AppendLine($"  endgame    {eg:0}%");
-        sb.AppendLine($"{review.Mistakes.Count} mistake(s)");
-        sb.AppendLine();
-        foreach (var m in review.Mistakes)
-        {
-            int ply = (m.MoveNumber - 1) * 2; // player is White → even plies
-            string played = ply >= 0 && ply < san.Count ? san[ply] : m.PlayedMove;
-            sb.AppendLine($"{m.MoveNumber,2}. {played,-7}");
-            sb.AppendLine($"    best {m.BestMove}");
-            sb.AppendLine($"    {m.Quality} -{m.CentipawnLoss}");
-        }
-        _moveListText.text = sb.ToString();
+        var l = UiKit.Text_(s, 14, c, bold: false);
+        l.style.width = w;
+        return l;
     }
 
-    // A finished game moved the player's rating (Stockfish is capped to it). Persist it into the same
-    // saved progress the puzzles use, preserving existing cards, so play and training share one rating.
-    private void SaveRating()
-    {
-        if (_game == null)
-            return;
-        var saved = KaissaProgress.Load();
-        var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();
-        model.RatingEstimate = _game.PlayerRating;
-        KaissaProgress.Save(model.ToJson());
-    }
-
-    // Enter the walkthrough: step through the finished game with ←/→, mistakes flagged.
     private void EnterReview(GameReviewResult review)
     {
-        // Persist the positions from this game's mistakes so they are drilled in training (the
-        // play-to-train fusion). This is what the "added to practice" count refers to.
-        if (review.Practice.Count > 0)
-            KaissaPractice.Add(review.Practice);
-        SaveRating(); // the game adjusted the player's rating; keep it for next session
-        KaissaGameLog.Record(review.Accuracy); // track accuracy across games for Stats
+        if (review.Practice.Count > 0) KaissaPractice.Add(review.Practice);
+        SaveRating();
+        KaissaGameLog.Record(review.Accuracy);
 
-        ShowReview(review);
         _reviewMoves = _game.MoveHistory;
         _reviewSan = _game.MoveHistorySan();
         _reviewMistakes = new Dictionary<int, GameReviewItem>();
         foreach (var m in review.Mistakes)
-            _reviewMistakes[(m.MoveNumber - 1) * 2] = m; // player is White → even plies
+            _reviewMistakes[(m.MoveNumber - 1) * 2] = m;
         _reviewPly = _reviewMoves.Count;
         _reviewMode = true;
-        _interactor.SetInputEnabled(false);
+        _matLabel.text = $"acc {review.Accuracy:0}%";
         RenderReviewPosition();
     }
 
     private void RenderReviewPosition()
     {
-        RenderBoard(BoardView.FromFen(PositionAfter(_reviewPly)));
-        if (_reviewPly > 0)
-            BoardFx.LastMove(_boardRoot, _reviewMoves[_reviewPly - 1]);
-
+        _lastMove = _reviewPly > 0 ? _reviewMoves[_reviewPly - 1] : null;
+        RenderBoard(PositionAfter(_reviewPly), canMove: false);
         string move = _reviewPly > 0 && _reviewPly - 1 < _reviewSan.Count ? _reviewSan[_reviewPly - 1] : "start";
         string note = "";
         if (_reviewPly > 0 && _reviewMistakes.TryGetValue(_reviewPly - 1, out var m))
             note = $"   —   Mistake: best {m.BestMove} ({m.Quality})";
-        _statusText.text = $"Review {_reviewPly}/{_reviewMoves.Count}: {move}   (←/→ step · N new game){note}";
+        _statusLabel.text = $"Review {_reviewPly}/{_reviewMoves.Count}: {move}   (←/→ · N new){note}";
     }
 
     private string PositionAfter(int plyCount)
@@ -407,102 +421,57 @@ public sealed class KaissaGameController : MonoBehaviour
         return game.Fen;
     }
 
-    // Net material from White's perspective (P1 N3 B3 R5 Q9).
+    private void SaveRating()
+    {
+        if (_game == null) return;
+        var saved = KaissaProgress.Load();
+        var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();
+        model.RatingEstimate = _game.PlayerRating;
+        KaissaProgress.Save(model.ToJson());
+    }
+
     private static int Material(BoardView board)
     {
         int sum = 0;
         foreach (var p in board.Pieces)
         {
-            int v = char.ToUpperInvariant(p.Piece) switch
-            {
-                'P' => 1, 'N' => 3, 'B' => 3, 'R' => 5, 'Q' => 9, _ => 0,
-            };
+            int v = char.ToUpperInvariant(p.Piece) switch { 'P' => 1, 'N' => 3, 'B' => 3, 'R' => 5, 'Q' => 9, _ => 0 };
             sum += char.IsUpper(p.Piece) ? v : -v;
         }
         return sum;
     }
 
-    private Text MakeText(Transform parent, int size, TextAnchor anchor, Vector2 anchorMinMax, Vector2 pivot, Vector2 pos, Vector2 sizeDelta)
+    private void Update()
     {
-        var go = new GameObject("text");
-        go.transform.SetParent(parent, false);
-        var text = go.AddComponent<Text>();
-        text.font = _font;
-        text.fontSize = size;
-        text.alignment = anchor;
-        text.color = Color.white;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.verticalOverflow = VerticalWrapMode.Overflow;
+        if (Keyboard.current == null) return;
 
-        var rt = text.rectTransform;
-        rt.anchorMin = anchorMinMax;
-        rt.anchorMax = anchorMinMax;
-        rt.pivot = pivot;
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = sizeDelta;
-        return text;
+        if (_reviewMode)
+        {
+            if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+            else if (Keyboard.current.nKey.wasPressedThisFrame) NewGame();
+            else if (Keyboard.current.leftArrowKey.wasPressedThisFrame) { _reviewPly = Mathf.Max(0, _reviewPly - 1); RenderReviewPosition(); }
+            else if (Keyboard.current.rightArrowKey.wasPressedThisFrame) { _reviewPly = Mathf.Min(_reviewMoves.Count, _reviewPly + 1); RenderReviewPosition(); }
+            else if (Keyboard.current.fKey.wasPressedThisFrame) Flip();
+            return;
+        }
+
+        if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        else if (Keyboard.current.nKey.wasPressedThisFrame && _game != null) NewGame();
+        else if (Keyboard.current.rKey.wasPressedThisFrame) Resign();
+        else if (Keyboard.current.uKey.wasPressedThisFrame) Takeback();
+        else if (Keyboard.current.fKey.wasPressedThisFrame) Flip();
     }
 
     private void OnDestroy()
     {
-        if (_game != null)
-            _ = _game.DisposeAsync();
+        if (_game != null) _ = _game.DisposeAsync();
     }
 
-
-    private static void SetUpCameraAndLight()
+    private static void EnsureEventSystem()
     {
-        var cam = Camera.main;
-        if (cam != null)
-        {
-            cam.transform.position = new Vector3(3.5f, 7.5f, -4.5f);
-            cam.transform.LookAt(new Vector3(3.5f, 0f, 3.2f));
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.05f, 0.06f, 0.09f);
-
-            var data = cam.GetUniversalAdditionalCameraData();
-            if (data != null)
-                data.renderPostProcessing = true;
-        }
-
-        RenderSettings.ambientMode = AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.28f, 0.30f, 0.36f);
-
-        if (UnityEngine.Object.FindAnyObjectByType<Light>() == null)
-        {
-            var keyObj = new GameObject("KeyLight");
-            var key = keyObj.AddComponent<Light>();
-            key.type = LightType.Directional;
-            key.intensity = 1.15f;
-            key.color = new Color(1f, 0.96f, 0.9f);
-            key.shadows = LightShadows.Soft;
-            keyObj.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
-        }
-
-        SceneEnvironment.Apply();
-    }
-
-    private static void BuildPostProcessing()
-    {
-        var volumeObj = new GameObject("PostFX");
-        var volume = volumeObj.AddComponent<Volume>();
-        volume.isGlobal = true;
-
-        var profile = ScriptableObject.CreateInstance<VolumeProfile>();
-        volume.profile = profile;
-
-        var tonemapping = profile.Add<Tonemapping>(true);
-        tonemapping.mode.overrideState = true;
-        tonemapping.mode.value = TonemappingMode.Neutral;
-
-        var bloom = profile.Add<Bloom>(true);
-        bloom.intensity.overrideState = true;
-        bloom.intensity.value = 0.30f;
-        bloom.threshold.overrideState = true;
-        bloom.threshold.value = 1.40f;
-
-        var vignette = profile.Add<Vignette>(true);
-        vignette.intensity.overrideState = true;
-        vignette.intensity.value = 0.3f;
+        if (UnityEngine.Object.FindAnyObjectByType<EventSystem>() != null) return;
+        var go = new GameObject("EventSystem");
+        go.AddComponent<EventSystem>();
+        go.AddComponent<InputSystemUIInputModule>();
     }
 }

@@ -111,6 +111,65 @@ public static class UiKit
         return b;
     }
 
+    // The shared chess.com-style left nav rail. activeScene highlights the current screen; every item
+    // loads its scene. Kept here so every screen shows the same rail.
+    public static VisualElement NavRail(string activeScene)
+    {
+        var rail = new VisualElement();
+        rail.style.width = 200;
+        rail.style.backgroundColor = Rail;
+        rail.style.borderRightWidth = 1;
+        rail.style.borderRightColor = Line;
+        Pad(rail, 14, 10, 14, 10);
+
+        var mark = Text_("♞  Kaissa", 22, GreenHi, bold: true);
+        Pad(mark, 6, 8, 16, 8);
+        rail.Add(mark);
+
+        rail.Add(NavItem("Home", "Menu", activeScene));
+        rail.Add(NavItem("Play", "Play", activeScene));
+        rail.Add(GroupLabel("Train"));
+        rail.Add(NavItem("Puzzles", "SampleScene", activeScene));
+        rail.Add(NavItem("Puzzle Blitz", "Rush", activeScene));
+        rail.Add(NavItem("Openings", "Opening", activeScene));
+        rail.Add(NavItem("Learn", "Library", activeScene));
+        rail.Add(NavItem("Endgames", "Endgame", activeScene));
+        rail.Add(GroupLabel("Tools"));
+        rail.Add(NavItem("Board Vision", "Vision", activeScene));
+        rail.Add(NavItem("Coordinates", "Coordinate", activeScene));
+        rail.Add(NavItem("Stats", "Stats", activeScene));
+
+        var spacer = new VisualElement();
+        spacer.style.flexGrow = 1;
+        rail.Add(spacer);
+
+        rail.Add(NavItem("Calibrate", "Calibrate", activeScene));
+        rail.Add(NavItem("Settings", "Settings", activeScene));
+        return rail;
+    }
+
+    public static VisualElement GroupLabel(string text)
+    {
+        var l = Text_(text.ToUpperInvariant(), 11, Mute, bold: true);
+        l.style.letterSpacing = 1.2f;
+        Pad(l, 14, 10, 5, 10);
+        return l;
+    }
+
+    public static VisualElement NavItem(string label, string scene, string activeScene)
+    {
+        bool active = scene == activeScene;
+        var item = Row(Text_(label, 15, active ? Text : Dim, bold: true));
+        Pad(item, 10); Radius(item, 6);
+        item.style.marginBottom = 1;
+        var idle = active ? Hex(0x3d, 0x3a, 0x36) : new Color(0, 0, 0, 0);
+        item.style.backgroundColor = idle;
+        item.RegisterCallback<MouseEnterEvent>(_ => { if (!active) item.style.backgroundColor = Panel2; });
+        item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = idle);
+        item.RegisterCallback<ClickEvent>(_ => UnityEngine.SceneManagement.SceneManager.LoadScene(scene));
+        return item;
+    }
+
     // A rounded chip (streak / due count) with a colored dot.
     public static VisualElement Chip(string label, Color dot)
     {
