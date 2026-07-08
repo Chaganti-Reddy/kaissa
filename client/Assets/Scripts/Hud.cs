@@ -18,9 +18,21 @@ public static class Hud
         var obj = new GameObject("HUD");
         var canvas = obj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        obj.AddComponent<CanvasScaler>();
+        ConfigureScaler(obj.AddComponent<CanvasScaler>());
         obj.AddComponent<GraphicRaycaster>();
         return canvas.transform;
+    }
+
+    // Every screen's layout is authored in 1280x720 coordinates. Scaling with screen size (rather
+    // than the default constant-pixel mode) keeps those layouts proportional at any window size —
+    // maximized, fullscreen, or resized — instead of clustering in a corner. match 0.5 balances
+    // width and height so nothing clips on off-16:9 aspect ratios.
+    public static void ConfigureScaler(CanvasScaler scaler)
+    {
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1280f, 720f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
     }
 
     public static Text Text(Transform parent, string content, int size, TextAnchor anchor,

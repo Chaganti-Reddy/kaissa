@@ -347,7 +347,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         var canvasObj = new GameObject("HUD");
         var canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<CanvasScaler>();
+        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
         canvasObj.AddComponent<GraphicRaycaster>();
 
         _titleText = MakeText(canvas.transform, 26, TextAnchor.UpperCenter,

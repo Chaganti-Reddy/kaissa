@@ -131,7 +131,7 @@ public sealed class StatsController : MonoBehaviour
         var canvasObj = new GameObject("HUD");
         var canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<CanvasScaler>();
+        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
         canvasObj.AddComponent<GraphicRaycaster>();
 
         // Dark panel so the screen region is clearly rendering.

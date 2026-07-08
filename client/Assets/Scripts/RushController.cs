@@ -161,7 +161,7 @@ public sealed class RushController : MonoBehaviour
         var canvasObj = new GameObject("HUD");
         var canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<CanvasScaler>();
+        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
         canvasObj.AddComponent<GraphicRaycaster>();
 
         _hudText = MakeText(canvas.transform, 26, TextAnchor.UpperCenter,

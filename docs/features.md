@@ -34,7 +34,7 @@ Legend: ✅ built (core + client) · 🎨 core built, client UI still pending ·
 
 - ✅ Endgame trainer (K+Q, K+R, K+P opposition, promotion) — pick and play out vs engine — `EndgameLibrary`
 - ✅ Opening trainer — pick a line and play it move by move — `OpeningLibrary` / `OpeningTrainer`
-- ⏳ Pattern library browser (see/learn each motif)
+- ✅ Pattern library browser (Learn) — browse each motif, see an example position, drill it — `ScenarioLibrary`
 
 ## Stats and motivation
 
@@ -54,6 +54,7 @@ Legend: ✅ built (core + client) · 🎨 core built, client UI still pending ·
 - ✅ Settings (sound, move input, move hints, auto-queen, bot speed, board flip, board theme, piece style, coordinates, reset) — `KaissaSettings` + Settings screen
 - ✅ Shared board interaction on every screen — drag or click, legal-move dots, highlights, sounds, premove, glide animation, promotion picker
 - ✅ F1 controls help overlay, on every screen
+- ✅ Launches maximized with a windowed/fullscreen toggle; the UI scales with window size
 - ✅ Cosmetic board themes (eight) + piece style (modelled/procedural); more sets = drop-in. Never pay-to-win.
 - ⏳ Cloud sync (v1.5), ML weakness prediction + generated content (v2)
 - ⏳ Mobile (embed engine for iOS)

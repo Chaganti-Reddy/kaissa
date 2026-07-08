@@ -30,7 +30,7 @@ public sealed class PromotionPicker : MonoBehaviour
         var canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 100; // above the game HUD
-        canvasObj.AddComponent<CanvasScaler>();
+        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
         canvasObj.AddComponent<GraphicRaycaster>();
 
         // Dim backdrop.

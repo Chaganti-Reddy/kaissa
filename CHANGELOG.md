@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.22 (alpha) — 2026-07-08
+
+- New Learn screen: a pattern library. Browse every motif, read what it trains, see an example
+  position on the board, then drill it. Replaces the previous Practice picker (this is a superset).
+- The app now launches maximized instead of a fixed small window, and Settings has a Display toggle
+  between a maximized window and borderless fullscreen.
+- The interface scales with the window size, so screens stay proportional when maximized, in
+  fullscreen, or resized, instead of clustering at a fixed pixel size.
+
 ## v0.1.21 (alpha) — 2026-07-08
 
 - Openings: the screen now lists the opening lines and you pick which one to train, instead of

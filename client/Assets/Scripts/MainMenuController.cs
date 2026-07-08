@@ -11,16 +11,16 @@ using UnityEngine.UI;
 public sealed class MainMenuController : MonoBehaviour
 {
     private Font _font;
-    private static bool _startedWindowed;
+    private static bool _appliedWindowMode;
 
     private void Start()
     {
-        // Launch windowed so a first-time player isn't trapped in fullscreen with no obvious exit.
-        // Only forced once per run, so returning to the menu doesn't fight a manual resize.
-        if (!_startedWindowed)
+        // Apply the saved window mode (maximized by default) once per run, so returning to the menu
+        // doesn't fight a manual resize. A maximized window still has a title bar, so no fullscreen trap.
+        if (!_appliedWindowMode)
         {
-            Screen.SetResolution(1280, 720, FullScreenMode.Windowed);
-            _startedWindowed = true;
+            WindowMode.Apply();
+            _appliedWindowMode = true;
         }
 
         _font = Resources.GetBuiltinResource(typeof(Font), "LegacyRuntime.ttf") as Font;
@@ -138,7 +138,7 @@ public sealed class MainMenuController : MonoBehaviour
         var canvasObj = new GameObject("Menu");
         var canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<CanvasScaler>();
+        Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
         canvasObj.AddComponent<GraphicRaycaster>();
         return canvas.transform;
     }
