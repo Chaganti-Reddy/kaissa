@@ -100,6 +100,11 @@ public sealed class ScreenshotHarness : MonoBehaviour
         board.DebugPromotion(true); // promotion picker
         yield return new WaitForSeconds(0.3f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, "i-promotion.png")); yield return new WaitForSeconds(0.4f);
+
+        board.Render(start, false, null, true); // opponent's turn
+        board.DebugPremove("e2", "e4"); // queued premove (orange highlight)
+        yield return new WaitForSeconds(0.3f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, "i-premove.png")); yield return new WaitForSeconds(0.4f);
         Debug.Log("ScreenshotHarness: interact done");
     }
 

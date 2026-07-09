@@ -12,6 +12,7 @@ public sealed class Board3DView : IBoardView
 
     // The coordinate drill uses the 2D board; raw square clicks are not wired for 3D.
     public Action<string> SquareClickHandler { get; set; }
+    public bool AllowPremove { get => _interactor.AllowPremove; set => _interactor.AllowPremove = value; }
 
     public Board3DView(GameObject go, Action<string> onMove, PieceAudio audio)
     {

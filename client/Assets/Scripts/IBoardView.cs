@@ -8,4 +8,5 @@ public interface IBoardView
     void Render(string fen, bool canMove, string lastMove, bool whiteBottom);
     void HighlightSquare(string sq, Color color);
     Action<string> SquareClickHandler { get; set; }
+    bool AllowPremove { get; set; }
 }

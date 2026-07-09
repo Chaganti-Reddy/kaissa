@@ -18,8 +18,14 @@ public sealed class Board2D : IBoardView
     // coordinate drill. When true (default) edge coordinate labels show, honoring the global setting.
     public Action<string> SquareClickHandler { get; set; }
     public bool ShowCoordinates = true;
+    public bool AllowPremove { get; set; }
 
     private readonly Action<string> _onMove;
+
+    // premove (queue a move during the opponent's turn)
+    private (int f, int r)? _premoveSel;
+    private (string from, string to)? _premove;
+    private static readonly Color PremoveCol = new(0.90f, 0.55f, 0.20f, 0.55f);
 
     private string _fen;
     private bool _whiteBottom = true;
@@ -278,6 +284,22 @@ public sealed class Board2D : IBoardView
             if (!whiteToMove && bkF >= 0) Highlight((bkF, bkR), Check);
         }
 
+        // premove: show it while the opponent moves; play it as soon as it becomes our turn
+        if (_premoveSel is { } psel) Highlight(psel, PremoveCol);
+        if (_premove is { } pm)
+        {
+            if (canMove)
+            {
+                _premove = null;
+                Root.schedule.Execute(() => AttemptMove(pm.from, pm.to, false)).ExecuteLater(0);
+            }
+            else
+            {
+                Highlight(Sq(pm.from), PremoveCol);
+                Highlight(Sq(pm.to), PremoveCol);
+            }
+        }
+
         // glide the piece for a newly-arrived move (skip re-renders like flip/select of the same move)
         if (!string.IsNullOrEmpty(lastMove) && lastMove != _lastAnimated && lastMove.Length >= 4)
         {
@@ -384,6 +406,12 @@ public sealed class Board2D : IBoardView
     }
 
     public void DebugPromotion(bool white) => ShowPromotion("e8", white, _ => { });
+
+    public void DebugPremove(string from, string to)
+    {
+        _premove = (from, to);
+        Render(_fen, false, _lastMove, _whiteBottom);
+    }
 
     private void OnPointerDown(PointerDownEvent e, int row, int col)
     {
@@ -545,7 +573,12 @@ public sealed class Board2D : IBoardView
     {
         var (f, r) = ToBoard(row, col);
         if (SquareClickHandler != null) { SquareClickHandler(Uci((f, r))); return; }
-        if (!_canMove) return;
+
+        if (!_canMove)
+        {
+            if (AllowPremove) PremoveClick(f, r);
+            return;
+        }
         var game = SafeGame(_fen);
         if (game == null) return;
 
@@ -561,6 +594,30 @@ public sealed class Board2D : IBoardView
 
         if (IsOwnPiece(game, f, r))
             Select(game, (f, r));
+    }
+
+    // Queue (or clear) a premove during the opponent's turn: click your piece, then its target.
+    private void PremoveClick(int f, int r)
+    {
+        var game = SafeGame(_fen);
+        if (game == null) return;
+        bool playerIsWhite = game.SideToMove != Side.White; // the player is the side NOT to move now
+        char p = new AttackBoardLite(_fen).At(f, r);
+
+        if (_premoveSel is { } sel)
+        {
+            if (sel == (f, r)) { _premoveSel = null; _premove = null; Render(_fen, false, _lastMove, _whiteBottom); return; }
+            _premove = (Uci(sel), Uci((f, r)));
+            _premoveSel = null;
+            Render(_fen, false, _lastMove, _whiteBottom);
+        }
+        else if (p != '\0' && char.IsUpper(p) == playerIsWhite)
+        {
+            _premoveSel = (f, r);
+            _premove = null;
+            Render(_fen, false, _lastMove, _whiteBottom);
+        }
+        else { _premove = null; Render(_fen, false, _lastMove, _whiteBottom); }
     }
 
     private void Select(ChessGame game, (int f, int r) sq)

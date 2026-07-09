@@ -20,6 +20,7 @@ public static class KaissaSettings
         public int botSpeed = 1;        // bot move pacing: 0 Fast, 1 Normal, 2 Slow
         public bool fullscreen;       // borderless fullscreen vs a maximized window
         public int boardView;         // 0 = flat 2D board, 1 = 3D board
+        public bool evalBar;          // show a live engine eval bar during play
         public bool onboarded;        // has the player seen the first-run welcome
         public string dailyDone = ""; // yyyy-MM-dd of the last solved daily puzzle
         public int dayStreak;         // consecutive days with training activity
@@ -52,6 +53,7 @@ public static class KaissaSettings
     public static int BotSpeed { get => D.botSpeed; set { D.botSpeed = value; Save(); } }
     public static bool Fullscreen { get => D.fullscreen; set { D.fullscreen = value; Save(); } }
     public static int BoardView { get => D.boardView; set { D.boardView = value; Save(); } }
+    public static bool EvalBar { get => D.evalBar; set { D.evalBar = value; Save(); } }
     public static bool Onboarded { get => D.onboarded; set { D.onboarded = value; Save(); } }
     public static string DailyDone { get => D.dailyDone; set { D.dailyDone = value; Save(); } }
     public static int DayStreak { get => D.dayStreak; set { D.dayStreak = value; Save(); } }

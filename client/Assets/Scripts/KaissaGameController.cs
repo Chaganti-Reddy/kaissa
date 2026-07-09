@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
+using Kaissa.Training.Play;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -43,6 +45,9 @@ public sealed class KaissaGameController : MonoBehaviour
     private Label _botName;
     private Label _botCaptured;
     private Label _youCaptured;
+    private VisualElement _evalFill;
+    private KaissaAnalysis _analysis;
+    private CancellationTokenSource _evalCts;
 
     private void Start()
     {
@@ -71,6 +76,8 @@ public sealed class KaissaGameController : MonoBehaviour
         _root.Add(BuildRightRail());
 
         _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnMove(uci), _audio);
+        _board.AllowPremove = true; // queue a move while the bot thinks
+        if (KaissaSettings.EvalBar) StartCoroutine(StartAnalysis());
 
         if (EndgameRoute.Fen != null)
             StartGame("Bot", null);
@@ -93,9 +100,25 @@ public sealed class KaissaGameController : MonoBehaviour
         _botCaptured = UiKit.Text_("", 16, UiKit.Mute);
         center.Add(Strip(_botName, _botCaptured));
 
+        var boardRow = new VisualElement();
+        boardRow.style.flexDirection = FlexDirection.Row;
+        boardRow.style.alignItems = Align.Center;
+        if (KaissaSettings.EvalBar)
+        {
+            var bar = new VisualElement();
+            bar.style.width = 16; bar.style.height = 480; bar.style.marginRight = 8; bar.style.flexShrink = 0;
+            bar.style.flexDirection = FlexDirection.ColumnReverse; bar.style.overflow = Overflow.Hidden;
+            bar.style.backgroundColor = UiKit.Hex(0x40, 0x3d, 0x39); UiKit.Radius(bar, 4);
+            _evalFill = new VisualElement();
+            _evalFill.style.width = Length.Percent(100); _evalFill.style.height = Length.Percent(50);
+            _evalFill.style.backgroundColor = UiKit.Hex(0xf4, 0xf4, 0xf4);
+            bar.Add(_evalFill);
+            boardRow.Add(bar);
+        }
         _boardHost = new VisualElement();
         _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
-        center.Add(_boardHost);
+        boardRow.Add(_boardHost);
+        center.Add(boardRow);
 
         _topName = UiKit.Text_("you", 15, UiKit.Text, bold: true);
         _youCaptured = UiKit.Text_("", 16, UiKit.Mute);
@@ -362,6 +385,36 @@ public sealed class KaissaGameController : MonoBehaviour
         _currentFen = fen;
         _canMove = canMove;
         _board.Render(fen, canMove, _lastMove, _whiteBottom);
+        if (_analysis != null) EvaluateEval(fen);
+    }
+
+    private System.Collections.IEnumerator StartAnalysis()
+    {
+        var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
+        if (!File.Exists(enginePath)) yield break;
+        var task = KaissaAnalysis.StartAsync(enginePath);
+        while (!task.IsCompleted) yield return null;
+        if (task.IsFaulted) { Debug.LogError(task.Exception); yield break; }
+        _analysis = task.Result;
+        EvaluateEval(_currentFen);
+    }
+
+    private async void EvaluateEval(string fen)
+    {
+        if (_analysis == null || _evalFill == null) return;
+        _evalCts?.Cancel();
+        _evalCts = new CancellationTokenSource();
+        var ct = _evalCts.Token;
+        try
+        {
+            var line = await _analysis.EvaluateAsync(fen, depth: 12, ct);
+            if (ct.IsCancellationRequested || _evalFill == null) return;
+            bool whiteToMove = ChessGame.FromFen(fen).SideToMove == Side.White;
+            int whiteCp = whiteToMove ? line.Centipawns : -line.Centipawns;
+            _evalFill.style.height = Length.Percent((float)AccuracyModel.WinPercent(whiteCp));
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception e) { Debug.LogError(e); }
     }
 
     private static string ApplyMove(string fen, string uci)
@@ -392,14 +445,23 @@ public sealed class KaissaGameController : MonoBehaviour
         {
             string w = moves[i];
             string b = i + 1 < moves.Count ? moves[i + 1] : "";
-            var row = UiKit.Row(
-                Cell($"{i / 2 + 1}.", 40, UiKit.Mute),
-                Cell(w, 120, UiKit.Text),
-                Cell(b, 120, UiKit.Text));
+            var wc = Cell(w, 120, UiKit.Text); int wply = i + 1;
+            wc.RegisterCallback<ClickEvent>(_ => RowClicked(wply));
+            var bc = Cell(b, 120, UiKit.Text);
+            if (!string.IsNullOrEmpty(b)) { int bply = i + 2; bc.RegisterCallback<ClickEvent>(_ => RowClicked(bply)); }
+            var row = UiKit.Row(Cell($"{i / 2 + 1}.", 40, UiKit.Mute), wc, bc);
             if ((i / 2) % 2 == 1) row.style.backgroundColor = UiKit.Panel3;
             UiKit.Pad(row, 6, 12, 6, 12);
             _movesBody.Add(row);
         }
+    }
+
+    // Click a move in the list (during the post-game review) to jump to that position.
+    private void RowClicked(int ply)
+    {
+        if (!_reviewMode || _reviewMoves == null) return;
+        _reviewPly = Mathf.Clamp(ply, 0, _reviewMoves.Count);
+        RenderReviewPosition();
     }
 
     private static Label Cell(string s, float w, Color c)
@@ -489,6 +551,8 @@ public sealed class KaissaGameController : MonoBehaviour
     private void OnDestroy()
     {
         if (_game != null) _ = _game.DisposeAsync();
+        _evalCts?.Cancel();
+        if (_analysis != null) _ = _analysis.DisposeAsync();
     }
 
     private static void EnsureEventSystem()
