@@ -24,7 +24,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
         var args = Environment.GetCommandLineArgs();
         if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact")
             && !args.Contains("-kaissa-record") && !args.Contains("-kaissa-playtest")
-            && !args.Contains("-annotate3d"))
+            && !args.Contains("-annotate3d") && !args.Contains("-kaissa-puzzletest"))
             return;
         Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
         var go = new GameObject("ScreenshotHarness");
@@ -53,6 +53,16 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (args.Contains("-kaissa-record"))
         {
             yield return RecordPass(dir);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-puzzletest"))
+        {
+            // The Puzzles controller sees the arg, auto-runs its solve demo, captures labeled frames
+            // to -shotdir, and quits. We just route to the scene and wait it out.
+            SceneManager.LoadScene("SampleScene");
+            yield return new WaitForSeconds(30f);
             Application.Quit();
             yield break;
         }
