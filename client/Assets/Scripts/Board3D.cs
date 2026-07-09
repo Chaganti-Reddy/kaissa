@@ -137,13 +137,14 @@ public static class Board3D
         }
 
         RenderSettings.ambientMode = AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.28f, 0.30f, 0.36f);
+        RenderSettings.ambientLight = new Color(0.34f, 0.36f, 0.42f); // lift ambient so we need less key light
 
         if (Object.FindAnyObjectByType<Light>() == null)
         {
-            AddLight("KeyLight", 1.15f, new Color(1f, 0.96f, 0.9f), new Vector3(52f, -35f, 0f), LightShadows.Soft);
+            // Softer key so glossy white pieces don't blow out (these scenes have no tonemapping).
+            AddLight("KeyLight", 0.85f, new Color(1f, 0.96f, 0.9f), new Vector3(50f, -35f, 0f), LightShadows.Soft);
             AddLight("FillLight", 0.35f, new Color(0.7f, 0.8f, 1f), new Vector3(30f, 150f, 0f), LightShadows.None);
-            AddLight("RimLight", 0.5f, new Color(1f, 0.9f, 0.8f), new Vector3(-20f, 40f, 0f), LightShadows.None);
+            AddLight("RimLight", 0.4f, new Color(1f, 0.9f, 0.8f), new Vector3(-20f, 40f, 0f), LightShadows.None);
         }
 
         SceneEnvironment.Apply(); // HDRI skybox + reflections when present

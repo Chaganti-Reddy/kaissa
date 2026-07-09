@@ -35,6 +35,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
         var args = Environment.GetCommandLineArgs();
         if (args.Contains("-board2d")) KaissaSettings.BoardView = 0;
         else if (args.Contains("-board3d")) KaissaSettings.BoardView = 1;
+        if (args.Contains("-greenboard")) KaissaSettings.BoardTheme = 1;
 
         string dir = ArgValue("-shotdir") ?? Path.Combine(Application.persistentDataPath, "shots");
         Directory.CreateDirectory(dir);

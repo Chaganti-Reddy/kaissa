@@ -46,12 +46,12 @@ public static class Pieces
     // whatever material the OBJ or procedural mesh shipped with. Ivory vs polished obsidian.
     private static void ApplyMaterial(GameObject root, bool white)
     {
-        var color = white ? new Color(0.93f, 0.90f, 0.83f) : new Color(0.09f, 0.09f, 0.12f);
+        var color = white ? new Color(0.86f, 0.83f, 0.76f) : new Color(0.11f, 0.11f, 0.14f);
         var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
         var mat = new Material(shader);
         mat.color = color;
         mat.SetColor("_BaseColor", color);
-        mat.SetFloat("_Smoothness", white ? 0.30f : 0.55f);
+        mat.SetFloat("_Smoothness", white ? 0.18f : 0.45f); // matte-ish ivory so it doesn't blow out
         mat.SetFloat("_Metallic", 0f);
 
         foreach (var renderer in root.GetComponentsInChildren<Renderer>())
