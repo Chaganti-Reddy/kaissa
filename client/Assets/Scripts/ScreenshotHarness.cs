@@ -22,7 +22,8 @@ public sealed class ScreenshotHarness : MonoBehaviour
     private static void Boot()
     {
         var args = Environment.GetCommandLineArgs();
-        if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact") && !args.Contains("-kaissa-record"))
+        if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact")
+            && !args.Contains("-kaissa-record") && !args.Contains("-kaissa-playtest"))
             return;
         var go = new GameObject("ScreenshotHarness");
         DontDestroyOnLoad(go);
@@ -49,6 +50,19 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (args.Contains("-kaissa-record"))
         {
             yield return RecordPass(dir);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-playtest"))
+        {
+            SceneManager.LoadScene("Play"); // the Play controller auto-starts a timed game (sees the arg)
+            for (int i = 0; i < 9; i++)
+            {
+                yield return new WaitForSeconds(1.2f);
+                ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"pt_{i}.png"));
+                Debug.Log($"ScreenshotHarness: playtest frame {i}");
+            }
             Application.Quit();
             yield break;
         }

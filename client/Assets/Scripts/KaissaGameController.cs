@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
@@ -89,7 +90,13 @@ public sealed class KaissaGameController : MonoBehaviour
         _board.AllowPremove = true; // queue a move while the bot thinks
         if (KaissaSettings.EvalBar) StartCoroutine(StartAnalysis());
 
-        if (EndgameRoute.Fen != null)
+        if (Environment.GetCommandLineArgs().Contains("-kaissa-playtest"))
+        {
+            _tcIndex = 1; // 3-minute clock, to verify the timer ticks
+            StartGame("Rookie", 1350);
+            StartCoroutine(AutoPlay());
+        }
+        else if (EndgameRoute.Fen != null)
             StartGame("Bot", null);
         else
             ShowPicker();
@@ -330,6 +337,18 @@ public sealed class KaissaGameController : MonoBehaviour
 
         RenderBoard(_game.Board.Fen, canMove: true);
         UpdateMoveList();
+    }
+
+    // Playtest driver (screenshot harness): play a couple of legal moves so the clock switches sides,
+    // the bot replies, and captured pieces / move list populate — all observable in the frame captures.
+    private System.Collections.IEnumerator AutoPlay()
+    {
+        yield return new WaitForSeconds(2.5f);
+        if (_game != null && !_busy) OnMove("e2e4");
+        yield return new WaitForSeconds(3f);
+        if (_game != null && !_busy && !_game.IsGameOver) OnMove("g1f3");
+        yield return new WaitForSeconds(3f);
+        if (_game != null && !_busy && !_game.IsGameOver) OnMove("f1c4");
     }
 
     private async void OnMove(string uci)
