@@ -45,6 +45,16 @@ public sealed class KaissaGameController : MonoBehaviour
     private Label _botName;
     private Label _botCaptured;
     private Label _youCaptured;
+    private Label _botClock;
+    private Label _youClock;
+    private bool _timed, _flagged, _activeWhite = true;
+    private double _clockWhite, _clockBlack, _increment;
+    private int _tcIndex;
+    private string _lastLabel; private int? _lastElo;
+    private static readonly (string name, int secs, int inc)[] TimeControls =
+    {
+        ("Untimed", 0, 0), ("3 min", 180, 0), ("5 min", 300, 0), ("10 min", 600, 0), ("15|10", 900, 10),
+    };
     private VisualElement _evalFill;
     private KaissaAnalysis _analysis;
     private CancellationTokenSource _evalCts;
@@ -98,7 +108,8 @@ public sealed class KaissaGameController : MonoBehaviour
 
         _botName = UiKit.Text_("Bot", 15, UiKit.Dim, bold: true);
         _botCaptured = UiKit.Text_("", 16, UiKit.Mute);
-        center.Add(Strip(_botName, _botCaptured));
+        _botClock = ClockLabel();
+        center.Add(Strip(_botName, _botCaptured, _botClock));
 
         var boardRow = new VisualElement();
         boardRow.style.flexDirection = FlexDirection.Row;
@@ -122,7 +133,8 @@ public sealed class KaissaGameController : MonoBehaviour
 
         _topName = UiKit.Text_("you", 15, UiKit.Text, bold: true);
         _youCaptured = UiKit.Text_("", 16, UiKit.Mute);
-        center.Add(Strip(_topName, _youCaptured));
+        _youClock = ClockLabel();
+        center.Add(Strip(_topName, _youCaptured, _youClock));
 
         _statusLabel = UiKit.Text_("", 15, UiKit.Dim);
         _statusLabel.style.marginTop = 12;
@@ -131,14 +143,24 @@ public sealed class KaissaGameController : MonoBehaviour
         return center;
     }
 
-    private VisualElement Strip(Label name, Label captured)
+    private VisualElement Strip(Label name, Label captured, Label clock)
     {
         var av = UiKit.Text_("♟", 18, UiKit.Dim, bold: true);
         av.style.marginRight = 8;
         captured.style.marginLeft = 10;
-        var s = UiKit.Row(av, name, captured);
+        var spacer = new VisualElement(); spacer.style.flexGrow = 1;
+        var s = UiKit.Row(av, name, captured, spacer, clock);
         s.style.width = 480; UiKit.Pad(s, 6, 4, 6, 4);
         return s;
+    }
+
+    private static Label ClockLabel()
+    {
+        var l = UiKit.Text_("", 18, UiKit.Text, bold: true);
+        l.style.backgroundColor = UiKit.Panel3;
+        UiKit.Pad(l, 4, 12, 4, 12); UiKit.Radius(l, 6);
+        l.style.display = DisplayStyle.None; // shown only for timed games
+        return l;
     }
 
     // Glyphs for the pieces of `white` colour that have been captured (start count minus current).
@@ -207,7 +229,24 @@ public sealed class KaissaGameController : MonoBehaviour
         var dim = Overlay();
         var panel = OverlayPanel();
         panel.Add(UiKit.Text_("Choose your opponent", 24, UiKit.Text, bold: true));
-        var spacer = new VisualElement(); spacer.style.height = 14; panel.Add(spacer);
+
+        // time control selector
+        var tcRow = UiKit.Row(); tcRow.style.marginTop = 12; tcRow.style.marginBottom = 12;
+        var tcBtns = new List<VisualElement>();
+        for (int i = 0; i < TimeControls.Length; i++)
+        {
+            int idx = i;
+            var b = UiKit.Ghost(TimeControls[i].name, () =>
+            {
+                _tcIndex = idx;
+                for (int j = 0; j < tcBtns.Count; j++)
+                    tcBtns[j].style.backgroundColor = j == idx ? UiKit.Green : UiKit.Panel2;
+            }, 12);
+            b.style.marginLeft = 3; b.style.marginRight = 3;
+            if (i == _tcIndex) b.style.backgroundColor = UiKit.Green;
+            tcBtns.Add(b); tcRow.Add(b);
+        }
+        panel.Add(tcRow);
 
         panel.Add(PickBtn("Adaptive — matches your level", () => { _root.Remove(dim); StartGame("Adaptive", null); }));
         foreach (var bot in BotRoster.All)
@@ -260,6 +299,7 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         }
 
+        _lastLabel = label; _lastElo = fixedElo;
         _titleLabel.text = $"Play vs {label}";
         _statusLabel.text = "Starting engine...";
         double playerRating = KaissaTrainer.CreateDefault(KaissaProgress.Load()).PlayerRating;
@@ -281,6 +321,13 @@ public sealed class KaissaGameController : MonoBehaviour
         _botName.text = $"{label}  ~{_game.OpponentElo}";
         _statusLabel.text = "You are White. Your move.   ·   N new · R resign · U takeback · F flip";
         _lastMove = null;
+
+        var tc = TimeControls[Mathf.Clamp(_tcIndex, 0, TimeControls.Length - 1)];
+        _timed = tc.secs > 0; _clockWhite = _clockBlack = tc.secs; _increment = tc.inc;
+        _activeWhite = true; _flagged = false;
+        _botClock.style.display = _youClock.style.display = _timed ? DisplayStyle.Flex : DisplayStyle.None;
+        UpdateClockLabels();
+
         RenderBoard(_game.Board.Fen, canMove: true);
         UpdateMoveList();
     }
@@ -291,10 +338,12 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         _busy = true;
 
+        if (_timed && _flagged) { _busy = false; return; }
         var interFen = ApplyMove(_game.Board.Fen, uci);
         if (interFen != null)
             RenderBoard(interFen, canMove: false);
         _audio.PlayMove();
+        if (_timed) { _clockWhite += _increment; _activeWhite = false; } // your clock stops, bot's runs
 
         try
         {
@@ -322,8 +371,10 @@ public sealed class KaissaGameController : MonoBehaviour
             }
             else
             {
+                if (_timed) { _clockBlack += _increment; _activeWhite = true; } // bot moved, your clock runs
                 _statusLabel.text = $"Bot played {outcome.BotMove}. Your move.";
             }
+            UpdateClockLabels();
         }
         catch (Exception e)
         {
@@ -371,6 +422,16 @@ public sealed class KaissaGameController : MonoBehaviour
         _busy = false;
         _lastMove = null;
         ShowPicker();
+    }
+
+    // Rematch: play the same opponent + time control again without the picker.
+    private void Rematch()
+    {
+        if (_lastLabel == null) { NewGame(); return; }
+        _reviewMode = false;
+        if (_game != null) { _ = _game.DisposeAsync(); _game = null; }
+        _busy = false; _lastMove = null;
+        StartGame(_lastLabel, _lastElo);
     }
 
     private void Flip()
@@ -527,14 +588,49 @@ public sealed class KaissaGameController : MonoBehaviour
         return sum;
     }
 
+    private void TickClock()
+    {
+        if (!_timed || _flagged || _game == null || _game.IsGameOver || _reviewMode) return;
+        double dt = Time.deltaTime;
+        if (_activeWhite) _clockWhite -= dt; else _clockBlack -= dt;
+        if (_clockWhite <= 0) { _clockWhite = 0; _flagged = true; OnFlag(playerLost: true); }
+        else if (_clockBlack <= 0) { _clockBlack = 0; _flagged = true; OnFlag(playerLost: false); }
+        UpdateClockLabels();
+    }
+
+    private void OnFlag(bool playerLost)
+    {
+        _audio.PlayGameEnd();
+        _statusLabel.text = playerLost ? "Time — you lost.   ·   N: new game" : "Time — the bot flagged. You win!   ·   N: new game";
+        RenderBoard(_currentFen, canMove: false);
+    }
+
+    private void UpdateClockLabels()
+    {
+        if (_botClock == null) return;
+        if (!_timed) { _botClock.style.display = DisplayStyle.None; _youClock.style.display = DisplayStyle.None; return; }
+        _youClock.text = Fmt(_clockWhite);
+        _botClock.text = Fmt(_clockBlack);
+        _youClock.style.color = _activeWhite && !_flagged ? UiKit.Text : UiKit.Mute;
+        _botClock.style.color = !_activeWhite && !_flagged ? UiKit.Text : UiKit.Mute;
+    }
+
+    private static string Fmt(double seconds)
+    {
+        int t = Mathf.Max(0, Mathf.CeilToInt((float)seconds));
+        return $"{t / 60}:{t % 60:00}";
+    }
+
     private void Update()
     {
+        TickClock();
         if (Keyboard.current == null) return;
 
         if (_reviewMode)
         {
             if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
             else if (Keyboard.current.nKey.wasPressedThisFrame) NewGame();
+            else if (Keyboard.current.rKey.wasPressedThisFrame) Rematch();
             else if (Keyboard.current.leftArrowKey.wasPressedThisFrame) { _reviewPly = Mathf.Max(0, _reviewPly - 1); RenderReviewPosition(); }
             else if (Keyboard.current.rightArrowKey.wasPressedThisFrame) { _reviewPly = Mathf.Min(_reviewMoves.Count, _reviewPly + 1); RenderReviewPosition(); }
             else if (Keyboard.current.fKey.wasPressedThisFrame) Flip();
