@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using Kaissa.Chess.Rules;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -21,7 +22,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
     private static void Boot()
     {
         var args = Environment.GetCommandLineArgs();
-        if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact"))
+        if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact") && !args.Contains("-kaissa-record"))
             return;
         var go = new GameObject("ScreenshotHarness");
         DontDestroyOnLoad(go);
@@ -41,6 +42,13 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (args.Contains("-kaissa-interact"))
         {
             yield return InteractPass(dir);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-record"))
+        {
+            yield return RecordPass(dir);
             Application.Quit();
             yield break;
         }
@@ -106,6 +114,46 @@ public sealed class ScreenshotHarness : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, "i-premove.png")); yield return new WaitForSeconds(0.4f);
         Debug.Log("ScreenshotHarness: interact done");
+    }
+
+    // Scripts a short game on the 2D board and captures burst frames through each move's glide, so the
+    // animation/feel can be reviewed frame-by-frame (a lightweight "recording").
+    private IEnumerator RecordPass(string dir)
+    {
+        var camGo = new GameObject("cam");
+        var cam = camGo.AddComponent<Camera>();
+        cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg;
+
+        var doc = gameObject.AddComponent<UIDocument>();
+        doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
+        doc.sortingOrder = 100;
+        yield return null;
+
+        var root = doc.rootVisualElement;
+        root.style.flexGrow = 1; root.style.alignItems = Align.Center; root.style.justifyContent = Justify.Center;
+        root.style.backgroundColor = UiKit.Bg;
+        var board = new Board2D(_ => { });
+        board.Root.style.width = 600; board.Root.style.height = 600;
+        root.Add(board.Root);
+
+        var game = ChessGame.Start();
+        board.Render(game.Fen, true, null, true);
+        yield return new WaitForSeconds(0.6f);
+
+        int frame = 0;
+        foreach (var move in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "f8c5" })
+        {
+            game.TryMakeMove(move);
+            board.Render(game.Fen, true, move, true); // triggers the glide of `move`
+            for (int k = 0; k < 5; k++) // ~5 frames across the 110ms animation
+            {
+                yield return new WaitForSeconds(0.035f);
+                ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"rec_{frame:000}.png"));
+                frame++;
+            }
+            yield return new WaitForSeconds(0.25f);
+        }
+        Debug.Log("ScreenshotHarness: record done");
     }
 
     private static string ArgValue(string key)
