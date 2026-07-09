@@ -82,7 +82,10 @@ public sealed class ScenarioLibrary
 
         var patterns = dto.Patterns.Select(p => new Pattern(new PatternId(p.Id), p.Name, p.Description));
         var scenarios = dto.Scenarios.Select(s =>
-            new Scenario(s.Id, new PatternId(s.Pattern), s.Fen, s.Solutions, s.Prompt, s.Rating));
+            new Scenario(s.Id, new PatternId(s.Pattern), s.Fen, s.Solutions, s.Prompt, s.Rating,
+                s.Line is { Count: > 0 } ? s.Line : null,
+                s.Themes is { Count: > 0 } ? s.Themes : null,
+                string.IsNullOrEmpty(s.Setup) ? null : s.Setup));
 
         return new ScenarioLibrary(patterns, scenarios);
     }
@@ -108,5 +111,8 @@ public sealed class ScenarioLibrary
         public List<string> Solutions { get; init; } = new();
         public string Prompt { get; init; } = "";
         public int Rating { get; init; }
+        public List<string> Line { get; init; } = new();
+        public List<string> Themes { get; init; } = new();
+        public string Setup { get; init; } = "";
     }
 }
