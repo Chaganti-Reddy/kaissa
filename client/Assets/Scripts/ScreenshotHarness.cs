@@ -23,8 +23,10 @@ public sealed class ScreenshotHarness : MonoBehaviour
     {
         var args = Environment.GetCommandLineArgs();
         if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact")
-            && !args.Contains("-kaissa-record") && !args.Contains("-kaissa-playtest"))
+            && !args.Contains("-kaissa-record") && !args.Contains("-kaissa-playtest")
+            && !args.Contains("-annotate3d"))
             return;
+        Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
         var go = new GameObject("ScreenshotHarness");
         DontDestroyOnLoad(go);
         go.AddComponent<ScreenshotHarness>();
@@ -51,6 +53,21 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (args.Contains("-kaissa-record"))
         {
             yield return RecordPass(dir);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-annotate3d"))
+        {
+            KaissaSettings.BoardView = 1; // force 3D
+            SceneManager.LoadScene("Play");
+            yield return new WaitForSeconds(2.0f); // let the 3D board build + settle
+            var bi = UnityEngine.Object.FindAnyObjectByType<BoardInteractor>();
+            Debug.Log($"ScreenshotHarness: annotate3d interactor={(bi != null)}");
+            if (bi != null) bi.DebugAnnotate();
+            yield return new WaitForSeconds(0.6f);
+            ScreenCapture.CaptureScreenshot(Path.Combine(dir, "annotate3d.png"));
+            yield return new WaitForSeconds(0.5f);
             Application.Quit();
             yield break;
         }

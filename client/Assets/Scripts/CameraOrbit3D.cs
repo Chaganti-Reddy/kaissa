@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// chess.com "Real 3D"-style camera for the 3D board: right-drag to orbit/tilt, scroll to zoom. Left
-// button is left for moving pieces. Orbits around the board centre; the board flip snaps the yaw.
+// chess.com "Real 3D"-style camera for the 3D board: middle-drag to orbit/tilt, scroll to zoom. Left
+// button moves pieces; right button draws annotations. Orbits around the board centre; flip snaps yaw.
 public sealed class CameraOrbit3D : MonoBehaviour
 {
     public static CameraOrbit3D Instance;
@@ -20,7 +20,7 @@ public sealed class CameraOrbit3D : MonoBehaviour
         var m = Mouse.current;
         if (m != null)
         {
-            if (m.rightButton.isPressed)
+            if (m.middleButton.isPressed)
             {
                 var d = m.delta.ReadValue();
                 _yaw += d.x * 0.25f;

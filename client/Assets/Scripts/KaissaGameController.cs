@@ -98,6 +98,8 @@ public sealed class KaissaGameController : MonoBehaviour
         }
         else if (EndgameRoute.Fen != null)
             StartGame("Bot", null);
+        else if (Environment.GetCommandLineArgs().Contains("-annotate3d"))
+            StartGame("Bot", null); // harness: plain game, no picker/autoplay, so annotations can be verified
         else
             ShowPicker();
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Kaissa.Chess.Rules;
 using Kaissa.Training.Api;
@@ -39,6 +40,13 @@ public sealed class BoardInteractor : MonoBehaviour
     private (string from, string to)? _premove;
     private string _premoveFrom;
     private string _hoverPreviewSquare;
+
+    // right-click annotations (square highlights + arrows) on the 3D board
+    private Transform _annRoot;
+    private string _rDownSquare;
+    private static readonly Color AnnRed = new(0.86f, 0.20f, 0.20f, 0.85f);
+    private static readonly Color AnnGreen = new(0.35f, 0.62f, 0.24f, 0.9f);
+    private static readonly Color AnnBlue = new(0.30f, 0.55f, 0.80f, 0.9f);
 
     public void Init(Action<string> onMove, PieceAudio audio)
     {
@@ -127,6 +135,20 @@ public sealed class BoardInteractor : MonoBehaviour
         var mouse = Mouse.current;
         if (mouse == null)
             return;
+
+        // right-click annotations (any time); a left press clears them
+        if (mouse.rightButton.wasPressedThisFrame)
+            _rDownSquare = RaycastSquare(mouse);
+        else if (mouse.rightButton.wasReleasedThisFrame && _rDownSquare != null)
+        {
+            var up = RaycastSquare(mouse) ?? _rDownSquare;
+            var col = AnnColor();
+            if (up == _rDownSquare) ToggleHighlight(_rDownSquare, col);
+            else AddArrow(_rDownSquare, up, col);
+            _rDownSquare = null;
+        }
+        if (mouse.leftButton.wasPressedThisFrame)
+            ClearAnnotations();
 
         if (!_humanCanMove)
         {
@@ -369,6 +391,95 @@ public sealed class BoardInteractor : MonoBehaviour
         _premove = null;
         _premoveFrom = null;
         BoardFx.ClearPremove(_root);
+    }
+
+    // ----- right-click annotations (3D) -----
+
+    private static Color AnnColor()
+    {
+        var kb = Keyboard.current;
+        if (kb == null) return AnnRed;
+        if (kb.leftAltKey.isPressed || kb.rightAltKey.isPressed) return AnnBlue;
+        if (kb.leftShiftKey.isPressed || kb.leftCtrlKey.isPressed) return AnnGreen;
+        return AnnRed;
+    }
+
+    private string RaycastSquare(Mouse m) => Raycast(m, out var sq, out _, out _) ? sq : null;
+
+    private Transform EnsureAnnRoot()
+    {
+        if (_annRoot == null || _annRoot.parent != _root)
+        {
+            var go = new GameObject("annotations");
+            go.transform.SetParent(_root, false);
+            _annRoot = go.transform;
+        }
+        return _annRoot;
+    }
+
+    private void ClearAnnotations()
+    {
+        if (_annRoot != null) { Destroy(_annRoot.gameObject); _annRoot = null; }
+    }
+
+    private static Vector3 Center(string sq) => new(sq[0] - 'a', TileTopY + 0.02f, sq[1] - '1');
+
+    private void ToggleHighlight(string sq, Color col)
+    {
+        var root = EnsureAnnRoot();
+        var existing = root.Find("hl_" + sq);
+        if (existing != null) { Destroy(existing.gameObject); return; }
+        var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        q.name = "hl_" + sq;
+        Destroy(q.GetComponent<Collider>());
+        q.transform.SetParent(root);
+        q.transform.position = Center(sq) + new Vector3(0, 0.01f, 0);
+        q.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        q.transform.localScale = new Vector3(0.92f, 0.92f, 1f);
+        PaintAnn(q, col);
+    }
+
+    private void AddArrow(string from, string to, Color col)
+    {
+        var root = EnsureAnnRoot();
+        Vector3 a = Center(from), b = Center(to), dir = b - a;
+        float len = dir.magnitude;
+        if (len < 0.1f) return;
+        var rot = Quaternion.LookRotation(dir.normalized, Vector3.up);
+        const float headLen = 0.30f;
+        float shaftLen = Mathf.Max(0.02f, len - headLen);
+
+        var shaft = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        Destroy(shaft.GetComponent<Collider>()); shaft.name = "arrow"; shaft.transform.SetParent(root);
+        shaft.transform.position = a + dir.normalized * (shaftLen * 0.5f) + new Vector3(0, 0.03f, 0);
+        shaft.transform.rotation = rot;
+        shaft.transform.localScale = new Vector3(0.12f, 0.05f, shaftLen);
+        PaintAnn(shaft, col);
+
+        var head = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        Destroy(head.GetComponent<Collider>()); head.name = "arrow"; head.transform.SetParent(root);
+        head.transform.position = b - dir.normalized * (headLen * 0.5f) + new Vector3(0, 0.03f, 0);
+        head.transform.rotation = rot * Quaternion.Euler(0f, 45f, 0f);
+        head.transform.localScale = new Vector3(0.24f, 0.05f, 0.24f);
+        PaintAnn(head, col);
+    }
+
+    private static void PaintAnn(GameObject go, Color c)
+    {
+        var sh = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color") ?? Shader.Find("Standard");
+        var m = new Material(sh) { color = c };
+        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
+        go.GetComponent<Renderer>().material = m;
+    }
+
+    // Sample annotations for the screenshot harness to verify the 3D overlay.
+    public void DebugAnnotate()
+    {
+        ToggleHighlight("d4", AnnRed);
+        ToggleHighlight("e5", AnnGreen);
+        ToggleHighlight("c6", AnnBlue);
+        AddArrow("g1", "f3", AnnGreen);
+        AddArrow("e2", "e4", AnnRed);
     }
 
     // ----- geometry / lookup helpers -----
