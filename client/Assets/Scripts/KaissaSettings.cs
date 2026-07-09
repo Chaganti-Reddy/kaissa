@@ -25,6 +25,8 @@ public static class KaissaSettings
         public string dailyDone = ""; // yyyy-MM-dd of the last solved daily puzzle
         public int dayStreak;         // consecutive days with training activity
         public string lastActive = ""; // yyyy-MM-dd of the last active day
+        public long puzzleXp;         // total puzzle XP earned (hybrid progression / tiers)
+        public int puzzleBestStreak;  // best consecutive-solve run in a single puzzle session
     }
 
     private static Data _data;
@@ -58,4 +60,6 @@ public static class KaissaSettings
     public static string DailyDone { get => D.dailyDone; set { D.dailyDone = value; Save(); } }
     public static int DayStreak { get => D.dayStreak; set { D.dayStreak = value; Save(); } }
     public static string LastActive { get => D.lastActive; set { D.lastActive = value; Save(); } }
+    public static long PuzzleXp { get => D.puzzleXp; set { D.puzzleXp = value; Save(); } }
+    public static int PuzzleBestStreak { get => D.puzzleBestStreak; set { D.puzzleBestStreak = value; Save(); } }
 }

@@ -68,6 +68,11 @@ public sealed class AnalysisController : MonoBehaviour
         root.Add(BuildRightRail());
 
         _board = BoardMount.Create(gameObject, _boardHost, root, uci => OnMove(uci), _audio);
+        if (!string.IsNullOrEmpty(AnalysisRoute.Fen))
+        {
+            _session.LoadFen(AnalysisRoute.Fen);
+            AnalysisRoute.Fen = null;
+        }
         StartCoroutine(StartEngine());
         RenderCurrent();
     }

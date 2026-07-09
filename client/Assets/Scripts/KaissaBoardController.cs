@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
@@ -12,43 +13,62 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Training screen (Puzzles), redesigned in UI Toolkit + the 2D board. Three modes share the screen:
-// the adaptive spaced loop, the daily puzzle (DailyRoute), and a themed drill of one pattern
-// (ThemeRoute). Keeps the grading, spacing, hint-as-lapse and streak logic — only the view changed.
+// Puzzles screen, rebuilt to mirror chess.com's puzzle-solving page and layered with Kaissa's own
+// progression. Every puzzle is multi-move: the player finds each solver move and the opponent's
+// replies play automatically (via the pure-C# PuzzleSession). Controls: Hint, Solution, Retry, Next,
+// Analyze. Three feeds: Rated (adaptive/spaced, moves your rating), by Theme, and by Difficulty band
+// (the last two are unrated "custom" practice, like chess.com). Works on the 2D or 3D board through
+// IBoardView; the correct/incorrect badge is a board-agnostic overlay so both boards get it.
 public sealed class KaissaBoardController : MonoBehaviour
 {
+    private enum Mode { Rated, Theme, Difficulty, Daily }
+
     private KaissaTrainer _trainer;
     private IBoardView _board;
     private VisualElement _boardHost;
     private PieceAudio _audio;
-    private bool _busy;
+    private readonly System.Random _rng = new();
+
+    // current puzzle
+    private Mode _mode = Mode.Rated;
+    private PuzzleSession _session;
+    private TrainingCard _card;        // rated feed only (for grading)
+    private Scenario _scenario;        // custom/daily feed
+    private int _puzzleRating;
+    private IReadOnlyList<string> _themes = Array.Empty<string>();
+    private string _patternName = "";
     private bool _whiteBottom = true;
+    private bool _busy;                 // animating a reply; ignore input
     private bool _hintUsed;
-    private float _cardShownTime;
-    private string _patternDesc = "";
-    private string _currentFen;
+    private int _hintStage;
+    private bool _wrongThisPuzzle;
+    private bool _graded;               // rating already applied for this puzzle
+    private bool _solutionShown;
+    private bool _concluded;            // solved or given up; awaiting Next
+    private float _elapsed;
+    private bool _timing;
 
-    private bool _dailyMode;
-    private bool _themedMode;
-    private ThemedSession _themed;
-    private Scenario _themedScenario;
-    private Scenario _dailyScenario;
-    private string _themedPatternName = "";
+    // custom feed queue
+    private List<Scenario> _feed = new();
+    private int _feedAt;
 
-    // session summary
-    private int _answered, _correct;
+    // session tallies
+    private int _answered, _correct, _solveStreak;
     private double _ratingStart;
     private bool _summaryShown;
 
+    // ui
     private VisualElement _root;
-    private Label _titleLabel;
-    private Label _promptLabel;
-    private Label _feedbackLabel;
-    private Label _ratingLabel;
+    private VisualElement _sideBadge, _sideDot;
+    private Label _sideText;
+    private Label _puzzleRatingLabel, _playerRatingLabel, _streakLabel, _solvedLabel, _timerLabel;
+    private Label _feedbackLabel, _tierLabel, _xpLabel, _modeLabel;
+    private VisualElement _themeChips, _badge, _xpFill, _masteryBody, _pickerHost;
+    private Button _hintBtn, _solutionBtn, _retryBtn, _nextBtn, _analyzeBtn;
 
     private static readonly Color Good = new(0.30f, 0.85f, 0.45f, 0.55f);
     private static readonly Color Bad = new(0.92f, 0.33f, 0.33f, 0.55f);
-    private static readonly Color HintCol = new(0.51f, 0.72f, 0.30f, 0.55f);
+    private static readonly Color HintCol = new(0.51f, 0.72f, 0.30f, 0.60f);
 
     private void Start()
     {
@@ -82,55 +102,263 @@ public sealed class KaissaBoardController : MonoBehaviour
 
         _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnPlayerMove(uci), _audio);
 
-        if (DailyRoute.Active) { DailyRoute.Active = false; StartDaily(); }
+        // Entry routing: Daily / themed drill / adaptive.
+        if (DailyRoute.Active) { DailyRoute.Active = false; _mode = Mode.Daily; }
         else if (!string.IsNullOrEmpty(ThemeRoute.PatternId))
         {
-            string pid = ThemeRoute.PatternId;
-            _themedPatternName = string.IsNullOrEmpty(ThemeRoute.PatternName) ? pid : ThemeRoute.PatternName;
+            _mode = Mode.Theme;
+            _patternName = string.IsNullOrEmpty(ThemeRoute.PatternName) ? ThemeRoute.PatternId : ThemeRoute.PatternName;
+            LoadThemeFeed(ThemeRoute.PatternId);
             ThemeRoute.PatternId = null; ThemeRoute.PatternName = null;
-            StartThemed(pid);
         }
-        else DealNext();
+
+        RefreshProgression();
+        LoadNext();
+
+        if (Environment.GetCommandLineArgs().Contains("-kaissa-puzzletest"))
+            StartCoroutine(AutoDemo());
     }
+
+    // Self-test driver: exercises hint, a wrong move, and a full multi-move solve, capturing a labeled
+    // screenshot at each step so the whole flow can be verified without a human (2D and 3D).
+    private System.Collections.IEnumerator AutoDemo()
+    {
+        string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
+        System.IO.Directory.CreateDirectory(dir);
+        string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+
+        yield return new WaitForSeconds(1.4f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_1_start.png"));
+        yield return new WaitForSeconds(0.6f);
+
+        ShowHint();
+        yield return new WaitForSeconds(0.8f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_2_hint.png"));
+        yield return new WaitForSeconds(0.6f);
+
+        var wrong = FindLegalNonSolution();
+        if (wrong != null)
+        {
+            OnPlayerMove(wrong);
+            yield return new WaitForSeconds(1.0f);
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_3_wrong.png"));
+            yield return new WaitForSeconds(0.6f);
+        }
+
+        int guard = 0;
+        while (!_concluded && _session != null && _session.ExpectedMove is { } mv && guard++ < 20)
+        {
+            OnPlayerMove(mv);
+            if (_concluded)
+            {
+                yield return new WaitForSeconds(0.3f); // inside the correct-flash window
+                ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_4_solved.png"));
+                break;
+            }
+            yield return new WaitForSeconds(0.7f);
+        }
+        yield return new WaitForSeconds(0.6f);
+
+        // exercise the difficulty picker + next
+        LoadNext();
+        yield return new WaitForSeconds(1.0f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_5_next.png"));
+        yield return new WaitForSeconds(0.5f);
+        Application.Quit();
+    }
+
+    private string FindLegalNonSolution()
+    {
+        if (_session == null) return null;
+        var expected = _session.ExpectedMove;
+        foreach (var mv in ChessGame.FromFen(_session.Fen).LegalUciMoves())
+            if (!string.Equals(mv, expected, StringComparison.OrdinalIgnoreCase))
+                return mv;
+        return null;
+    }
+
+    private static string ArgValue(string key)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == key) return args[i + 1];
+        return null;
+    }
+
+    // ---------------- layout ----------------
 
     private VisualElement BuildCenter()
     {
         var center = new VisualElement();
         center.style.flexGrow = 1;
         center.style.alignItems = Align.Center;
-        UiKit.Pad(center, 22, 24, 22, 24);
+        UiKit.Pad(center, 18, 24, 18, 24);
 
-        _titleLabel = UiKit.Text_("Puzzles", 24, UiKit.Text, bold: true);
-        center.Add(_titleLabel);
-        _promptLabel = UiKit.Text_("", 15, UiKit.Dim);
-        _promptLabel.style.marginBottom = 12; _promptLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-        center.Add(_promptLabel);
+        // top: title + mode picker
+        var head = UiKit.Row();
+        head.style.width = 480; head.style.justifyContent = Justify.SpaceBetween; head.style.marginBottom = 10;
+        head.Add(UiKit.Text_("Puzzles", 24, UiKit.Text, bold: true));
+        head.Add(BuildModeBar());
+        center.Add(head);
 
+        // side-to-move badge
+        var sideRow = UiKit.Row();
+        sideRow.style.width = 480; sideRow.style.justifyContent = Justify.SpaceBetween; sideRow.style.marginBottom = 8;
+        _sideBadge = MakeSideBadge();
+        sideRow.Add(_sideBadge);
+        _puzzleRatingLabel = UiKit.Text_("", 15, UiKit.Dim, bold: true);
+        sideRow.Add(_puzzleRatingLabel);
+        center.Add(sideRow);
+
+        // board + overlay badge
+        var boardWrap = new VisualElement();
+        boardWrap.style.width = 480; boardWrap.style.height = 480; boardWrap.style.flexShrink = 0;
         _boardHost = new VisualElement();
-        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
-        center.Add(_boardHost);
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.position = Position.Absolute;
+        boardWrap.Add(_boardHost);
+        boardWrap.Add(BuildBadge());
+        center.Add(boardWrap);
 
         _feedbackLabel = UiKit.Text_("", 16, UiKit.Dim, bold: true);
-        _feedbackLabel.style.marginTop = 12; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+        _feedbackLabel.style.marginTop = 10; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+        UiKit.Pad(_feedbackLabel, 6, 14, 6, 14); UiKit.Radius(_feedbackLabel, 8); // pill so it reads over the 3D board
         center.Add(_feedbackLabel);
+
+        center.Add(BuildControls());
         return center;
+    }
+
+    private VisualElement BuildModeBar()
+    {
+        var bar = UiKit.Row();
+        bar.Add(ModeChip("Rated", () => SwitchMode(Mode.Rated)));
+        bar.Add(ModeChip("Themes", ToggleThemePicker));
+        bar.Add(ModeChip("Difficulty", ToggleDifficultyPicker));
+        _modeLabel = UiKit.Text_("", 12, UiKit.Mute);
+        _modeLabel.style.marginLeft = 8;
+        bar.Add(_modeLabel);
+        return bar;
+    }
+
+    private Button ModeChip(string label, Action onClick)
+    {
+        var b = UiKit.Ghost(label, onClick, 12);
+        b.style.marginLeft = 6;
+        UiKit.Pad(b, 6, 10, 6, 10);
+        return b;
+    }
+
+    private VisualElement MakeSideBadge()
+    {
+        _sideDot = new VisualElement();
+        _sideDot.style.width = 12; _sideDot.style.height = 12; UiKit.Radius(_sideDot, 6);
+        _sideDot.style.marginRight = 8;
+        _sideDot.style.borderTopWidth = _sideDot.style.borderBottomWidth = _sideDot.style.borderLeftWidth = _sideDot.style.borderRightWidth = 1;
+        _sideDot.style.borderTopColor = _sideDot.style.borderBottomColor = _sideDot.style.borderLeftColor = _sideDot.style.borderRightColor = UiKit.Line;
+        _sideText = UiKit.Text_("", 16, UiKit.Text, bold: true);
+        var row = UiKit.Row(_sideDot, _sideText);
+        UiKit.Pad(row, 6, 12, 6, 12); UiKit.Radius(row, 6);
+        return row;
+    }
+
+    private VisualElement BuildBadge()
+    {
+        _badge = new VisualElement();
+        _badge.style.position = Position.Absolute;
+        _badge.style.width = 88; _badge.style.height = 88; UiKit.Radius(_badge, 44);
+        _badge.style.left = 196; _badge.style.top = 196; // centered on 480 board
+        // A thick ring so the colour reads as a clear correct/incorrect flash without any glyph.
+        _badge.style.borderTopWidth = _badge.style.borderBottomWidth = _badge.style.borderLeftWidth = _badge.style.borderRightWidth = 6;
+        _badge.style.display = DisplayStyle.None;
+        _badge.pickingMode = PickingMode.Ignore; // never intercept clicks on the board beneath
+        return _badge;
+    }
+
+    private VisualElement BuildControls()
+    {
+        var row = UiKit.Row();
+        row.style.marginTop = 12; row.style.justifyContent = Justify.Center;
+        _hintBtn = CtrlBtn("Hint", ShowHint);
+        _solutionBtn = CtrlBtn("Solution", ShowSolution);
+        _retryBtn = CtrlBtn("Retry", Retry);
+        _nextBtn = CtrlBtn("Next", () => LoadNext());
+        _analyzeBtn = CtrlBtn("Analyze", Analyze);
+        row.Add(_hintBtn); row.Add(_solutionBtn); row.Add(_retryBtn); row.Add(_nextBtn); row.Add(_analyzeBtn);
+        return row;
+    }
+
+    private Button CtrlBtn(string label, Action onClick)
+    {
+        var b = UiKit.Ghost(label, onClick, 14);
+        b.style.marginLeft = 5; b.style.marginRight = 5; b.style.minWidth = 88;
+        return b;
     }
 
     private VisualElement BuildRightRail()
     {
         var rail = new VisualElement();
         rail.style.width = 340;
-        UiKit.Pad(rail, 24, 24, 24, 0);
+        UiKit.Pad(rail, 18, 24, 18, 8);
 
-        var panel = Panel();
-        _ratingLabel = UiKit.Text_("", 15, UiKit.Text, bold: true);
-        UiKit.Pad(_ratingLabel, 14, 16, 6, 16);
-        panel.Add(_ratingLabel);
-        var hint = UiKit.Ghost("Hint  (counts as assisted)", ShowHint, 13);
-        hint.style.marginLeft = 16; hint.style.marginRight = 16; hint.style.marginBottom = 14;
-        panel.Add(hint);
-        rail.Add(panel);
+        // progression panel (tier + xp)
+        var prog = Panel();
+        UiKit.Pad(prog, 14, 16, 14, 16);
+        _tierLabel = UiKit.Text_("", 18, UiKit.Gold, bold: true);
+        prog.Add(_tierLabel);
+        var track = new VisualElement();
+        track.style.height = 10; track.style.marginTop = 8; track.style.marginBottom = 6;
+        track.style.backgroundColor = UiKit.Panel3; UiKit.Radius(track, 5);
+        _xpFill = new VisualElement();
+        _xpFill.style.height = 10; UiKit.Radius(_xpFill, 5); _xpFill.style.backgroundColor = UiKit.Gold;
+        track.Add(_xpFill);
+        prog.Add(track);
+        _xpLabel = UiKit.Text_("", 12, UiKit.Dim);
+        prog.Add(_xpLabel);
+        var chips = UiKit.Row();
+        chips.style.marginTop = 10;
+        _streakLabel = UiKit.Text_("", 13, UiKit.Text, bold: true);
+        _solvedLabel = UiKit.Text_("", 13, UiKit.Text, bold: true);
+        _timerLabel = UiKit.Text_("", 13, UiKit.Dim, bold: true);
+        chips.Add(Pill(_streakLabel)); chips.Add(Pill(_solvedLabel)); chips.Add(Pill(_timerLabel));
+        prog.Add(chips);
+        rail.Add(prog);
+
+        // ratings
+        var rate = Panel(); rate.style.marginTop = 14; UiKit.Pad(rate, 14, 16, 14, 16);
+        _playerRatingLabel = UiKit.Text_("", 15, UiKit.Text, bold: true);
+        rate.Add(_playerRatingLabel);
+        rail.Add(rate);
+
+        // themes
+        var themes = Panel(); themes.style.marginTop = 14; UiKit.Pad(themes, 12, 14, 12, 14);
+        themes.Add(UiKit.Text_("Themes", 12, UiKit.Mute, bold: true));
+        _themeChips = new VisualElement();
+        _themeChips.style.flexDirection = FlexDirection.Row; _themeChips.style.flexWrap = Wrap.Wrap; _themeChips.style.marginTop = 6;
+        themes.Add(_themeChips);
+        rail.Add(themes);
+
+        // mastery map
+        var mastery = Panel(); mastery.style.marginTop = 14; UiKit.Pad(mastery, 12, 14, 12, 14);
+        var mh = UiKit.Text_("Pattern mastery", 12, UiKit.Mute, bold: true);
+        mastery.Add(mh);
+        var scroll = new ScrollView(); scroll.style.maxHeight = 190; scroll.style.marginTop = 6;
+        _masteryBody = scroll.contentContainer;
+        mastery.Add(scroll);
+        rail.Add(mastery);
+
+        // picker overlay host (theme / difficulty dropdowns)
+        _pickerHost = new VisualElement();
+        _pickerHost.style.position = Position.Absolute; _pickerHost.style.display = DisplayStyle.None;
+        rail.Add(_pickerHost);
         return rail;
+    }
+
+    private static VisualElement Pill(Label content)
+    {
+        var p = UiKit.Row(content);
+        p.style.backgroundColor = UiKit.Panel3; UiKit.Radius(p, 14); UiKit.Pad(p, 5, 10, 5, 10);
+        p.style.marginRight = 6;
+        return p;
     }
 
     private static VisualElement Panel()
@@ -143,181 +371,463 @@ public sealed class KaissaBoardController : MonoBehaviour
         return p;
     }
 
-    // ---- adaptive ----
-    private void DealNext()
+    // ---------------- feeds ----------------
+
+    private void SwitchMode(Mode m, string patternId = null, string label = null)
     {
-        var card = _trainer.NextCard();
-        if (card == null) { _titleLabel.text = "No more cards."; return; }
-        _hintUsed = false;
-        _patternDesc = card.PatternDescription;
-        _cardShownTime = Time.time;
-        _titleLabel.text = card.PatternName;
-        _promptLabel.text = card.Prompt;
-        _ratingLabel.text = $"Rating {card.PlayerRating:0}   ·   Solved {_correct}/{_answered}";
-        RenderCard(card.Board);
+        HidePicker();
+        _mode = m;
+        if (m == Mode.Theme && patternId != null) { _patternName = label ?? patternId; LoadThemeFeed(patternId); }
+        _summaryShown = false;
+        LoadNext();
     }
 
-    private void RenderCard(BoardView board)
+    private void LoadThemeFeed(string patternId)
     {
-        _currentFen = board.Fen;
-        _whiteBottom = !KaissaSettings.Flip || board.WhiteToMove;
-        _board.Render(board.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
+        var list = _trainer.Library.ForPattern(new PatternId(patternId)).ToList();
+        Shuffle(list);
+        _feed = list; _feedAt = 0;
     }
+
+    private void LoadDifficultyFeed(int lo, int hi, string label)
+    {
+        _mode = Mode.Difficulty; _patternName = label;
+        var list = _trainer.Library.ByRatingRange(lo, hi).ToList();
+        Shuffle(list);
+        _feed = list; _feedAt = 0;
+        _summaryShown = false;
+        LoadNext();
+    }
+
+    private void Shuffle(List<Scenario> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = _rng.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
+    }
+
+    private void LoadNext()
+    {
+        _card = null; _scenario = null;
+
+        switch (_mode)
+        {
+            case Mode.Rated:
+                _card = _trainer.NextCard();
+                if (_card == null) { SetFeedback("No puzzles available.", UiKit.Dim); return; }
+                _session = new PuzzleSession(_card.Board.Fen, _card.Line, _card.Setup);
+                _puzzleRating = _card.PuzzleRating; _themes = _card.Themes; _patternName = _card.PatternName;
+                _modeLabel.text = "Rated (adaptive)";
+                break;
+
+            case Mode.Daily:
+                _scenario = DailyPuzzle.ForDate(_trainer.Library, DateTime.Today);
+                _session = new PuzzleSession(_scenario);
+                _puzzleRating = _scenario.Rating; _themes = _scenario.ThemeTags; _patternName = "Daily puzzle";
+                _modeLabel.text = "Daily";
+                break;
+
+            default: // Theme / Difficulty custom feeds
+                if (_feed.Count == 0) { SetFeedback("No puzzles in this filter.", UiKit.Dim); return; }
+                _scenario = _feed[_feedAt % _feed.Count]; _feedAt++;
+                _session = new PuzzleSession(_scenario);
+                _puzzleRating = _scenario.Rating; _themes = _scenario.ThemeTags;
+                _modeLabel.text = $"{_patternName} (unrated)";
+                break;
+        }
+
+        // reset per-puzzle state
+        _hintUsed = false; _hintStage = 0; _wrongThisPuzzle = false; _graded = false;
+        _solutionShown = false; _concluded = false; _busy = false;
+        _elapsed = 0f; _timing = true;
+        HideBadge();
+        SetFeedback("", UiKit.Dim);
+        _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
+
+        UpdateSideBadge();
+        UpdateThemeChips();
+        UpdateInfoLabels();
+        SetControlsSolving();
+
+        // Render with the opponent's setup move animating in, chess.com-style.
+        _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
+    }
+
+    // ---------------- solving ----------------
 
     private void OnPlayerMove(string uci)
     {
-        if (_summaryShown) return;
-        if (_dailyMode) { OnDailyMove(uci); return; }
-        if (_themedMode) { OnThemedMove(uci); return; }
-        if (_busy) return;
-        _busy = true;
+        if (_busy || _concluded || _summaryShown || _session == null) return;
 
-        var thinkTime = TimeSpan.FromSeconds(Time.time - _cardShownTime);
-        var result = _trainer.Answer(uci, thinkTime, _hintUsed);
+        var result = _session.Submit(uci);
+
+        if (result.Outcome == PuzzleOutcome.Wrong)
+        {
+            _wrongThisPuzzle = true;
+            _board.Render(_session.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom); // snap back
+            TintMove(uci, Bad);
+            FlashBadge(false);
+            _audio.PlayWrong();
+            SetFeedback("Not the move - try again.", UiKit.Danger);
+            if (_mode == Mode.Rated && !_graded) GradeRated(correct: false, playedMove: uci);
+            return;
+        }
+
+        // correct
+        _audio.PlayCorrect();
+        TintMove(result.PlayerMove, Good);
+
+        if (result.Outcome == PuzzleOutcome.Continue)
+        {
+            _busy = true;
+            SetFeedback("Best move - keep going.", UiKit.GreenHi);
+            StartCoroutine(PlayReply(result));
+        }
+        else // Solved
+        {
+            _board.Render(result.FenAfterReply, canMove: false, lastMove: result.ReplyMove, whiteBottom: _whiteBottom);
+            OnSolved();
+        }
+    }
+
+    private IEnumerator PlayReply(PuzzleMoveResult result)
+    {
+        yield return new WaitForSeconds(0.28f);
+        _board.Render(result.FenAfterReply, canMove: true, lastMove: result.ReplyMove, whiteBottom: _whiteBottom);
+        UpdateSideBadge();
+        _busy = false;
+        FlashBadge(true);
+    }
+
+    private void OnSolved()
+    {
+        _timing = false; _concluded = true;
+        FlashBadge(true);
+        _answered++; _correct++;
+        _solveStreak++;
+        if (_solveStreak > KaissaSettings.PuzzleBestStreak) KaissaSettings.PuzzleBestStreak = _solveStreak;
+        KaissaStreak.RecordToday();
+
+        int xp = 0;
+        if (!_solutionShown)
+        {
+            bool firstTry = !_wrongThisPuzzle && !_hintUsed;
+            xp = PuzzleProgression.XpForSolve(_puzzleRating, _trainer.PlayerRating, _hintUsed, firstTry, _elapsed, _solveStreak);
+            KaissaSettings.PuzzleXp += xp;
+        }
+
+        string tail = xp > 0 ? $"  +{xp} XP" : "";
+        if (_mode == Mode.Rated && !_graded)
+        {
+            var before = _trainer.PlayerRating;
+            GradeRated(correct: true, playedMove: _card.Line[0]);
+            int delta = Mathf.RoundToInt((float)(_trainer.PlayerRating - before));
+            SetFeedback($"Solved!  Rating {delta:+0;-0}{tail}", UiKit.GreenHi);
+        }
+        else
+        {
+            SetFeedback($"Solved!{tail}", UiKit.GreenHi);
+        }
+
+        RefreshProgression();
+        UpdateInfoLabels();
+        SetControlsConcluded();
+        StartCoroutine(AutoAdvance());
+    }
+
+    private IEnumerator AutoAdvance()
+    {
+        yield return new WaitForSeconds(2.2f);
+        if (_concluded && !_summaryShown) LoadNext();
+    }
+
+    private void GradeRated(bool correct, string playedMove)
+    {
+        _graded = true;
+        if (!correct) { _answered++; _solveStreak = 0; }
+        // trainer grades the move against the card's accepted solution; assisted = hint used.
+        _trainer.Answer(correct ? _card.Line[0] : playedMove, TimeSpan.FromSeconds(_elapsed), _hintUsed);
         KaissaProgress.Save(_trainer.ExportProgress());
-        _answered++;
-        if (result.Correct) _correct++;
-        KaissaStreak.RecordToday();
-
-        var afterFen = ApplyMove(_currentFen, uci);
-        if (afterFen != null) { _currentFen = afterFen; _board.Render(afterFen, false, uci, _whiteBottom); }
-
-        var color = result.Correct ? Good : Bad;
-        if (result.Solutions.Count > 0) HighlightSolution(result.Solutions[0], color);
-        _feedbackLabel.style.color = result.Correct ? UiKit.GreenHi : UiKit.Danger;
-        _feedbackLabel.text = _hintUsed
-            ? $"With a hint — best was {string.Join(", ", result.Solutions)}. It'll come back soon."
-            : result.Correct ? $"Correct!  {_patternDesc}" : $"Missed — best was {string.Join(", ", result.Solutions)}";
-        _ratingLabel.text = $"Rating {result.PlayerRating:0}  ({result.PlayerRatingChange:+0;-0})   ·   Solved {_correct}/{_answered}";
-        if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
-
-        StartCoroutine(NextAfter(result.Correct ? 0.9f : 1.6f));
     }
 
-    private IEnumerator NextAfter(float seconds)
-    {
-        yield return new WaitForSeconds(seconds);
-        _feedbackLabel.text = "";
-        _busy = false;
-        DealNext();
-    }
+    // ---------------- controls ----------------
 
-    // ---- themed ----
-    private void StartThemed(string patternId)
-    {
-        _themedMode = true;
-        _themed = new ThemedSession(ScenarioLibrary.LoadDefault(), new PatternId(patternId), _trainer.PlayerRating);
-        _titleLabel.text = $"Practice: {_themedPatternName}";
-        ThemedNext();
-    }
-
-    private void ThemedNext()
-    {
-        _themedScenario = _themed.Next();
-        _hintUsed = false;
-        _cardShownTime = Time.time;
-        _promptLabel.text = _themedScenario.Prompt;
-        _ratingLabel.text = $"Score {_themed.Score}/{_themed.Attempts}";
-        var board = BoardView.FromFen(_themedScenario.Fen);
-        RenderCard(board);
-    }
-
-    private void OnThemedMove(string uci)
-    {
-        if (_busy) return;
-        _busy = true;
-        var result = _themed.Submit(uci, TimeSpan.FromSeconds(Time.time - _cardShownTime));
-        KaissaStreak.RecordToday();
-        var afterFen = ApplyMove(_themedScenario.Fen, uci);
-        if (afterFen != null) _board.Render(afterFen, false, uci, _whiteBottom);
-        if (result.Solutions.Count > 0) HighlightSolution(result.Solutions[0], result.Correct ? Good : Bad);
-        _feedbackLabel.style.color = result.Correct ? UiKit.GreenHi : UiKit.Danger;
-        _feedbackLabel.text = result.Correct ? "Correct!" : $"Missed — best was {string.Join(", ", result.Solutions)}";
-        if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
-        StartCoroutine(ThemedNextAfter(result.Correct ? 0.9f : 1.6f));
-    }
-
-    private IEnumerator ThemedNextAfter(float seconds)
-    {
-        yield return new WaitForSeconds(seconds);
-        _feedbackLabel.text = "";
-        _busy = false;
-        ThemedNext();
-    }
-
-    // ---- daily ----
-    private void StartDaily()
-    {
-        _dailyMode = true;
-        string today = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        _dailyScenario = DailyPuzzle.ForDate(ScenarioLibrary.LoadDefault(), DateTime.Today);
-        _titleLabel.text = $"Daily puzzle — {today}";
-        _promptLabel.text = _dailyScenario.Prompt;
-        _ratingLabel.text = $"Puzzle {_dailyScenario.Rating}";
-        var board = BoardView.FromFen(_dailyScenario.Fen);
-        _whiteBottom = !KaissaSettings.Flip || board.WhiteToMove;
-        _currentFen = _dailyScenario.Fen;
-
-        bool done = KaissaSettings.DailyDone == today;
-        _board.Render(_dailyScenario.Fen, canMove: !done, lastMove: null, whiteBottom: _whiteBottom);
-        if (done) { _feedbackLabel.style.color = UiKit.GreenHi; _feedbackLabel.text = "Already solved today. Come back tomorrow."; }
-    }
-
-    private void OnDailyMove(string uci)
-    {
-        if (_busy) return;
-        _busy = true;
-        bool correct = false;
-        foreach (var s in _dailyScenario.Solutions)
-            if (string.Equals(s, uci, StringComparison.OrdinalIgnoreCase)) { correct = true; break; }
-
-        var afterFen = ApplyMove(_dailyScenario.Fen, uci);
-        if (afterFen != null) _board.Render(afterFen, false, uci, _whiteBottom);
-        if (_dailyScenario.Solutions.Count > 0) HighlightSolution(_dailyScenario.Solutions[0], correct ? Good : Bad);
-        _feedbackLabel.style.color = correct ? UiKit.GreenHi : UiKit.Danger;
-        _feedbackLabel.text = correct
-            ? "Correct! Daily solved. Come back tomorrow."
-            : $"Missed — best was {string.Join(", ", _dailyScenario.Solutions)}.";
-        if (correct) { KaissaSettings.DailyDone = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture); _audio.PlayCorrect(); }
-        else _audio.PlayWrong();
-        KaissaStreak.RecordToday();
-    }
-
-    // ---- shared ----
     private void ShowHint()
     {
-        if (_busy || _summaryShown || _themedMode || _dailyMode) return; // hint in the adaptive loop
-        var sq = _trainer.Hint();
-        if (sq != null) { _board.HighlightSquare(sq, HintCol); _hintUsed = true; }
+        if (_concluded || _session == null || _session.ExpectedMove == null) return;
+        _hintUsed = true;
+        var mv = _session.ExpectedMove;
+        _board.HighlightSquare(mv.Substring(0, 2), HintCol);
+        if (_hintStage >= 1) _board.HighlightSquare(mv.Substring(2, 2), HintCol); // second press reveals the move
+        _hintStage++;
+        SetFeedback(_hintStage >= 2 ? "There's the move." : "Look at the highlighted piece.", UiKit.Dim);
     }
 
-    private void HighlightSolution(string uci, Color color)
+    private void ShowSolution()
+    {
+        if (_session == null || _concluded) { if (_concluded) LoadNext(); return; }
+        _solutionShown = true;
+        _timing = false;
+        if (_mode == Mode.Rated && !_graded) GradeRated(correct: false, playedMove: _session.ExpectedMove ?? "0000");
+        StartCoroutine(PlayOutSolution());
+    }
+
+    private IEnumerator PlayOutSolution()
+    {
+        _busy = true;
+        while (_session.ExpectedMove is { } mv)
+        {
+            var r = _session.Submit(mv);
+            TintMove(r.PlayerMove, Good);
+            _board.Render(r.FenAfterPlayer, canMove: false, lastMove: r.PlayerMove, whiteBottom: _whiteBottom);
+            yield return new WaitForSeconds(0.5f);
+            if (r.ReplyMove != null)
+            {
+                _board.Render(r.FenAfterReply, canMove: false, lastMove: r.ReplyMove, whiteBottom: _whiteBottom);
+                yield return new WaitForSeconds(0.45f);
+            }
+        }
+        _busy = false; _concluded = true;
+        SetFeedback("Solution shown.", UiKit.Dim);
+        SetControlsConcluded();
+    }
+
+    private void Retry()
+    {
+        if (_session == null) return;
+        // Replay the same puzzle for practice. Rating is not re-applied if already graded.
+        _session = _scenario != null ? new PuzzleSession(_scenario) : new PuzzleSession(_card.Board.Fen, _card.Line, _card.Setup);
+        _hintUsed = false; _hintStage = 0; _wrongThisPuzzle = false; _solutionShown = false;
+        _concluded = false; _busy = false; _elapsed = 0f; _timing = true;
+        HideBadge();
+        SetFeedback("", UiKit.Dim);
+        _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
+        UpdateSideBadge();
+        SetControlsSolving();
+        _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
+    }
+
+    private void Analyze()
+    {
+        if (_session == null) return;
+        AnalysisRoute.Fen = _session.Fen;
+        SceneManager.LoadScene("Analysis");
+    }
+
+    private void SetControlsSolving()
+    {
+        Enable(_hintBtn, true); Enable(_solutionBtn, true); Enable(_retryBtn, true);
+        Enable(_nextBtn, false); Enable(_analyzeBtn, true);
+    }
+
+    private void SetControlsConcluded()
+    {
+        Enable(_hintBtn, false); Enable(_solutionBtn, false); Enable(_retryBtn, true);
+        Enable(_nextBtn, true); Enable(_analyzeBtn, true);
+    }
+
+    private static void Enable(Button b, bool on)
+    {
+        if (b == null) return;
+        b.SetEnabled(on);
+        b.style.opacity = on ? 1f : 0.45f;
+    }
+
+    // ---------------- pickers ----------------
+
+    private void ToggleThemePicker()
+    {
+        if (_pickerHost.style.display == DisplayStyle.Flex) { HidePicker(); return; }
+        _pickerHost.Clear();
+        var panel = PickerPanel("Choose a theme");
+        foreach (var pid in _trainer.Library.Patterns)
+        {
+            var p = _trainer.Library.Describe(pid);
+            panel.Add(PickerRow(p.Name, () => SwitchMode(Mode.Theme, pid.Value, p.Name)));
+        }
+        ShowPicker(panel);
+    }
+
+    private void ToggleDifficultyPicker()
+    {
+        if (_pickerHost.style.display == DisplayStyle.Flex) { HidePicker(); return; }
+        _pickerHost.Clear();
+        var panel = PickerPanel("Choose a difficulty");
+        panel.Add(PickerRow("Easy  (600-1100)", () => { HidePicker(); LoadDifficultyFeed(600, 1100, "Easy"); }));
+        panel.Add(PickerRow("Medium  (1100-1600)", () => { HidePicker(); LoadDifficultyFeed(1100, 1600, "Medium"); }));
+        panel.Add(PickerRow("Hard  (1600-2100)", () => { HidePicker(); LoadDifficultyFeed(1600, 2100, "Hard"); }));
+        panel.Add(PickerRow("Expert  (2100-2600)", () => { HidePicker(); LoadDifficultyFeed(2100, 2600, "Expert"); }));
+        ShowPicker(panel);
+    }
+
+    private VisualElement PickerPanel(string title)
+    {
+        var panel = Panel();
+        panel.style.width = 300; UiKit.Pad(panel, 10, 12, 10, 12);
+        var h = UiKit.Text_(title, 13, UiKit.Mute, bold: true); h.style.marginBottom = 6;
+        panel.Add(h);
+        return panel;
+    }
+
+    private VisualElement PickerRow(string label, Action onClick)
+    {
+        var row = UiKit.Row(UiKit.Text_(label, 14, UiKit.Text));
+        UiKit.Pad(row, 8, 10, 8, 10); UiKit.Radius(row, 6);
+        row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
+        row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
+        row.RegisterCallback<ClickEvent>(_ => onClick());
+        return row;
+    }
+
+    private void ShowPicker(VisualElement panel)
+    {
+        _pickerHost.Clear();
+        _pickerHost.Add(panel);
+        _pickerHost.style.top = 60; _pickerHost.style.right = 24;
+        _pickerHost.style.display = DisplayStyle.Flex;
+    }
+
+    private void HidePicker() => _pickerHost.style.display = DisplayStyle.None;
+
+    // ---------------- info / progression ----------------
+
+    private void UpdateSideBadge()
+    {
+        bool white = IsWhiteToMove(_session.Fen);
+        _sideText.text = white ? "White to move" : "Black to move";
+        _sideDot.style.backgroundColor = white ? Color.white : new Color(0.10f, 0.10f, 0.12f);
+        _sideBadge.style.backgroundColor = white ? new Color(1, 1, 1, 0.12f) : new Color(0, 0, 0, 0.28f);
+    }
+
+    private void UpdateThemeChips()
+    {
+        _themeChips.Clear();
+        foreach (var t in _themes.Take(8))
+            _themeChips.Add(ThemeChip(Prettify(t)));
+        if (_themes.Count == 0)
+            _themeChips.Add(UiKit.Text_("-", 12, UiKit.Mute));
+    }
+
+    private VisualElement ThemeChip(string label)
+    {
+        var c = UiKit.Row(UiKit.Text_(label, 12, UiKit.Text, bold: true));
+        c.style.backgroundColor = UiKit.Panel3; UiKit.Radius(c, 12); UiKit.Pad(c, 4, 9, 4, 9);
+        c.style.marginRight = 5; c.style.marginBottom = 5;
+        return c;
+    }
+
+    private void UpdateInfoLabels()
+    {
+        _puzzleRatingLabel.text = $"Puzzle {_puzzleRating}";
+        _playerRatingLabel.text = $"Your rating  {_trainer.PlayerRating:0}";
+        _streakLabel.text = $"{KaissaStreak.CurrentDays()}d streak";
+        _solvedLabel.text = $"Solved {_correct}/{_answered}";
+    }
+
+    private void RefreshProgression()
+    {
+        var st = PuzzleProgression.Standing(KaissaSettings.PuzzleXp);
+        _tierLabel.text = st.Name;
+        _xpFill.style.width = new Length(st.Fraction * 100f, LengthUnit.Percent);
+        _xpLabel.text = st.IsMax
+            ? $"{st.TotalXp:n0} XP (max tier)"
+            : $"{st.XpIntoTier:n0} / {st.XpForNext:n0} XP to {PuzzleProgression.Tiers[st.Index + 1].Name}";
+
+        _masteryBody.Clear();
+        foreach (var row in _trainer.Progress())
+        {
+            var m = PuzzleProgression.MasteryFor(row);
+            var r = UiKit.Row();
+            r.style.justifyContent = Justify.SpaceBetween; r.style.marginBottom = 3;
+            r.Add(UiKit.Text_(row.PatternName, 12, UiKit.Dim));
+            var lvl = UiKit.Text_(PuzzleProgression.MasteryLabel(m), 12, MasteryColor(m), bold: true);
+            r.Add(lvl);
+            _masteryBody.Add(r);
+        }
+    }
+
+    private static Color MasteryColor(PuzzleProgression.Mastery m) => m switch
+    {
+        PuzzleProgression.Mastery.Mastered => UiKit.Gold,
+        PuzzleProgression.Mastery.Strong => UiKit.GreenHi,
+        PuzzleProgression.Mastery.Proficient => UiKit.Green,
+        PuzzleProgression.Mastery.Familiar => UiKit.Dim,
+        PuzzleProgression.Mastery.Learning => UiKit.Mute,
+        _ => UiKit.Mute,
+    };
+
+    // ---------------- badge / tint helpers ----------------
+
+    private void FlashBadge(bool correct)
+    {
+        var fill = correct ? new Color(0.30f, 0.72f, 0.35f, 0.55f) : new Color(0.80f, 0.28f, 0.24f, 0.55f);
+        var ring = correct ? new Color(0.35f, 0.85f, 0.42f, 0.95f) : new Color(0.92f, 0.36f, 0.30f, 0.95f);
+        _badge.style.backgroundColor = fill;
+        _badge.style.borderTopColor = _badge.style.borderBottomColor = _badge.style.borderLeftColor = _badge.style.borderRightColor = ring;
+        _badge.style.display = DisplayStyle.Flex;
+        CancelInvoke(nameof(HideBadge));
+        Invoke(nameof(HideBadge), 0.7f);
+    }
+
+    private void HideBadge() { if (_badge != null) _badge.style.display = DisplayStyle.None; }
+
+    private void SetFeedback(string text, Color color)
+    {
+        _feedbackLabel.text = text;
+        _feedbackLabel.style.color = color;
+        _feedbackLabel.style.backgroundColor = string.IsNullOrEmpty(text) ? new Color(0, 0, 0, 0) : new Color(0, 0, 0, 0.55f);
+    }
+
+    private void TintMove(string uci, Color c)
     {
         if (string.IsNullOrEmpty(uci) || uci.Length < 4) return;
-        _board.HighlightSquare(uci.Substring(0, 2), color);
-        _board.HighlightSquare(uci.Substring(2, 2), color);
+        _board.HighlightSquare(uci.Substring(0, 2), c);
+        _board.HighlightSquare(uci.Substring(2, 2), c);
     }
 
-    private static string ApplyMove(string fen, string uci)
+    private static bool IsWhiteToMove(string fen)
     {
-        try { var g = ChessGame.FromFen(fen); if (g.TryMakeMove(uci)) return g.Fen; }
-        catch { }
-        return null;
+        var parts = fen.Split(' ');
+        return parts.Length < 2 || parts[1] != "b";
     }
+
+    private static string Prettify(string theme)
+    {
+        if (string.IsNullOrEmpty(theme)) return theme;
+        var sb = new System.Text.StringBuilder();
+        sb.Append(char.ToUpperInvariant(theme[0]));
+        for (int i = 1; i < theme.Length; i++)
+        {
+            if (char.IsUpper(theme[i])) sb.Append(' ');
+            sb.Append(theme[i]);
+        }
+        return sb.ToString();
+    }
+
+    // ---------------- input / lifecycle ----------------
 
     private void Update()
     {
-        if (Keyboard.current == null) return;
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (_timing) _elapsed += Time.deltaTime;
+        if (_timerLabel != null && _timing)
+            _timerLabel.text = $"{_elapsed:0.0}s";
+
+        var kb = Keyboard.current;
+        if (kb == null) return;
+        if (kb.escapeKey.wasPressedThisFrame)
         {
-            if (_answered > 0 && !_summaryShown && !_dailyMode) ShowSummary();
+            if (_answered > 0 && !_summaryShown) ShowSummary();
             else SceneManager.LoadScene("Menu");
         }
-        else if (Keyboard.current.hKey.wasPressedThisFrame) ShowHint();
-        else if (Keyboard.current.fKey.wasPressedThisFrame && _currentFen != null)
+        else if (kb.hKey.wasPressedThisFrame) ShowHint();
+        else if (kb.nKey.wasPressedThisFrame && _concluded) LoadNext();
+        else if (kb.rKey.wasPressedThisFrame) Retry();
+        else if (kb.fKey.wasPressedThisFrame && _session != null)
         {
             _whiteBottom = !_whiteBottom;
-            _board.Render(_currentFen, !_busy, null, _whiteBottom);
+            _board.Render(_session.Fen, !_concluded && !_busy, null, _whiteBottom);
         }
     }
 
@@ -334,10 +844,13 @@ public sealed class KaissaBoardController : MonoBehaviour
         UiKit.Pad(panel, 28); panel.style.alignItems = Align.Center;
         int pct = _answered > 0 ? Mathf.RoundToInt(100f * _correct / _answered) : 0;
         int delta = Mathf.RoundToInt((float)(_trainer.PlayerRating - _ratingStart));
+        var st = PuzzleProgression.Standing(KaissaSettings.PuzzleXp);
         panel.Add(UiKit.Text_("Session summary", 26, UiKit.Text, bold: true));
         var s1 = UiKit.Text_($"Solved {_correct}/{_answered}   ({pct}%)", 17, UiKit.Dim); s1.style.marginTop = 10; panel.Add(s1);
-        var s2 = UiKit.Text_($"Rating {_ratingStart:0} → {_trainer.PlayerRating:0}   ({delta:+0;-0})", 17, UiKit.Dim);
-        s2.style.marginTop = 4; s2.style.marginBottom = 18; panel.Add(s2);
+        var s2 = UiKit.Text_($"Rating {_ratingStart:0} -> {_trainer.PlayerRating:0}   ({delta:+0;-0})", 17, UiKit.Dim);
+        s2.style.marginTop = 4; panel.Add(s2);
+        var s3 = UiKit.Text_($"{st.Name}  -  {st.TotalXp:n0} XP  -  best streak {KaissaSettings.PuzzleBestStreak}", 15, UiKit.Gold);
+        s3.style.marginTop = 4; s3.style.marginBottom = 18; panel.Add(s3);
         var keep = UiKit.Primary("Keep training", () => { _root.Remove(dim); _summaryShown = false; }, 15);
         keep.style.width = 300; keep.style.marginBottom = 8; panel.Add(keep);
         var back = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu")); back.style.width = 300; panel.Add(back);
