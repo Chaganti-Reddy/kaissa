@@ -53,6 +53,7 @@ public sealed class SettingsController : MonoBehaviour
         Row("Auto-queen", KaissaSettings.AutoQueen ? "On" : "Off", () => KaissaSettings.AutoQueen = !KaissaSettings.AutoQueen);
         Row("Bot speed", speeds[Mathf.Clamp(KaissaSettings.BotSpeed, 0, 2)], () => KaissaSettings.BotSpeed = (KaissaSettings.BotSpeed + 1) % 3);
         Row("Display", KaissaSettings.Fullscreen ? "Fullscreen" : "Maximized", () => { KaissaSettings.Fullscreen = !KaissaSettings.Fullscreen; WindowMode.Apply(); });
+        Row("Board", KaissaSettings.BoardView == 1 ? "3D" : "2D", () => KaissaSettings.BoardView = KaissaSettings.BoardView == 1 ? 0 : 1);
         Row("Flip board", KaissaSettings.Flip ? "On" : "Off", () => KaissaSettings.Flip = !KaissaSettings.Flip);
         Row("Board theme", Board3D.Themes[Mathf.Clamp(KaissaSettings.BoardTheme, 0, Board3D.Themes.Length - 1)].Name,
             () => KaissaSettings.BoardTheme = (KaissaSettings.BoardTheme + 1) % Board3D.Themes.Length);

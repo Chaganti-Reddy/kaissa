@@ -9,13 +9,13 @@ using UnityEngine.UIElements;
 // last-move / check highlights. Legal moves and promotion are validated against the rules core, so
 // it reports only legal moves through onMove (UCI). Mirrors BoardInteractor's contract for the 2D
 // board mode; the 3D board keeps using BoardInteractor.
-public sealed class Board2D
+public sealed class Board2D : IBoardView
 {
     public readonly VisualElement Root = new();
 
     // When set, a click reports the clicked square (e.g. "e4") instead of making a move — used by the
     // coordinate drill. When true (default) edge coordinate labels show, honoring the global setting.
-    public Action<string> SquareClickHandler;
+    public Action<string> SquareClickHandler { get; set; }
     public bool ShowCoordinates = true;
 
     private readonly Action<string> _onMove;

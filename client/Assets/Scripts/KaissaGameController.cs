@@ -17,7 +17,8 @@ using UnityEngine.UIElements;
 public sealed class KaissaGameController : MonoBehaviour
 {
     private KaissaGame _game;
-    private Board2D _board;
+    private IBoardView _board;
+    private VisualElement _boardHost;
     private PieceAudio _audio;
     private bool _busy;
     private string _lastMove;
@@ -48,7 +49,6 @@ public sealed class KaissaGameController : MonoBehaviour
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
         _audio = PieceAudio.Attach(gameObject);
-        _board = new Board2D(uci => OnMove(uci));
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -67,6 +67,8 @@ public sealed class KaissaGameController : MonoBehaviour
         _root.Add(UiKit.NavRail("Play"));
         _root.Add(BuildCenter());
         _root.Add(BuildRightRail());
+
+        _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnMove(uci), _audio);
 
         if (EndgameRoute.Fen != null)
             StartGame("Bot", null);
@@ -89,11 +91,9 @@ public sealed class KaissaGameController : MonoBehaviour
         var top = Strip(_botName);
         center.Add(top);
 
-        var host = new VisualElement();
-        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0;
-        host.Add(_board.Root);
-        _board.Root.style.width = 480; _board.Root.style.height = 480;
-        center.Add(host);
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
+        center.Add(_boardHost);
 
         _topName = UiKit.Text_("you", 15, UiKit.Text, bold: true);
         center.Add(Strip(_topName));
