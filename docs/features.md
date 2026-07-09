@@ -10,7 +10,7 @@ Legend: ✅ built (core + client) · 🎨 core built, client UI still pending ·
 ## Training and puzzles
 
 - ✅ Adaptive spaced puzzle trainer (FSRS; each pattern drilled at its own rating) — *our core edge*
-- ✅ Puzzle Rush (timed / lives, escalating difficulty) — `RushSession`
+- ✅ Puzzle Blitz (lives, escalating difficulty) — `RushSession`
 - ✅ Daily puzzle (deterministic by date, marked done until tomorrow) — `DailyPuzzle`
 - ✅ Themed practice — pick any pattern to drill from the menu (Practice) — `ThemedSession`
 - 🎨 Puzzle by rating range / custom sets — `ScenarioLibrary.ByRatingRange` + `PuzzleSetSession`
@@ -56,6 +56,8 @@ Legend: ✅ built (core + client) · 🎨 core built, client UI still pending ·
 - ✅ Shared board interaction on every screen — drag or click, legal-move dots, highlights, sounds, premove, glide animation, promotion picker
 - ✅ F1 controls help overlay, on every screen
 - ✅ Launches maximized with a windowed/fullscreen toggle; the UI scales with window size
+- ✅ UI Toolkit interface: nav-rail/board/panel layout on every screen; 2D or 3D board (toggle)
+- ✅ Analysis board — explore positions, step/branch, engine eval + best line — `AnalysisSession` / `KaissaAnalysis`
 - ✅ Cosmetic board themes (eight) + piece style (modelled/procedural); more sets = drop-in. Never pay-to-win.
 - ⏳ Cloud sync (v1.5), ML weakness prediction + generated content (v2)
 - ⏳ Mobile (embed engine for iOS)

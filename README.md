@@ -10,7 +10,7 @@ The name is a placeholder and may change.
 
 ## Status
 
-Alpha. The learning core is complete and tested, and there is a playable Unity client on desktop covering training, puzzle rush, daily puzzle, themed/custom practice, play-vs-bot, endgames, openings, post-game review, stats, board-vision and coordinate drills, and calibration. Visuals are functional and still being polished; a real modelled piece set and full UX pass are pending. See [`docs/`](docs/).
+Alpha. The learning core is complete and tested, and there is a playable Unity client on desktop covering training, puzzle blitz, daily puzzle, themed practice, play-vs-bot, endgames, openings, an analysis board, post-game review, stats, board-vision and coordinate drills, and calibration. The interface was rebuilt in Unity UI Toolkit with a consistent nav-rail/board/panel layout, and the board can be shown flat (2D) or in 3D. A real modelled piece set and further polish are still pending. See [`docs/`](docs/).
 
 ## Build and run
 

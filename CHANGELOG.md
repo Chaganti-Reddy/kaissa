@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.2.0 (alpha) — 2026-07-09
+
+Interface redesign. Every screen was rebuilt in Unity UI Toolkit with a consistent layout: a left
+navigation rail, a board area, and a right panel — the conventions most chess players already know.
+
+- New flat 2D board (squares, coordinates, legal-move dots, last-move and check highlights,
+  click-to-move). A Board setting switches between the 2D board and the existing 3D board on every
+  playing and training screen.
+- New Analysis board: explore any position, step forward and back through your line, branch into
+  variations, and see the engine's evaluation, best move, and line for the current position.
+- Home, Play, Puzzles, Openings, Learn, Endgames, Board Vision, Coordinates, Stats, Settings and
+  calibration were all reworked into the new layout.
+- Puzzle Rush is now called Puzzle Blitz.
+- The window launches maximized, with a windowed/fullscreen toggle in Settings.
+
 ## v0.1.23 (alpha) — 2026-07-08
 
 - Openings is now a spaced-repetition repertoire trainer. You recall only your own moves; each is
