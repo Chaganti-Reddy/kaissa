@@ -17,7 +17,8 @@ public sealed class OpeningController : MonoBehaviour
     private OpeningProgress _progress;
     private RepertoireSession _session;
     private RepertoireCard _card;
-    private Board2D _board;
+    private IBoardView _board;
+    private VisualElement _boardHost;
     private PieceAudio _audio;
     private bool _busy;
     private float _shownTime;
@@ -33,7 +34,6 @@ public sealed class OpeningController : MonoBehaviour
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
         _audio = PieceAudio.Attach(gameObject);
-        _board = new Board2D(uci => OnPlayerMove(uci));
         _progress = KaissaOpenings.Load();
         _session = new RepertoireSession(OpeningRepertoire.Default, _progress, new SystemClock());
 
@@ -56,17 +56,16 @@ public sealed class OpeningController : MonoBehaviour
         _prompt = UiKit.Text_("", 15, UiKit.Dim); _prompt.style.marginBottom = 12; _prompt.style.marginTop = 4;
         center.Add(_prompt);
 
-        var host = new VisualElement();
-        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0;
-        host.Add(_board.Root);
-        _board.Root.style.width = 480; _board.Root.style.height = 480;
-        center.Add(host);
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
+        center.Add(_boardHost);
 
         _feedback = UiKit.Text_("", 16, UiKit.Dim, bold: true);
         _feedback.style.marginTop = 12; _feedback.style.unityTextAlign = TextAnchor.MiddleCenter;
         center.Add(_feedback);
         root.Add(center);
 
+        _board = BoardMount.Create(gameObject, _boardHost, root, uci => OnPlayerMove(uci), _audio);
         NextCard();
     }
 

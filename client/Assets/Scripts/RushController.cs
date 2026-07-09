@@ -15,7 +15,8 @@ using UnityEngine.UIElements;
 public sealed class RushController : MonoBehaviour
 {
     private RushSession _rush;
-    private Board2D _board;
+    private IBoardView _board;
+    private VisualElement _boardHost;
     private PieceAudio _audio;
     private Scenario _current;
     private float _shownTime;
@@ -41,7 +42,6 @@ public sealed class RushController : MonoBehaviour
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
         _audio = PieceAudio.Attach(gameObject);
-        _board = new Board2D(uci => OnPlayerMove(uci));
         _rush = RushSession.CreateDefault(startRating: 800, lives: 3);
 
         var doc = gameObject.AddComponent<UIDocument>();
@@ -61,6 +61,7 @@ public sealed class RushController : MonoBehaviour
         _root.Add(UiKit.NavRail("Rush"));
         _root.Add(BuildCenter());
         _root.Add(BuildRightRail());
+        _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnPlayerMove(uci), _audio);
         DealNext();
     }
 
@@ -72,11 +73,9 @@ public sealed class RushController : MonoBehaviour
         var title = UiKit.Text_("Puzzle Blitz", 24, UiKit.Text, bold: true);
         title.style.marginBottom = 12; center.Add(title);
 
-        var host = new VisualElement();
-        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0;
-        host.Add(_board.Root);
-        _board.Root.style.width = 480; _board.Root.style.height = 480;
-        center.Add(host);
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
+        center.Add(_boardHost);
 
         _feedbackLabel = UiKit.Text_("", 16, UiKit.Dim, bold: true);
         _feedbackLabel.style.marginTop = 12; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;

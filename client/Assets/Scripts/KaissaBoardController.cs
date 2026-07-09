@@ -18,7 +18,8 @@ using UnityEngine.UIElements;
 public sealed class KaissaBoardController : MonoBehaviour
 {
     private KaissaTrainer _trainer;
-    private Board2D _board;
+    private IBoardView _board;
+    private VisualElement _boardHost;
     private PieceAudio _audio;
     private bool _busy;
     private bool _whiteBottom = true;
@@ -60,7 +61,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _ratingStart = _trainer.PlayerRating;
 
         _audio = PieceAudio.Attach(gameObject);
-        _board = new Board2D(uci => OnPlayerMove(uci));
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -79,6 +79,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         _root.Add(UiKit.NavRail("SampleScene"));
         _root.Add(BuildCenter());
         _root.Add(BuildRightRail());
+
+        _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnPlayerMove(uci), _audio);
 
         if (DailyRoute.Active) { DailyRoute.Active = false; StartDaily(); }
         else if (!string.IsNullOrEmpty(ThemeRoute.PatternId))
@@ -104,11 +106,9 @@ public sealed class KaissaBoardController : MonoBehaviour
         _promptLabel.style.marginBottom = 12; _promptLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
         center.Add(_promptLabel);
 
-        var host = new VisualElement();
-        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0;
-        host.Add(_board.Root);
-        _board.Root.style.width = 480; _board.Root.style.height = 480;
-        center.Add(host);
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
+        center.Add(_boardHost);
 
         _feedbackLabel = UiKit.Text_("", 16, UiKit.Dim, bold: true);
         _feedbackLabel.style.marginTop = 12; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;

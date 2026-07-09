@@ -16,7 +16,9 @@ using UnityEngine.UIElements;
 public sealed class AnalysisController : MonoBehaviour
 {
     private readonly AnalysisSession _session = new();
-    private Board2D _board;
+    private IBoardView _board;
+    private VisualElement _boardHost;
+    private PieceAudio _audio;
     private KaissaAnalysis _engine;
     private CancellationTokenSource _evalCts;
     private bool _whiteBottom = true;
@@ -32,7 +34,7 @@ public sealed class AnalysisController : MonoBehaviour
         var cam = Camera.main;
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
-        _board = new Board2D(uci => OnMove(uci));
+        _audio = PieceAudio.Attach(gameObject);
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -51,11 +53,9 @@ public sealed class AnalysisController : MonoBehaviour
         center.style.flexGrow = 1; center.style.alignItems = Align.Center; UiKit.Pad(center, 24, 24, 24, 24);
         center.Add(UiKit.Text_("Analysis", 24, UiKit.Text, bold: true));
 
-        var host = new VisualElement();
-        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0; host.style.marginTop = 12;
-        host.Add(_board.Root);
-        _board.Root.style.width = 480; _board.Root.style.height = 480;
-        center.Add(host);
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0; _boardHost.style.marginTop = 12;
+        center.Add(_boardHost);
 
         var nav = UiKit.Row(
             NavBtn("|<", _session.GoToStart), NavBtn("<", () => _session.StepBack()),
@@ -67,6 +67,7 @@ public sealed class AnalysisController : MonoBehaviour
 
         root.Add(BuildRightRail());
 
+        _board = BoardMount.Create(gameObject, _boardHost, root, uci => OnMove(uci), _audio);
         StartCoroutine(StartEngine());
         RenderCurrent();
     }

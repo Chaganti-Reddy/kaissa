@@ -14,7 +14,8 @@ using UnityEngine.UIElements;
 public sealed class CalibrateController : MonoBehaviour
 {
     private CalibrationSession _session;
-    private Board2D _board;
+    private IBoardView _board;
+    private VisualElement _boardHost;
     private PieceAudio _audio;
     private bool _done;
     private BoardView _current;
@@ -29,7 +30,6 @@ public sealed class CalibrateController : MonoBehaviour
 
         _session = new CalibrationSession(ScenarioLibrary.LoadDefault(), puzzles: 12);
         _audio = PieceAudio.Attach(gameObject);
-        _board = new Board2D(uci => OnPlayerMove(uci));
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -50,13 +50,12 @@ public sealed class CalibrateController : MonoBehaviour
         _prompt = UiKit.Text_("", 15, UiKit.Dim); _prompt.style.marginBottom = 12; _prompt.style.marginTop = 4;
         center.Add(_prompt);
 
-        var host = new VisualElement();
-        host.style.width = 480; host.style.height = 480; host.style.flexShrink = 0;
-        host.Add(_board.Root);
-        _board.Root.style.width = 480; _board.Root.style.height = 480;
-        center.Add(host);
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
+        center.Add(_boardHost);
         root.Add(center);
 
+        _board = BoardMount.Create(gameObject, _boardHost, root, uci => OnPlayerMove(uci), _audio);
         DealNext();
     }
 
