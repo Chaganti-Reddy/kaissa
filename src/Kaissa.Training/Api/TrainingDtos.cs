@@ -48,7 +48,11 @@ public sealed record TrainingCard(
     string Prompt,
     int PuzzleRating,
     double PlayerRating,
-    IReadOnlyList<string> LegalMoves);
+    IReadOnlyList<string> LegalMoves,
+    IReadOnlyList<string> Line,     // full solver/opponent UCI sequence from Board (solver, opp, solver, ...)
+    IReadOnlyList<string> Themes,   // Lichess theme tags for chips
+    string? Setup,                  // opponent's move into this position, for the load animation
+    string ScenarioId);
 
 /// <summary>The outcome of answering a card.</summary>
 public sealed record AnswerResult(

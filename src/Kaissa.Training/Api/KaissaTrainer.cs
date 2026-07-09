@@ -2,7 +2,7 @@ namespace Kaissa.Training.Api;
 
 /// <summary>
 /// The single entry point a UI (e.g. the Unity client) uses to run the puzzle-training loop. It
-/// wraps the library, skill model, and session, and speaks only in plain DTOs — no engine or rules
+/// wraps the library, skill model, and session, and speaks only in plain DTOs - no engine or rules
 /// types leak across this boundary. Persistence is the caller's job via <see cref="ExportProgress"/>.
 /// </summary>
 public sealed class KaissaTrainer
@@ -29,6 +29,9 @@ public sealed class KaissaTrainer
 
     public double PlayerRating => _model.RatingEstimate;
 
+    /// <summary>The scenario library backing this trainer, for unrated custom feeds (theme/difficulty).</summary>
+    public ScenarioLibrary Library => _library;
+
     /// <summary>Adds player-specific content (e.g. positions from their own games) to be scheduled.</summary>
     public void AddScenarios(Pattern pattern, IEnumerable<Scenario> scenarios) => _library.Add(pattern, scenarios);
 
@@ -48,7 +51,11 @@ public sealed class KaissaTrainer
             _current.Prompt,
             _current.Rating,
             _model.RatingEstimate,
-            Kaissa.Chess.Rules.ChessGame.FromFen(_current.Fen).LegalUciMoves());
+            Kaissa.Chess.Rules.ChessGame.FromFen(_current.Fen).LegalUciMoves(),
+            _current.SolverLine,
+            _current.ThemeTags,
+            _current.Setup,
+            _current.Id);
     }
 
     /// <summary>The from-square of the current card's best move, as a hint (null if none yet).</summary>
