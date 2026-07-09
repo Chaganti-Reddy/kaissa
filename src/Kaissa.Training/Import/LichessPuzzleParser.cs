@@ -118,27 +118,45 @@ public static class LichessPuzzleParser
             return false;
         }
 
-        if (!game.TryMakeMove(puzzle.Moves[0]))
+        var setup = game.ResolveToUci(puzzle.Moves[0]);
+        if (setup is null || !game.TryMakeMove(puzzle.Moves[0]))
         {
             reason = "setup move illegal";
             return false;
         }
 
-        var solution = game.ResolveToUci(puzzle.Moves[1]);
-        if (solution is null)
+        var startFen = game.Fen;
+
+        // Walk and canonicalise the whole solver/opponent line, validating each ply as we go.
+        var line = new List<string>(puzzle.Moves.Count - 1);
+        for (int i = 1; i < puzzle.Moves.Count; i++)
         {
-            reason = "solution move illegal";
-            return false;
+            var uci = game.ResolveToUci(puzzle.Moves[i]);
+            if (uci is null || !game.TryMakeMove(puzzle.Moves[i]))
+            {
+                reason = $"line move {i} illegal";
+                return false;
+            }
+            line.Add(uci);
         }
 
         scenario = new Scenario(
             $"lichess-{puzzle.PuzzleId}",
             patternId,
-            game.Fen,
-            new[] { solution },
-            $"{game.SideToMove} to move. Find the best move.",
-            puzzle.Rating);
+            startFen,
+            new[] { line[0] },
+            $"{PlayerSide(startFen)} to move. Find the best move.",
+            puzzle.Rating,
+            Line: line,
+            Themes: puzzle.Themes,
+            Setup: setup);
         return true;
+    }
+
+    private static string PlayerSide(string fen)
+    {
+        var parts = fen.Split(' ');
+        return parts.Length > 1 && parts[1] == "b" ? "Black" : "White";
     }
 
     private static Pattern Pat(string id, string name, string description) =>

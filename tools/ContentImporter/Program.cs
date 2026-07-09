@@ -166,11 +166,15 @@ static void WriteContent(string path, List<Scenario> scenarios)
             Solutions = s.Solutions.ToList(),
             Prompt = s.Prompt,
             Rating = s.Rating,
+            Line = s.SolverLine.ToList(),
+            Themes = s.ThemeTags.ToList(),
+            Setup = s.Setup ?? "",
         })
         .ToList();
 
     var content = new ContentDto { Patterns = patternDtos, Scenarios = scenarioDtos };
-    File.WriteAllText(path, JsonSerializer.Serialize(content, new JsonSerializerOptions { WriteIndented = true }));
+    // Compact: the file is generated content, not hand-edited, and a large set balloons if pretty-printed.
+    File.WriteAllText(path, JsonSerializer.Serialize(content, new JsonSerializerOptions { WriteIndented = false }));
 }
 
 file sealed class ContentDto
@@ -194,4 +198,7 @@ file sealed class ScenarioDto
     [JsonPropertyName("solutions")] public List<string> Solutions { get; init; } = new();
     [JsonPropertyName("prompt")] public string Prompt { get; init; } = "";
     [JsonPropertyName("rating")] public int Rating { get; init; }
+    [JsonPropertyName("line")] public List<string> Line { get; init; } = new();
+    [JsonPropertyName("themes")] public List<string> Themes { get; init; } = new();
+    [JsonPropertyName("setup")] public string Setup { get; init; } = "";
 }
