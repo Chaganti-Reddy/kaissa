@@ -117,6 +117,7 @@ public static class Board3D
     /// <summary>Positions the camera so the chosen side is at the bottom (a true 180° board flip).</summary>
     public static void OrientCamera(bool whiteBottom)
     {
+        if (CameraOrbit3D.Instance != null) { CameraOrbit3D.Instance.SetSide(whiteBottom); return; }
         var cam = Camera.main;
         if (cam == null)
             return;
