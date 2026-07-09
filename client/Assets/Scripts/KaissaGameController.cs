@@ -41,6 +41,8 @@ public sealed class KaissaGameController : MonoBehaviour
     private Label _matLabel;
     private Label _topName;
     private Label _botName;
+    private Label _botCaptured;
+    private Label _youCaptured;
 
     private void Start()
     {
@@ -88,15 +90,16 @@ public sealed class KaissaGameController : MonoBehaviour
         center.Add(_titleLabel);
 
         _botName = UiKit.Text_("Bot", 15, UiKit.Dim, bold: true);
-        var top = Strip(_botName);
-        center.Add(top);
+        _botCaptured = UiKit.Text_("", 16, UiKit.Mute);
+        center.Add(Strip(_botName, _botCaptured));
 
         _boardHost = new VisualElement();
         _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
         center.Add(_boardHost);
 
         _topName = UiKit.Text_("you", 15, UiKit.Text, bold: true);
-        center.Add(Strip(_topName));
+        _youCaptured = UiKit.Text_("", 16, UiKit.Mute);
+        center.Add(Strip(_topName, _youCaptured));
 
         _statusLabel = UiKit.Text_("", 15, UiKit.Dim);
         _statusLabel.style.marginTop = 12;
@@ -105,13 +108,32 @@ public sealed class KaissaGameController : MonoBehaviour
         return center;
     }
 
-    private VisualElement Strip(Label name)
+    private VisualElement Strip(Label name, Label captured)
     {
         var av = UiKit.Text_("♟", 18, UiKit.Dim, bold: true);
         av.style.marginRight = 8;
-        var s = UiKit.Row(av, name);
+        captured.style.marginLeft = 10;
+        var s = UiKit.Row(av, name, captured);
         s.style.width = 480; UiKit.Pad(s, 6, 4, 6, 4);
         return s;
+    }
+
+    // Glyphs for the pieces of `white` colour that have been captured (start count minus current).
+    private static string CapturedGlyphs(BoardView board, bool white)
+    {
+        var start = new Dictionary<char, int> { ['P'] = 8, ['N'] = 2, ['B'] = 2, ['R'] = 2, ['Q'] = 1 };
+        var cur = new Dictionary<char, int> { ['P'] = 0, ['N'] = 0, ['B'] = 0, ['R'] = 0, ['Q'] = 0 };
+        foreach (var p in board.Pieces)
+            if (char.IsUpper(p.Piece) == white)
+            {
+                char u = char.ToUpperInvariant(p.Piece);
+                if (cur.ContainsKey(u)) cur[u]++;
+            }
+        var glyph = new Dictionary<char, string> { ['P'] = "♟", ['N'] = "♞", ['B'] = "♝", ['R'] = "♜", ['Q'] = "♛" };
+        var sb = new System.Text.StringBuilder();
+        foreach (var k in new[] { 'Q', 'R', 'B', 'N', 'P' })
+            for (int i = 0; i < start[k] - cur[k]; i++) sb.Append(glyph[k]);
+        return sb.ToString();
     }
 
     private VisualElement BuildRightRail()
@@ -362,6 +384,8 @@ public sealed class KaissaGameController : MonoBehaviour
 
         int material = Material(_game.Board);
         _matLabel.text = material == 0 ? "even" : material > 0 ? $"White +{material}" : $"Black +{-material}";
+        if (_botCaptured != null) _botCaptured.text = CapturedGlyphs(_game.Board, white: true);
+        if (_youCaptured != null) _youCaptured.text = CapturedGlyphs(_game.Board, white: false);
 
         var moves = _game.MoveHistorySan();
         for (int i = 0; i < moves.Count; i += 2)

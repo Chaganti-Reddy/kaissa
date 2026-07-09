@@ -11,7 +11,7 @@ public static class KaissaSettings
     {
         public bool sound = true;
         public bool flip = true;
-        public int boardTheme;      // index into Board3D.Themes
+        public int boardTheme = 1;  // index into Board3D.Themes / Board2D themes (1 = Green, chess.com-style)
         public bool useModels = true; // modelled pieces vs procedural
         public bool autoQueen;        // auto-promote to queen instead of showing a picker
         public bool dragToMove = true; // allow dragging a piece (click-to-move always works too)

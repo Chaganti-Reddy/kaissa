@@ -58,3 +58,8 @@ verify-*.png
 preview.log
 piece-preview.png
 Kaissa-Windows-*.zip
+
+# screenshot-harness output (local test artifacts)
+/shots/
+/shots2d/
+/shotsI/
