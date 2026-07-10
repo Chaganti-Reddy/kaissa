@@ -171,6 +171,7 @@ public sealed class EndgameController : MonoBehaviour
             {
                 int idx = IndexOf(e);
                 var row = UiKit.Row(UiKit.Text_(e.Name, 14, UiKit.Text));
+                row.name = "egrow-" + e.Id;
                 UiKit.Pad(row, 7, 10, 7, 10); UiKit.Radius(row, 6);
                 row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
                 row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
@@ -367,39 +368,39 @@ public sealed class EndgameController : MonoBehaviour
         Directory.CreateDirectory(dir);
         string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
 
+        KaissaSettings.AutoQueen = true;
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_warmup.png"));
         yield return new WaitForSeconds(2.5f); // let the first drill + engine start
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_start.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Load the promotion drill (deterministic: one move to pass).
-        int promo = IndexOf(EndgameLibrary.ById("kp_promote"));
-        LoadDrill(promo);
+        // Load the promotion drill via a real click on its list row (deterministic: one move to pass).
+        UiAutomation.Click(_root.Q("egrow-kp_promote"));
         yield return new WaitForSeconds(2.5f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_drill.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Hint, then solve by promoting.
-        ShowHint();
+        // Hint (real click), then solve by promoting through the board input path (AutoQueen -> e8=Q).
+        UiAutomation.Click(_hintBtn);
         yield return new WaitForSeconds(1.2f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_hint.png"));
         yield return new WaitForSeconds(0.4f);
 
-        OnMove("e7e8q");
+        _board.DebugClickMove("e7", "e8");
         yield return new WaitForSeconds(1.6f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_passed.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Retry resets the drill.
-        LoadDrill(promo);
+        // Retry button resets the drill.
+        UiAutomation.Click(_retryBtn);
         yield return new WaitForSeconds(2.2f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_retry.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Next + flip.
-        NextDrill();
+        // Next + Flip buttons (real clicks).
+        UiAutomation.Click(_nextBtn);
         yield return new WaitForSeconds(2.2f);
-        Flip();
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_next_flip.png"));
         yield return new WaitForSeconds(0.5f);

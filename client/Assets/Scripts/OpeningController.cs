@@ -103,6 +103,7 @@ public sealed class OpeningController : MonoBehaviour
         System.IO.Directory.CreateDirectory(dir);
         string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
 
+        KaissaSettings.AutoQueen = true;
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_warmup.png"));
         yield return new WaitForSeconds(0.6f);
 
@@ -110,71 +111,82 @@ public sealed class OpeningController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_start.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Play into the Italian Game, filming each move.
+        // Play into the Italian Game via the real board input path, filming each move.
         foreach (var mv in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" })
         {
-            PlayUci(mv);
+            _board.DebugClickMove(mv.Substring(0, 2), mv.Substring(2, 2));
             yield return Burst(dir, $"op_{tag}_explore_{mv}", 5, 0.05f);
         }
         yield return new WaitForSeconds(0.4f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_named.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Back one move.
-        Back();
+        // Click a book-move row (real click) to play its continuation.
+        UiAutomation.Click(_root.Q("bookrow"));
         yield return new WaitForSeconds(0.6f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_back.png"));
-        yield return new WaitForSeconds(0.4f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_bookrow.png"));
+        yield return new WaitForSeconds(0.3f);
 
-        // Learn: browse + search + load a line + step.
-        SetMode(Mode.Learn);
+        // Back + Reset buttons (real clicks).
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Back"));
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_back.png"));
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Reset"));
+        yield return new WaitForSeconds(0.5f);
+
+        // Learn tab (real click).
+        UiAutomation.Click(_tabLearn);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_list.png"));
         yield return new WaitForSeconds(0.5f);
 
-        PopulateOpenings("Sicilian");
-        yield return new WaitForSeconds(0.5f);
+        // Search: set the field value (fires the same value-changed callback typing does).
+        var search = _root.Q<TextField>();
+        if (search != null) search.value = "Sicilian";
+        yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_search.png"));
         yield return new WaitForSeconds(0.4f);
 
-        var line = _book.All.FirstOrDefault(e => e.Name.StartsWith("Sicilian Defense: Najdorf", StringComparison.Ordinal))
-                   ?? _book.All.First(e => e.Uci.Count >= 4);
-        LoadLearnLine(line);
+        // Load a line by clicking an opening row (real click), then step with Prev/Next buttons.
+        UiAutomation.Click(_root.Q("openrow"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_loaded.png"));
         yield return new WaitForSeconds(0.4f);
 
-        LearnPrev(); yield return new WaitForSeconds(0.4f);
-        LearnPrev(); yield return new WaitForSeconds(0.4f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Prev"));
+        yield return new WaitForSeconds(0.4f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Prev"));
+        yield return new WaitForSeconds(0.4f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_prev.png"));
         yield return new WaitForSeconds(0.4f);
-        LearnNext(); yield return new WaitForSeconds(0.5f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Next"));
+        yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_next.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Drill: a correct recall, then a wrong one.
-        SetMode(Mode.Drill);
+        // Drill tab (real click): a correct recall, then a wrong one - both through the board input path.
+        UiAutomation.Click(_tabDrill);
         yield return new WaitForSeconds(0.7f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_drill_prompt.png"));
         yield return new WaitForSeconds(0.4f);
-        if (_card != null)
+        if (_card?.ExpectedMove is { } exp && exp.Length >= 4)
         {
-            OnDrillMove(_card.ExpectedMove);
+            _board.DebugClickMove(exp.Substring(0, 2), exp.Substring(2, 2));
             yield return Burst(dir, $"op_{tag}_drill_correct", 6, 0.06f);
         }
         yield return new WaitForSeconds(1.0f);
         if (_card != null)
         {
             var wrong = FirstLegalOtherThan(_card.Fen, _card.ExpectedMove);
-            if (wrong != null) OnDrillMove(wrong);
+            if (wrong is { Length: >= 4 }) _board.DebugClickMove(wrong.Substring(0, 2), wrong.Substring(2, 2));
             yield return Burst(dir, $"op_{tag}_drill_wrong", 6, 0.06f);
         }
         yield return new WaitForSeconds(0.8f);
 
-        // Flip (back in Explore).
-        SetMode(Mode.Explore);
+        // Flip (back in Explore) via the real Flip button.
+        UiAutomation.Click(_tabExplore);
         yield return new WaitForSeconds(0.4f);
-        Flip();
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
         yield return new WaitForSeconds(0.7f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_flip.png"));
         yield return new WaitForSeconds(0.5f);
@@ -348,6 +360,7 @@ public sealed class OpeningController : MonoBehaviour
     private VisualElement BookRow(OpeningMove c)
     {
         var row = UiKit.Row();
+        row.name = "bookrow";
         row.style.justifyContent = Justify.SpaceBetween;
         UiKit.Pad(row, 7, 10, 7, 10); UiKit.Radius(row, 6);
         var san = UiKit.Text_(c.San, 14, UiKit.Text, bold: true); san.style.minWidth = 54;
@@ -426,6 +439,7 @@ public sealed class OpeningController : MonoBehaviour
     private VisualElement OpeningRow(OpeningEntry e)
     {
         var row = UiKit.Row();
+        row.name = "openrow";
         UiKit.Pad(row, 6, 8, 6, 8); UiKit.Radius(row, 5);
         var eco = UiKit.Text_(e.Eco, 11, UiKit.Gold, bold: true); eco.style.minWidth = 34;
         row.Add(eco);

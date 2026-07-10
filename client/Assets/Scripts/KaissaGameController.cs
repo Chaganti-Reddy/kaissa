@@ -274,6 +274,7 @@ public sealed class KaissaGameController : MonoBehaviour
     private VisualElement PickBtn(string label, Action onClick)
     {
         var b = UiKit.Primary(label, onClick, 15);
+        b.name = "pickopp";
         b.style.width = 360; b.style.marginBottom = 8;
         return b;
     }
@@ -349,39 +350,50 @@ public sealed class KaissaGameController : MonoBehaviour
         System.IO.Directory.CreateDirectory(dir);
         string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
 
+        KaissaSettings.AutoQueen = true;
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_warmup.png"));
         yield return new WaitForSeconds(1.8f); // board + clock settle
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_start.png"));
         yield return new WaitForSeconds(0.5f); // let the start frame flush before moving
 
-        // Opening move: film the glide + capture animation while the bot thinks.
-        if (_game != null && !_busy) OnMove("e2e4");
+        // Opening move through the real board input path: film the glide while the bot thinks.
+        if (_game != null && !_busy) _board.DebugClickMove("e2", "e4");
         yield return Burst(dir, $"play_{tag}_move", 12, 0.06f);
         yield return new WaitForSeconds(2.5f); // bot reply
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_afterbot.png"));
 
-        if (_game != null && !_busy && !_game.IsGameOver) OnMove("g1f3");
+        if (_game != null && !_busy && !_game.IsGameOver) _board.DebugClickMove("g1", "f3");
         yield return new WaitForSeconds(2.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_midgame.png"));
 
-        // Flip the board, then back. Yield AFTER the capture before flipping back, or the capture
-        // (grabbed at end of frame) would record the already-reverted board.
-        Flip(); yield return new WaitForSeconds(0.8f);
+        // Flip button (real click), then back.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Flip")); yield return new WaitForSeconds(0.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_flip.png"));
         yield return new WaitForSeconds(0.4f);
-        Flip(); yield return new WaitForSeconds(0.3f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Flip")); yield return new WaitForSeconds(0.3f);
 
-        // Takeback the last move.
-        Takeback(); yield return new WaitForSeconds(0.6f);
+        // Takeback button (real click).
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Takeback")); yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_takeback.png"));
 
-        // Move-list navigation: jump to an earlier ply.
-        RowClicked(0); yield return new WaitForSeconds(0.6f);
+        // Resign button (real click) -> post-game review; then navigate the move list by clicking a cell.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Resign"));
+        yield return new WaitForSeconds(3.0f); // engine review runs
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_review.png"));
+        yield return new WaitForSeconds(0.4f);
+        UiAutomation.Click(_movesBody.Q("movecell")); yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_movenav.png"));
+        yield return new WaitForSeconds(0.3f);
 
-        // New-game picker (time control + opponent).
-        NewGame(); yield return new WaitForSeconds(0.8f);
+        // New-game picker via the New button (real click), then pick a time control + opponent.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "New")); yield return new WaitForSeconds(0.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_picker.png"));
+        yield return new WaitForSeconds(0.4f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "5 min")); yield return new WaitForSeconds(0.4f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_picker_tc.png"));
+        UiAutomation.Click(_root.Q("pickopp")); // Adaptive (first opponent button)
+        yield return new WaitForSeconds(2.5f); // engine restart
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_newgame.png"));
         yield return new WaitForSeconds(0.4f);
         Application.Quit();
     }
@@ -578,9 +590,10 @@ public sealed class KaissaGameController : MonoBehaviour
             string w = moves[i];
             string b = i + 1 < moves.Count ? moves[i + 1] : "";
             var wc = Cell(w, 120, UiKit.Text); int wply = i + 1;
+            wc.name = "movecell";
             wc.RegisterCallback<ClickEvent>(_ => RowClicked(wply)); UiKit.Interactive(wc, 1.02f);
             var bc = Cell(b, 120, UiKit.Text);
-            if (!string.IsNullOrEmpty(b)) { int bply = i + 2; bc.RegisterCallback<ClickEvent>(_ => RowClicked(bply)); UiKit.Interactive(bc, 1.02f); }
+            if (!string.IsNullOrEmpty(b)) { int bply = i + 2; bc.name = "movecell"; bc.RegisterCallback<ClickEvent>(_ => RowClicked(bply)); UiKit.Interactive(bc, 1.02f); }
             var row = UiKit.Row(Cell($"{i / 2 + 1}.", 40, UiKit.Mute), wc, bc);
             if ((i / 2) % 2 == 1) row.style.backgroundColor = UiKit.Panel3;
             UiKit.Pad(row, 6, 12, 6, 12);

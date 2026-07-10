@@ -500,6 +500,7 @@ public sealed class RushController : MonoBehaviour
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
         System.IO.Directory.CreateDirectory(dir);
         string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+        KaissaSettings.AutoQueen = true;
 
         // Warm-up capture: the very first ScreenCapture of a session is unreliable, so spend it on a
         // throwaway frame before the real ones.
@@ -512,21 +513,17 @@ public sealed class RushController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_a_modes.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // Start a run and film the setup-move arriving on the board.
-        StartRun(RushMode.ThreeMin);
+        // Start a run with a REAL click on the "3 Minutes" mode button, then film the setup move.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "3 Minutes"));
         yield return Burst(dir, $"rush_{tag}_setup", 10, 0.05f);
 
-        // Film one solver move: the glide, the correct flash, and the opponent's reply.
-        if (_session?.ExpectedMove is { } mv)
-            OnPlayerMove(mv);
+        // One solver move through the real board input path: glide, correct flash, opponent reply.
+        PlayMove(_session?.ExpectedMove);
         yield return Burst(dir, $"rush_{tag}_solve", 16, 0.05f);
         yield return new WaitForSeconds(0.3f);
 
-        // Film a wrong move: the attempted piece snapping back, the red strike flash, and the
-        // correct move being revealed in green.
-        var wrong = FindLegalNonSolution();
-        if (wrong != null)
-            OnPlayerMove(wrong);
+        // A wrong move: attempted piece snaps back, red strike flash, correct move revealed in green.
+        PlayMove(FindLegalNonSolution());
         yield return Burst(dir, $"rush_{tag}_wrong", 18, 0.05f);
 
         // Two more misses to reach the game-over summary.
@@ -534,8 +531,38 @@ public sealed class RushController : MonoBehaviour
         yield return MissOnce();
         yield return new WaitForSeconds(1.4f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_z_gameover.png"));
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.4f);
+
+        // Game-over buttons: Play again (real click) restarts the same mode.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Play again"));
+        yield return new WaitForSeconds(1.0f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_playagain.png"));
+
+        // Burn out this run, then Change mode (real click) back to the picker and start Survival.
+        yield return MissOnce(); yield return MissOnce(); yield return MissOnce();
+        yield return new WaitForSeconds(1.2f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Change mode"));
+        yield return new WaitForSeconds(0.7f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_changemode.png"));
+        yield return new WaitForSeconds(0.3f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Survival"));
+        yield return new WaitForSeconds(1.0f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_survival.png"));
+
+        // Flip (F key on this page - no on-page button).
+        if (_session != null) { _whiteBottom = !_whiteBottom; _board.Render(_session.Fen, !_over, null, _whiteBottom); }
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_flip.png"));
+        yield return new WaitForSeconds(0.4f);
         Application.Quit();
+    }
+
+    // Play a move through the board's real input path (falls back to the callback for promotions).
+    private void PlayMove(string uci)
+    {
+        if (string.IsNullOrEmpty(uci)) return;
+        if (uci.Length == 4) _board.DebugClickMove(uci.Substring(0, 2), uci.Substring(2, 2));
+        else OnPlayerMove(uci);
     }
 
     private IEnumerator Burst(string dir, string prefix, int count, float interval)
@@ -555,7 +582,7 @@ public sealed class RushController : MonoBehaviour
         {
             var wrong = FindLegalNonSolution();
             if (wrong == null) break;
-            OnPlayerMove(wrong);
+            PlayMove(wrong);
             yield return new WaitForSeconds(0.9f);
         }
         yield return new WaitForSeconds(0.6f);

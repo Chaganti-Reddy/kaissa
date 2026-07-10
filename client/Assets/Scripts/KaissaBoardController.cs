@@ -129,78 +129,110 @@ public sealed class KaissaBoardController : MonoBehaviour
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
         System.IO.Directory.CreateDirectory(dir);
         string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+        KaissaSettings.AutoQueen = true; // never let a promotion picker block a scripted solve
 
         // Warm-up (first capture of a session is unreliable), then the loaded position.
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_warmup.png"));
         yield return new WaitForSeconds(0.6f);
         yield return Burst(dir, $"pz_{tag}_setup", 8, 0.05f);
 
-        // Hint: first press highlights the piece, second reveals the move.
-        ShowHint();
+        // Hint via a real click on the Hint button: first press highlights the piece, second reveals it.
+        UiAutomation.Click(_hintBtn);
         yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_hint1.png"));
-        ShowHint();
+        UiAutomation.Click(_hintBtn);
         yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_hint2.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // Wrong move: film the snap-back, red flash, and revealed square.
-        var wrong = FindLegalNonSolution();
-        if (wrong != null) OnPlayerMove(wrong);
+        // Wrong move through the real board input path: snap-back, red flash, revealed square.
+        PlayMove(FindLegalNonSolution());
         yield return Burst(dir, $"pz_{tag}_wrong", 14, 0.05f);
 
-        // Solve the whole line: film the glide, correct flash, and opponent reply.
+        // Solve the whole line through the board input path: glide, correct flash, opponent reply.
         int guard = 0;
         while (!_concluded && _session != null && _session.ExpectedMove is { } mv && guard++ < 20)
         {
-            OnPlayerMove(mv);
+            PlayMove(mv);
             yield return Burst(dir, $"pz_{tag}_solve{guard}", 6, 0.05f);
         }
         yield return new WaitForSeconds(0.4f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_solved.png"));
 
-        // Next puzzle.
-        LoadNext();
+        // Next puzzle via the Next button.
+        UiAutomation.Click(_nextBtn);
         yield return new WaitForSeconds(1.0f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_next.png"));
 
         // Solution button: play out the whole line.
-        ShowSolution();
+        UiAutomation.Click(_solutionBtn);
         yield return Burst(dir, $"pz_{tag}_solution", 16, 0.06f);
 
-        // Retry after a fresh puzzle + a wrong move: the board resets to the start.
-        LoadNext();
+        // Retry: fresh puzzle (Next), a wrong move, then the Retry button resets to the start.
+        UiAutomation.Click(_nextBtn);
         yield return new WaitForSeconds(0.8f);
-        var w2 = FindLegalNonSolution();
-        if (w2 != null) OnPlayerMove(w2);
+        PlayMove(FindLegalNonSolution());
         yield return new WaitForSeconds(0.8f);
-        Retry();
+        UiAutomation.Click(_retryBtn);
         yield return new WaitForSeconds(0.7f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_retry.png"));
 
-        // Themes picker. Close with HidePicker (deterministic) and always yield AFTER a capture
-        // before mutating, so the screenshot reflects the intended frame, not the next one.
-        ToggleThemePicker();
+        // Themes: click the Themes chip to open the picker, capture it, then click a theme row.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Themes"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_themes.png"));
         yield return new WaitForSeconds(0.4f);
-        HidePicker();
+        UiAutomation.Click(_pickerHost.Q("pickrow"));
+        yield return new WaitForSeconds(0.9f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_theme_loaded.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // Difficulty picker.
-        ToggleDifficultyPicker();
+        // Difficulty: open the picker, capture it, then pick a band.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Difficulty"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_difficulty.png"));
         yield return new WaitForSeconds(0.4f);
-        HidePicker();
+        UiAutomation.Click(_pickerHost.Q("pickrow"));
+        yield return new WaitForSeconds(0.9f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_difficulty_loaded.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // Board flip.
+        // Back to the Rated feed.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Rated"));
+        yield return new WaitForSeconds(0.8f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_rated.png"));
+
+        // Board flip (F key on this page - no on-page button).
         Flip();
         yield return new WaitForSeconds(0.7f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_flip.png"));
         yield return new WaitForSeconds(0.4f);
+
+        // Session summary overlay + its buttons (Esc-triggered UI; drive its buttons by real click).
+        ShowSummary();
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_summary.png"));
+        yield return new WaitForSeconds(0.4f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Keep training"));
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_summary_dismissed.png"));
+        yield return new WaitForSeconds(0.3f);
+
+        // Analyze routes to the Analysis scene - do this last, then quit.
+        UiAutomation.Click(_analyzeBtn);
+        yield return new WaitForSeconds(1.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_analyze.png"));
+        yield return new WaitForSeconds(0.4f);
         Application.Quit();
+    }
+
+    // Play a move the way a click does: through the board's real input path (falls back to the move
+    // callback only for promotions, whose picker AutoQueen bypasses anyway).
+    private void PlayMove(string uci)
+    {
+        if (string.IsNullOrEmpty(uci)) return;
+        if (uci.Length == 4) _board.DebugClickMove(uci.Substring(0, 2), uci.Substring(2, 2));
+        else OnPlayerMove(uci);
     }
 
     private System.Collections.IEnumerator Burst(string dir, string prefix, int count, float interval)
@@ -719,6 +751,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     private VisualElement PickerRow(string label, Action onClick)
     {
         var row = UiKit.Row(UiKit.Text_(label, 14, UiKit.Text));
+        row.name = "pickrow";
         UiKit.Pad(row, 8, 10, 8, 10); UiKit.Radius(row, 6);
         row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
         row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
