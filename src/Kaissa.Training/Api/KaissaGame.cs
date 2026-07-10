@@ -12,8 +12,8 @@ namespace Kaissa.Training.Api;
 public sealed class KaissaGame : IAsyncDisposable
 {
     private readonly IChessEngine _engine;
-    private readonly GameSession _session;
-    private readonly Side _playerSide;
+    private GameSession _session;
+    private Side _playerSide;
 
     private KaissaGame(IChessEngine engine, GameSession session, Side playerSide)
     {
@@ -45,6 +45,28 @@ public sealed class KaissaGame : IAsyncDisposable
             await session.EngineReplyAsync(cancellationToken).ConfigureAwait(false);
 
         return game;
+    }
+
+    /// <summary>
+    /// Reuses the already-running engine for a new game instead of launching a fresh process. This
+    /// keeps switching drills / starting a new game near-instant (no ~1-2s process spawn + handshake);
+    /// only a UCI "new game" reset is sent. Call this instead of disposing and StartAsync-ing again.
+    /// </summary>
+    public async Task ResetAsync(
+        Side playerSide,
+        double playerRating,
+        string? fen = null,
+        TimeSpan? botThinkTime = null,
+        int? fixedOpponentElo = null,
+        CancellationToken cancellationToken = default)
+    {
+        await _engine.NewGameAsync(cancellationToken).ConfigureAwait(false);
+        var opponent = new AdaptiveOpponent(_engine, botThinkTime ?? TimeSpan.FromMilliseconds(200), fixedElo: fixedOpponentElo);
+        _session = new GameSession(_engine, playerSide, playerRating, fen, opponent);
+        _playerSide = playerSide;
+
+        if (_session.SideToMove != playerSide && !_session.IsGameOver)
+            await _session.EngineReplyAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public BoardView Board => BoardView.FromFen(_session.Fen);
@@ -96,7 +118,7 @@ public sealed class KaissaGame : IAsyncDisposable
             .ToList();
 
         double accuracy = AccuracyModel.GameAccuracy(assessments);
-        // Player-perspective evaluation after each of the player's moves — the curve for a future graph.
+        // Player-perspective evaluation after each of the player's moves - the curve for a future graph.
         var evalSeries = assessments.Select(a => a.BestEvalCp - a.CentipawnLoss).ToList();
         var phaseAccuracy = AccuracyModel.ByPhase(assessments);
         return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy, evalSeries, phaseAccuracy);

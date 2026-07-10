@@ -16,7 +16,7 @@ using UnityEngine.UIElements;
 
 // Play a full game vs the adaptive bot, in the redesigned chess.com-style UI (UI Toolkit + the 2D
 // board). Drives KaissaGame (Stockfish from StreamingAssets); keeps the rating update, review,
-// walkthrough and practice-fusion logic — only the view changed from the old 3D/UGUI screen.
+// walkthrough and practice-fusion logic - only the view changed from the old 3D/UGUI screen.
 public sealed class KaissaGameController : MonoBehaviour
 {
     private KaissaGame _game;
@@ -154,7 +154,10 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private VisualElement Strip(Label name, Label captured, Label clock)
     {
-        var av = UiKit.Text_("♟", 18, UiKit.Dim, bold: true);
+        // Drawn avatar chip (no glyph): a small neutral disc next to the player name.
+        var av = new VisualElement();
+        av.style.width = 18; av.style.height = 18; UiKit.Radius(av, 9);
+        av.style.backgroundColor = UiKit.Panel3; av.style.flexShrink = 0;
         av.style.marginRight = 8;
         captured.style.marginLeft = 10;
         var spacer = new VisualElement(); spacer.style.flexGrow = 1;
@@ -257,7 +260,7 @@ public sealed class KaissaGameController : MonoBehaviour
         }
         panel.Add(tcRow);
 
-        panel.Add(PickBtn("Adaptive — matches your level", () => { _root.Remove(dim); StartGame("Adaptive", null); }));
+        panel.Add(PickBtn("Adaptive - matches your level", () => { _root.Remove(dim); StartGame("Adaptive", null); }));
         foreach (var bot in BotRoster.All)
         {
             var b = bot;
@@ -300,7 +303,17 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private static int BotThinkMs() => KaissaSettings.BotSpeed switch { 0 => 250, 2 => 1200, _ => 600 };
 
+    private bool _starting; // guards against concurrent engine ops from rapid New/Rematch clicks
+
     private async void StartGame(string label, int? fixedElo)
+    {
+        if (_starting) return;
+        _starting = true;
+        try { await StartGameCore(label, fixedElo); }
+        finally { _starting = false; }
+    }
+
+    private async System.Threading.Tasks.Task StartGameCore(string label, int? fixedElo)
     {
         var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
         if (!File.Exists(enginePath))
@@ -318,8 +331,13 @@ public sealed class KaissaGameController : MonoBehaviour
         _gameStartFen = startFen ?? ChessGame.StartFen;
         try
         {
-            _game = await KaissaGame.StartAsync(enginePath, Side.White, playerRating,
-                fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
+            // Reuse the live engine when starting another game, so New/Rematch is instant (no respawn).
+            if (_game == null)
+                _game = await KaissaGame.StartAsync(enginePath, Side.White, playerRating,
+                    fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
+            else
+                await _game.ResetAsync(Side.White, playerRating,
+                    fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
         }
         catch (Exception e)
         {
@@ -329,7 +347,7 @@ public sealed class KaissaGameController : MonoBehaviour
         }
 
         _botName.text = $"{label}  ~{_game.OpponentElo}";
-        _statusLabel.text = "You are White. Your move.   ·   N new · R resign · U takeback · F flip";
+        _statusLabel.text = "You are White. Your move.   -   N new - R resign - U takeback - F flip";
         _lastMove = null;
 
         var tc = TimeControls[Mathf.Clamp(_tcIndex, 0, TimeControls.Length - 1)];
@@ -343,7 +361,7 @@ public sealed class KaissaGameController : MonoBehaviour
     }
 
     // Playtest driver (screenshot harness): play a couple of legal moves so the clock switches sides,
-    // the bot replies, and captured pieces / move list populate — all observable in the frame captures.
+    // the bot replies, and captured pieces / move list populate - all observable in the frame captures.
     private System.Collections.IEnumerator AutoPlay()
     {
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
@@ -433,7 +451,7 @@ public sealed class KaissaGameController : MonoBehaviour
             var outcome = await _game.PlayAsync(uci);
             if (!outcome.Accepted)
             {
-                _statusLabel.text = "Illegal move — try again.";
+                _statusLabel.text = "Illegal move - try again.";
                 RenderBoard(_game.Board.Fen, canMove: true);
                 _busy = false;
                 return;
@@ -474,7 +492,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _lastMove = null;
         RenderBoard(_game.Board.Fen, canMove: true);
         UpdateMoveList();
-        _statusLabel.text = "Takeback — your move.";
+        _statusLabel.text = "Takeback - your move.";
     }
 
     private async void Resign()
@@ -500,8 +518,8 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private void NewGame()
     {
+        // Keep the engine process alive so StartGame can reuse it (instant start, no respawn).
         _reviewMode = false;
-        if (_game != null) { _ = _game.DisposeAsync(); _game = null; }
         _busy = false;
         _lastMove = null;
         ShowPicker();
@@ -512,7 +530,6 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (_lastLabel == null) { NewGame(); return; }
         _reviewMode = false;
-        if (_game != null) { _ = _game.DisposeAsync(); _game = null; }
         _busy = false; _lastMove = null;
         StartGame(_lastLabel, _lastElo);
     }
@@ -640,8 +657,8 @@ public sealed class KaissaGameController : MonoBehaviour
         string move = _reviewPly > 0 && _reviewPly - 1 < _reviewSan.Count ? _reviewSan[_reviewPly - 1] : "start";
         string note = "";
         if (_reviewPly > 0 && _reviewMistakes.TryGetValue(_reviewPly - 1, out var m))
-            note = $"   —   Mistake: best {m.BestMove} ({m.Quality})";
-        _statusLabel.text = $"Review {_reviewPly}/{_reviewMoves.Count}: {move}   (←/→ · N new){note}";
+            note = $"   -   Mistake: best {m.BestMove} ({m.Quality})";
+        _statusLabel.text = $"Review {_reviewPly}/{_reviewMoves.Count}: {move}   (<-/-> - N new){note}";
     }
 
     private string PositionAfter(int plyCount)
@@ -685,7 +702,7 @@ public sealed class KaissaGameController : MonoBehaviour
     private void OnFlag(bool playerLost)
     {
         _audio.PlayGameEnd();
-        _statusLabel.text = playerLost ? "Time — you lost.   ·   N: new game" : "Time — the bot flagged. You win!   ·   N: new game";
+        _statusLabel.text = playerLost ? "Time - you lost.   -   N: new game" : "Time - the bot flagged. You win!   -   N: new game";
         RenderBoard(_currentFen, canMove: false);
     }
 

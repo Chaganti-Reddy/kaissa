@@ -201,19 +201,27 @@ public sealed class EndgameController : MonoBehaviour
 
     // ---------------- drill lifecycle ----------------
 
+    private bool _loading; // guards against concurrent engine ops from rapid Next/Retry clicks
+
     private async void LoadDrill(int index)
     {
-        if (EndgameLibrary.All.Count == 0) return;
+        if (EndgameLibrary.All.Count == 0 || _loading) return;
+        _loading = true;
+        try { await LoadDrillCore(index); }
+        finally { _loading = false; }
+    }
+
+    private async System.Threading.Tasks.Task LoadDrillCore(int index)
+    {
         _index = (index % EndgameLibrary.All.Count + EndgameLibrary.All.Count) % EndgameLibrary.All.Count;
         _current = EndgameLibrary.All[_index];
         _over = false; _busy = true;
         _title.text = _current.Name;
         _goalLabel.text = _current.GoalText;
         _noteLabel.text = _current.Note;
-        SetFeedback("Starting engine...", UiKit.Dim);
+        // Only the first drill pays the one-time engine launch; later drills reuse the live process.
+        SetFeedback(_game == null ? "Starting engine..." : _current.GoalText + ".", UiKit.Dim);
         _whiteBottom = _current.PlayerWhite;
-
-        if (_game != null) { var g = _game; _game = null; _ = g.DisposeAsync(); }
 
         if (!File.Exists(_enginePath))
         {
@@ -225,8 +233,12 @@ public sealed class EndgameController : MonoBehaviour
         var side = _current.PlayerWhite ? Side.White : Side.Black;
         try
         {
-            _game = await KaissaGame.StartAsync(_enginePath, side, 1500,
-                fen: _current.Fen, botThinkTime: TimeSpan.FromMilliseconds(300), fixedOpponentElo: 2200);
+            if (_game == null)
+                _game = await KaissaGame.StartAsync(_enginePath, side, 1500,
+                    fen: _current.Fen, botThinkTime: TimeSpan.FromMilliseconds(300), fixedOpponentElo: 2200);
+            else
+                await _game.ResetAsync(side, 1500,
+                    fen: _current.Fen, botThinkTime: TimeSpan.FromMilliseconds(300), fixedOpponentElo: 2200);
         }
         catch (Exception e) { SetFeedback("Engine failed to start.", UiKit.Danger); Debug.LogError(e); _busy = false; return; }
 
