@@ -48,12 +48,39 @@ foreach (var file in new[] { "a", "b", "c", "d", "e" })
 entries.Sort((a, b) => a.Uci.Count != b.Uci.Count ? a.Uci.Count - b.Uci.Count
     : string.CompareOrdinal(a.Name, b.Name));
 
+// Precompute the position index offline so the app never has to replay openings at runtime:
+//   positions[key] = { name/eco of the opening ending there (if any), book continuation moves }.
+var positions = new Dictionary<string, PositionDto>();
+foreach (var e in entries)
+{
+    if (!string.IsNullOrEmpty(e.Fen))
+    {
+        var tk = Key(e.Fen);
+        if (!positions.TryGetValue(tk, out var pd)) positions[tk] = pd = new PositionDto();
+        if (pd.Name is null || e.Uci.Count > pd.Ply) { pd.Name = e.Name; pd.Eco = e.Eco; pd.Ply = e.Uci.Count; }
+    }
+    var g = ChessGame.Start();
+    foreach (var uci in e.Uci)
+    {
+        var k = Key(g.Fen);
+        if (!positions.TryGetValue(k, out var pd)) positions[k] = pd = new PositionDto();
+        if (!pd.Moves.Contains(uci)) pd.Moves.Add(uci);
+        if (!g.TryMakeMove(uci)) break;
+    }
+}
+
 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
-File.WriteAllText(output, JsonSerializer.Serialize(new ContentDto { Openings = entries },
+File.WriteAllText(output, JsonSerializer.Serialize(new ContentDto { Openings = entries, Positions = positions },
     new JsonSerializerOptions { WriteIndented = false }));
 
-Console.WriteLine($"Scanned {scanned}, kept {entries.Count}, skipped {skipped} -> {output}");
+Console.WriteLine($"Scanned {scanned}, kept {entries.Count}, skipped {skipped}, positions {positions.Count} -> {output}");
 return 0;
+
+static string Key(string fen)
+{
+    var p = fen.Split(' ');
+    return p.Length >= 4 ? $"{p[0]} {p[1]} {p[2]} {p[3]}" : fen;
+}
 
 static List<string>? SanLineToUci(string pgn, out string fen)
 {
@@ -93,6 +120,15 @@ static string? OptionValue(string name)
 file sealed class ContentDto
 {
     [JsonPropertyName("openings")] public List<OpeningDto> Openings { get; init; } = new();
+    [JsonPropertyName("positions")] public Dictionary<string, PositionDto> Positions { get; init; } = new();
+}
+
+file sealed class PositionDto
+{
+    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("eco")] public string? Eco { get; set; }
+    [JsonPropertyName("moves")] public List<string> Moves { get; set; } = new();
+    [JsonIgnore] public int Ply { get; set; }
 }
 
 file sealed class OpeningDto
