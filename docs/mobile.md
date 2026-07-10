@@ -16,6 +16,26 @@ Desktop runs Stockfish as a separate process over UCI. Mobile is different, and 
 
 The training loop needs no engine at runtime (puzzles are graded offline), so training, rush, vision, and stats work on mobile immediately. Play-vs-bot, endgames, and analysis wait on the embedded engine.
 
+## Interface on mobile
+
+The desktop layout is a three-column shell: a left navigation rail, a centered board, and a right panel (move list, themes, mastery, book moves, and so on). That does not fit a phone in portrait, so the interface reflows by screen size rather than being redrawn. The client is built in Unity UI Toolkit with flexbox layout and size-relative units, and the panel already scales with the window, so the work is adding breakpoints and a few mobile-specific containers, not a second UI.
+
+Breakpoints:
+
+- Phone portrait: a single column. The board sits at the top at full width; the primary controls sit directly beneath it; the side-panel content (move list, themes, mastery, book lines) moves into a collapsible bottom sheet or a small tab strip below the controls. Navigation becomes a bottom tab bar.
+- Phone landscape and small tablets: a two-column split — board on one side, panel on the other — without the nav rail, which stays a bottom bar.
+- Tablet and desktop: the existing three-column shell.
+
+Navigation: the left rail collapses to a bottom tab bar with the primary destinations (Home, Play, Puzzles, Learn) and a "More" entry that opens the rest (Puzzle Blitz, Openings, Endgames, Board Vision, Coordinates, Analysis, Stats, Settings). This keeps the most-used modes one tap away and matches the platform convention.
+
+Board and input: the board is always square, sized to the smaller of the available width and height so it never overflows. Touch already works — the board uses pointer events, so tap-to-move and drag both function — but tap targets (controls, list rows, the promotion picker) are enlarged to a comfortable minimum, and the promotion picker and other overlays become full-width sheets rather than small centered dialogs. Coordinate labels can be turned off to reclaim space. The flat 2D board is the default on phones; the 3D board remains available but is heavier.
+
+Ergonomics and platform fit: respect the safe area (notches, rounded corners, the home indicator) so nothing is clipped or unreachable; support portrait as the primary orientation with landscape optional; keep text legible with the existing size-relative scaling.
+
+Performance on mobile: default to the 2D board, drop the heavy 3D post-processing and HDRI reflections that the desktop 3D board uses, and cap engine threads (see the engine section) so play and analysis stay responsive without draining the battery.
+
+Status: the input layer, the core, and size-relative scaling already work on a touch screen; the breakpoint layouts (board-first portrait, bottom tab bar, collapsible panel sheets, enlarged targets) are designed here but not yet built. They are a client-only task and do not touch the core or the training loop.
+
 ## Licensing note (important for iOS)
 
 Stockfish is GPLv3, and Kaissa is GPLv3. Distributing GPL software through the Apple App Store is contentious: the App Store terms impose usage restrictions that conflict with the GPL (the VLC case is the well-known precedent). Options to resolve before an iOS App Store release:
