@@ -30,6 +30,7 @@ public static class KaissaSettings
         public int rushBest3;         // Puzzle Rush best score: 3-minute mode
         public int rushBest5;         // Puzzle Rush best score: 5-minute mode
         public int rushBestSurvival;  // Puzzle Rush best score: survival mode
+        public string lessonsDone = ""; // comma-joined ids of completed lessons
     }
 
     private static Data _data;
@@ -68,4 +69,14 @@ public static class KaissaSettings
     public static int RushBest3 { get => D.rushBest3; set { D.rushBest3 = value; Save(); } }
     public static int RushBest5 { get => D.rushBest5; set { D.rushBest5 = value; Save(); } }
     public static int RushBestSurvival { get => D.rushBestSurvival; set { D.rushBestSurvival = value; Save(); } }
+
+    public static bool IsLessonDone(string id) =>
+        !string.IsNullOrEmpty(id) && ("," + D.lessonsDone + ",").Contains("," + id + ",");
+
+    public static void MarkLessonDone(string id)
+    {
+        if (string.IsNullOrEmpty(id) || IsLessonDone(id)) return;
+        D.lessonsDone = string.IsNullOrEmpty(D.lessonsDone) ? id : D.lessonsDone + "," + id;
+        Save();
+    }
 }
