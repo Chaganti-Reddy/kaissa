@@ -94,13 +94,10 @@ public sealed class ScreenshotHarness : MonoBehaviour
 
         if (args.Contains("-kaissa-playtest"))
         {
-            SceneManager.LoadScene("Play"); // the Play controller auto-starts a timed game (sees the arg)
-            for (int i = 0; i < 9; i++)
-            {
-                yield return new WaitForSeconds(1.2f);
-                ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"pt_{i}.png"));
-                Debug.Log($"ScreenshotHarness: playtest frame {i}");
-            }
+            // The Play controller auto-starts a timed game, exercises the controls, self-captures
+            // labeled frames to -shotdir, and quits. We just route to the scene and wait it out.
+            SceneManager.LoadScene("Play");
+            yield return new WaitForSeconds(40f);
             Application.Quit();
             yield break;
         }
