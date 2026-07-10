@@ -578,9 +578,9 @@ public sealed class KaissaGameController : MonoBehaviour
             string w = moves[i];
             string b = i + 1 < moves.Count ? moves[i + 1] : "";
             var wc = Cell(w, 120, UiKit.Text); int wply = i + 1;
-            wc.RegisterCallback<ClickEvent>(_ => RowClicked(wply)); UiKit.Pointer(wc);
+            wc.RegisterCallback<ClickEvent>(_ => RowClicked(wply)); UiKit.Interactive(wc, 1.02f);
             var bc = Cell(b, 120, UiKit.Text);
-            if (!string.IsNullOrEmpty(b)) { int bply = i + 2; bc.RegisterCallback<ClickEvent>(_ => RowClicked(bply)); UiKit.Pointer(bc); }
+            if (!string.IsNullOrEmpty(b)) { int bply = i + 2; bc.RegisterCallback<ClickEvent>(_ => RowClicked(bply)); UiKit.Interactive(bc, 1.02f); }
             var row = UiKit.Row(Cell($"{i / 2 + 1}.", 40, UiKit.Mute), wc, bc);
             if ((i / 2) % 2 == 1) row.style.backgroundColor = UiKit.Panel3;
             UiKit.Pad(row, 6, 12, 6, 12);

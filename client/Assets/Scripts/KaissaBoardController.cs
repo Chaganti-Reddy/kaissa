@@ -723,7 +723,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
         row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
         row.RegisterCallback<ClickEvent>(_ => onClick());
-        UiKit.Pointer(row);
+        UiKit.Interactive(row, 1.02f);
         return row;
     }
 
