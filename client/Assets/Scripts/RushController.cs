@@ -38,7 +38,7 @@ public sealed class RushController : MonoBehaviour
     private bool _graded;          // one strike/solve recorded per puzzle
 
     private VisualElement _root, _overlayHost;
-    private VisualElement _sideBadge, _sideDot, _badge;
+    private VisualElement _sideBadge, _sideDot;
     private Label _sideText, _timerLabel, _scoreLabel, _streakLabel, _feedbackLabel, _bestLabel;
     private readonly VisualElement[] _strikeMarks = new VisualElement[3];
 
@@ -112,7 +112,6 @@ public sealed class RushController : MonoBehaviour
         _boardHost = new VisualElement();
         _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.position = Position.Absolute;
         boardWrap.Add(_boardHost);
-        boardWrap.Add(BuildBadge());
         center.Add(boardWrap);
 
         _feedbackLabel = UiKit.Text_("", 16, UiKit.Dim, bold: true);
@@ -149,18 +148,6 @@ public sealed class RushController : MonoBehaviour
             row.Add(mark);
         }
         return row;
-    }
-
-    private VisualElement BuildBadge()
-    {
-        _badge = new VisualElement();
-        _badge.style.position = Position.Absolute;
-        _badge.style.width = 84; _badge.style.height = 84; UiKit.Radius(_badge, 42);
-        _badge.style.left = 198; _badge.style.top = 198;
-        _badge.style.borderTopWidth = _badge.style.borderBottomWidth = _badge.style.borderLeftWidth = _badge.style.borderRightWidth = 6;
-        _badge.style.display = DisplayStyle.None;
-        _badge.pickingMode = PickingMode.Ignore;
-        return _badge;
     }
 
     private VisualElement BuildRightRail()
@@ -246,7 +233,6 @@ public sealed class RushController : MonoBehaviour
         if (_scenario == null) { EndRun("Out of puzzles"); return; }
         _session = new PuzzleSession(_scenario);
         _graded = false; _busy = false;
-        HideBadge();
         SetFeedback("", UiKit.Dim);
         _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
         UpdateSideBadge();
@@ -293,7 +279,6 @@ public sealed class RushController : MonoBehaviour
         if (_graded) return;
         _graded = true;
         _rush.Submit(_scenario.Solutions[0], TimeSpan.Zero);
-        FlashBadge(true);
         UpdateHud();
         StartCoroutine(NextAfter(0.45f));
     }
@@ -308,7 +293,6 @@ public sealed class RushController : MonoBehaviour
         TintMove(wrongMove, Bad);
         var sol = _session.ExpectedMove;
         if (!string.IsNullOrEmpty(sol)) TintMove(sol, Good); // show the move that was there
-        FlashBadge(false);
         _audio.PlayWrong();
         SetFeedback("Strike!", UiKit.Danger);
         UpdateHud();
@@ -421,19 +405,6 @@ public sealed class RushController : MonoBehaviour
         _feedbackLabel.style.color = color;
         _feedbackLabel.style.backgroundColor = string.IsNullOrEmpty(text) ? new Color(0, 0, 0, 0) : new Color(0, 0, 0, 0.55f);
     }
-
-    private void FlashBadge(bool correct)
-    {
-        var fill = correct ? new Color(0.30f, 0.72f, 0.35f, 0.55f) : new Color(0.80f, 0.28f, 0.24f, 0.55f);
-        var ring = correct ? new Color(0.35f, 0.85f, 0.42f, 0.95f) : new Color(0.92f, 0.36f, 0.30f, 0.95f);
-        _badge.style.backgroundColor = fill;
-        _badge.style.borderTopColor = _badge.style.borderBottomColor = _badge.style.borderLeftColor = _badge.style.borderRightColor = ring;
-        _badge.style.display = DisplayStyle.Flex;
-        CancelInvoke(nameof(HideBadge));
-        Invoke(nameof(HideBadge), 0.6f);
-    }
-
-    private void HideBadge() { if (_badge != null) _badge.style.display = DisplayStyle.None; }
 
     private void TintMove(string uci, Color c)
     {

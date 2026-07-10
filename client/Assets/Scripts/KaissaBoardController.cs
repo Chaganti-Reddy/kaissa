@@ -63,7 +63,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     private Label _sideText;
     private Label _puzzleRatingLabel, _playerRatingLabel, _streakLabel, _solvedLabel, _timerLabel;
     private Label _feedbackLabel, _tierLabel, _xpLabel, _modeLabel;
-    private VisualElement _themeChips, _badge, _xpFill, _masteryBody, _pickerHost;
+    private VisualElement _themeChips, _xpFill, _masteryBody, _pickerHost;
     private Button _hintBtn, _solutionBtn, _retryBtn, _nextBtn, _analyzeBtn;
 
     private static readonly Color Good = new(0.30f, 0.85f, 0.45f, 0.55f);
@@ -293,7 +293,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _boardHost = new VisualElement();
         _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.position = Position.Absolute;
         boardWrap.Add(_boardHost);
-        boardWrap.Add(BuildBadge());
         center.Add(boardWrap);
 
         _feedbackLabel = UiKit.Text_("", 16, UiKit.Dim, bold: true);
@@ -336,19 +335,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         var row = UiKit.Row(_sideDot, _sideText);
         UiKit.Pad(row, 6, 12, 6, 12); UiKit.Radius(row, 6);
         return row;
-    }
-
-    private VisualElement BuildBadge()
-    {
-        _badge = new VisualElement();
-        _badge.style.position = Position.Absolute;
-        _badge.style.width = 88; _badge.style.height = 88; UiKit.Radius(_badge, 44);
-        _badge.style.left = 196; _badge.style.top = 196; // centered on 480 board
-        // A thick ring so the colour reads as a clear correct/incorrect flash without any glyph.
-        _badge.style.borderTopWidth = _badge.style.borderBottomWidth = _badge.style.borderLeftWidth = _badge.style.borderRightWidth = 6;
-        _badge.style.display = DisplayStyle.None;
-        _badge.pickingMode = PickingMode.Ignore; // never intercept clicks on the board beneath
-        return _badge;
     }
 
     private VisualElement BuildControls()
@@ -514,7 +500,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _hintUsed = false; _hintStage = 0; _wrongThisPuzzle = false; _graded = false;
         _solutionShown = false; _concluded = false; _busy = false;
         _elapsed = 0f; _timing = true;
-        HideBadge();
         SetFeedback("", UiKit.Dim);
         _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
 
@@ -540,7 +525,6 @@ public sealed class KaissaBoardController : MonoBehaviour
             _wrongThisPuzzle = true;
             _board.Render(_session.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom); // snap back
             TintMove(uci, Bad);
-            FlashBadge(false);
             _audio.PlayWrong();
             SetFeedback("Not the move - try again.", UiKit.Danger);
             if (_mode == Mode.Rated && !_graded) GradeRated(correct: false, playedMove: uci);
@@ -570,13 +554,11 @@ public sealed class KaissaBoardController : MonoBehaviour
         _board.Render(result.FenAfterReply, canMove: true, lastMove: result.ReplyMove, whiteBottom: _whiteBottom);
         UpdateSideBadge();
         _busy = false;
-        FlashBadge(true);
     }
 
     private void OnSolved()
     {
         _timing = false; _concluded = true;
-        FlashBadge(true);
         _answered++; _correct++;
         _solveStreak++;
         if (_solveStreak > KaissaSettings.PuzzleBestStreak) KaissaSettings.PuzzleBestStreak = _solveStreak;
@@ -673,7 +655,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _session = _scenario != null ? new PuzzleSession(_scenario) : new PuzzleSession(_card.Board.Fen, _card.Line, _card.Setup);
         _hintUsed = false; _hintStage = 0; _wrongThisPuzzle = false; _solutionShown = false;
         _concluded = false; _busy = false; _elapsed = 0f; _timing = true;
-        HideBadge();
         SetFeedback("", UiKit.Dim);
         _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
         UpdateSideBadge();
@@ -849,19 +830,6 @@ public sealed class KaissaBoardController : MonoBehaviour
     };
 
     // ---------------- badge / tint helpers ----------------
-
-    private void FlashBadge(bool correct)
-    {
-        var fill = correct ? new Color(0.30f, 0.72f, 0.35f, 0.55f) : new Color(0.80f, 0.28f, 0.24f, 0.55f);
-        var ring = correct ? new Color(0.35f, 0.85f, 0.42f, 0.95f) : new Color(0.92f, 0.36f, 0.30f, 0.95f);
-        _badge.style.backgroundColor = fill;
-        _badge.style.borderTopColor = _badge.style.borderBottomColor = _badge.style.borderLeftColor = _badge.style.borderRightColor = ring;
-        _badge.style.display = DisplayStyle.Flex;
-        CancelInvoke(nameof(HideBadge));
-        Invoke(nameof(HideBadge), 0.7f);
-    }
-
-    private void HideBadge() { if (_badge != null) _badge.style.display = DisplayStyle.None; }
 
     private void SetFeedback(string text, Color color)
     {
