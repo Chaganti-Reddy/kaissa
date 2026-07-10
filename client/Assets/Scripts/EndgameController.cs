@@ -1,5 +1,12 @@
+using System;
 using System.Collections;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Kaissa.Chess.Rules;
 using Kaissa.Training;
+using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -7,20 +14,46 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Endgame picker, redesigned in UI Toolkit: choose an instructive endgame to play out. The chosen
-// FEN is handed to the Play scene via EndgameRoute.
+// Set by a screen before loading the Play scene to start a game from a specific position. Kept for
+// compatibility; the Endgames page now plays drills on its own screen rather than routing to Play.
 public static class EndgameRoute
 {
     public static string Fen;
 }
 
+// Endgames drill trainer, rebuilt to mirror chess.com's Drills: pick an instructive endgame, play it
+// out against Stockfish on this page, and get graded pass/fail against the drill's goal (win / draw /
+// promote). Controls: Retry, Next, Flip, Hint. Works on the 2D or 3D board through IBoardView.
 public sealed class EndgameController : MonoBehaviour
 {
+    private KaissaGame _game;
+    private KaissaAnalysis _analysis;
+    private IBoardView _board;
+    private VisualElement _boardHost;
+    private PieceAudio _audio;
+
+    private EndgamePosition _current;
+    private int _index;
+    private bool _busy, _over, _whiteBottom = true;
+    private string _fen = ChessGame.StartFen;
+    private string _enginePath;
+
+    private VisualElement _root, _list;
+    private VisualElement _sideBadge, _sideDot;
+    private Label _sideText, _title, _goalLabel, _noteLabel, _feedback;
+    private Button _hintBtn, _retryBtn, _nextBtn;
+
+    private static readonly Color Good = new(0.30f, 0.85f, 0.45f, 0.55f);
+    private static readonly Color HintCol = new(0.51f, 0.72f, 0.30f, 0.60f);
+
     private void Start()
     {
         EnsureEventSystem();
         var cam = Camera.main;
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
+
+        _audio = PieceAudio.Attach(gameObject);
+        _enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -30,48 +63,355 @@ public sealed class EndgameController : MonoBehaviour
     private IEnumerator Build(UIDocument doc)
     {
         yield return null;
-        var root = doc.rootVisualElement;
-        root.Clear();
-        root.style.flexDirection = FlexDirection.Row;
-        root.style.flexGrow = 1;
-        root.style.backgroundColor = UiKit.Bg;
-        root.Add(UiKit.NavRail("Endgame"));
+        _root = doc.rootVisualElement;
+        _root.Clear();
+        _root.style.flexDirection = FlexDirection.Row; _root.style.flexGrow = 1; _root.style.backgroundColor = UiKit.Bg;
+        _root.Add(UiKit.NavRail("Endgame"));
+        _root.Add(BuildCenter());
+        _root.Add(BuildRightRail());
 
-        var main = new VisualElement();
-        main.style.flexGrow = 1; UiKit.Pad(main, 26, 34, 40, 34);
-        main.Add(UiKit.Text_("Endgames", 26, UiKit.Text, bold: true));
-        var sub = UiKit.Text_("Play out an instructive endgame against the engine.", 14, UiKit.Dim);
-        sub.style.marginBottom = 18; sub.style.marginTop = 4;
-        main.Add(sub);
+        _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnMove(uci), _audio);
 
-        foreach (var eg in EndgameLibrary.All)
-        {
-            var fen = eg.Fen;
-            var card = UiKit.Col(
-                UiKit.Text_(eg.Name, 17, UiKit.Text, bold: true),
-                Goal(eg.Goal));
-            card.style.backgroundColor = UiKit.Panel;
-            card.style.borderTopWidth = card.style.borderBottomWidth = card.style.borderLeftWidth = card.style.borderRightWidth = 1;
-            card.style.borderTopColor = card.style.borderBottomColor = card.style.borderLeftColor = card.style.borderRightColor = UiKit.Line;
-            UiKit.Pad(card, 16); UiKit.Radius(card, 12);
-            card.style.marginBottom = 12; card.style.maxWidth = 640;
-            card.RegisterCallback<ClickEvent>(_ => { EndgameRoute.Fen = fen; SceneManager.LoadScene("Play"); });
-            main.Add(card);
-        }
-        root.Add(main);
+        StartCoroutine(StartAnalysis());
+        LoadDrill(0);
+
+        if (Environment.GetCommandLineArgs().Contains("-kaissa-endgametest"))
+            StartCoroutine(AutoDemo());
     }
 
-    private static Label Goal(string g)
+    // ---------------- layout ----------------
+
+    private VisualElement BuildCenter()
     {
-        var l = UiKit.Text_(g, 13, UiKit.Dim);
-        l.style.marginTop = 6;
-        return l;
+        var center = new VisualElement();
+        center.style.flexGrow = 1; center.style.alignItems = Align.Center; UiKit.Pad(center, 18, 24, 18, 24);
+
+        _title = UiKit.Text_("Endgames", 24, UiKit.Text, bold: true);
+        _title.style.marginBottom = 8;
+        center.Add(_title);
+
+        var sideRow = UiKit.Row();
+        sideRow.style.width = 480; sideRow.style.justifyContent = Justify.SpaceBetween; sideRow.style.marginBottom = 8;
+        _sideBadge = MakeSideBadge();
+        sideRow.Add(_sideBadge);
+        _goalLabel = UiKit.Text_("", 15, UiKit.Gold, bold: true);
+        sideRow.Add(_goalLabel);
+        center.Add(sideRow);
+
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
+        center.Add(_boardHost);
+
+        _feedback = UiKit.Text_("", 16, UiKit.Dim, bold: true);
+        _feedback.style.marginTop = 10; _feedback.style.unityTextAlign = TextAnchor.MiddleCenter;
+        UiKit.Pad(_feedback, 6, 14, 6, 14); UiKit.Radius(_feedback, 8);
+        center.Add(_feedback);
+
+        var controls = UiKit.Row();
+        controls.style.marginTop = 8;
+        _hintBtn = Ctrl("Hint", ShowHint);
+        _retryBtn = Ctrl("Retry", () => LoadDrill(_index));
+        _nextBtn = Ctrl("Next", NextDrill);
+        controls.Add(_hintBtn); controls.Add(_retryBtn); controls.Add(_nextBtn); controls.Add(Ctrl("Flip", Flip));
+        center.Add(controls);
+        return center;
+    }
+
+    private Button Ctrl(string label, Action onClick)
+    {
+        var b = UiKit.Ghost(label, onClick, 14);
+        b.style.marginLeft = 5; b.style.marginRight = 5; b.style.minWidth = 84;
+        return b;
+    }
+
+    private VisualElement MakeSideBadge()
+    {
+        _sideDot = new VisualElement();
+        _sideDot.style.width = 12; _sideDot.style.height = 12; UiKit.Radius(_sideDot, 6); _sideDot.style.marginRight = 8;
+        _sideDot.style.borderTopWidth = _sideDot.style.borderBottomWidth = _sideDot.style.borderLeftWidth = _sideDot.style.borderRightWidth = 1;
+        _sideDot.style.borderTopColor = _sideDot.style.borderBottomColor = _sideDot.style.borderLeftColor = _sideDot.style.borderRightColor = UiKit.Line;
+        _sideText = UiKit.Text_("", 16, UiKit.Text, bold: true);
+        var row = UiKit.Row(_sideDot, _sideText);
+        UiKit.Pad(row, 6, 12, 6, 12); UiKit.Radius(row, 6);
+        return row;
+    }
+
+    private VisualElement BuildRightRail()
+    {
+        var rail = new VisualElement();
+        rail.style.width = 340; UiKit.Pad(rail, 18, 24, 18, 8);
+
+        var info = Panel(); UiKit.Pad(info, 14, 16, 14, 16);
+        info.Add(UiKit.Text_("Drill", 12, UiKit.Mute, bold: true));
+        _noteLabel = UiKit.Text_("", 13, UiKit.Dim);
+        _noteLabel.style.whiteSpace = WhiteSpace.Normal; _noteLabel.style.marginTop = 6;
+        info.Add(_noteLabel);
+        rail.Add(info);
+
+        var listPanel = Panel(); listPanel.style.marginTop = 14; UiKit.Pad(listPanel, 12, 14, 12, 14);
+        listPanel.Add(UiKit.Text_("All endgames", 12, UiKit.Mute, bold: true));
+        var scroll = new ScrollView(); scroll.style.maxHeight = 520; scroll.style.marginTop = 6;
+        _list = scroll.contentContainer;
+        listPanel.Add(scroll);
+        rail.Add(listPanel);
+
+        PopulateList();
+        return rail;
+    }
+
+    private void PopulateList()
+    {
+        _list.Clear();
+        foreach (var cat in EndgameLibrary.Categories)
+        {
+            var header = UiKit.Text_(cat, 12, UiKit.Mute, bold: true);
+            header.style.marginTop = 8; header.style.marginBottom = 2;
+            _list.Add(header);
+            foreach (var e in EndgameLibrary.InCategory(cat))
+            {
+                int idx = IndexOf(e);
+                var row = UiKit.Row(UiKit.Text_(e.Name, 14, UiKit.Text));
+                UiKit.Pad(row, 7, 10, 7, 10); UiKit.Radius(row, 6);
+                row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
+                row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
+                row.RegisterCallback<ClickEvent>(_ => LoadDrill(idx));
+                UiKit.Interactive(row, 1.02f);
+                _list.Add(row);
+            }
+        }
+    }
+
+    private static int IndexOf(EndgamePosition e)
+    {
+        for (int i = 0; i < EndgameLibrary.All.Count; i++)
+            if (EndgameLibrary.All[i].Id == e.Id) return i;
+        return 0;
+    }
+
+    private static VisualElement Panel()
+    {
+        var p = new VisualElement();
+        p.style.backgroundColor = UiKit.Panel;
+        p.style.borderTopWidth = p.style.borderBottomWidth = p.style.borderLeftWidth = p.style.borderRightWidth = 1;
+        p.style.borderTopColor = p.style.borderBottomColor = p.style.borderLeftColor = p.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(p, 12);
+        return p;
+    }
+
+    // ---------------- drill lifecycle ----------------
+
+    private async void LoadDrill(int index)
+    {
+        if (EndgameLibrary.All.Count == 0) return;
+        _index = (index % EndgameLibrary.All.Count + EndgameLibrary.All.Count) % EndgameLibrary.All.Count;
+        _current = EndgameLibrary.All[_index];
+        _over = false; _busy = true;
+        _title.text = _current.Name;
+        _goalLabel.text = _current.GoalText;
+        _noteLabel.text = _current.Note;
+        SetFeedback("Starting engine...", UiKit.Dim);
+        _whiteBottom = _current.PlayerWhite;
+
+        if (_game != null) { var g = _game; _game = null; _ = g.DisposeAsync(); }
+
+        if (!File.Exists(_enginePath))
+        {
+            SetFeedback("Stockfish not found. Run scripts/build-unity-plugins.ps1.", UiKit.Danger);
+            _board.Render(_current.Fen, canMove: false, lastMove: null, whiteBottom: _whiteBottom);
+            _busy = false; return;
+        }
+
+        var side = _current.PlayerWhite ? Side.White : Side.Black;
+        try
+        {
+            _game = await KaissaGame.StartAsync(_enginePath, side, 1500,
+                fen: _current.Fen, botThinkTime: TimeSpan.FromMilliseconds(300), fixedOpponentElo: 2200);
+        }
+        catch (Exception e) { SetFeedback("Engine failed to start.", UiKit.Danger); Debug.LogError(e); _busy = false; return; }
+
+        _fen = _game.Board.Fen;
+        _board.Render(_fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
+        UpdateSideBadge();
+        SetFeedback(_current.GoalText + ".", UiKit.Dim);
+        _busy = false;
+    }
+
+    private void NextDrill() => LoadDrill(_index + 1);
+
+    private async void OnMove(string uci)
+    {
+        if (_busy || _over || _game == null) return;
+        _busy = true;
+
+        var afterFen = ApplyMove(_fen, uci);
+        if (afterFen != null) _board.Render(afterFen, canMove: false, lastMove: uci, whiteBottom: _whiteBottom);
+
+        MoveOutcome outcome;
+        try { outcome = await _game.PlayAsync(uci); }
+        catch (Exception e) { Debug.LogError(e); _busy = false; return; }
+
+        if (!outcome.Accepted)
+        {
+            _board.Render(_fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
+            SetFeedback("Illegal move.", UiKit.Danger);
+            _busy = false; return;
+        }
+
+        _fen = outcome.Board.Fen;
+        _board.Render(_fen, canMove: !outcome.IsGameOver, lastMove: outcome.BotMove ?? uci, whiteBottom: _whiteBottom);
+        UpdateSideBadge();
+
+        var result = DrillEvaluator.Evaluate(_fen, _current.PlayerWhite, _current.Goal);
+        if (result == DrillOutcome.Passed) Conclude(true);
+        else if (result == DrillOutcome.Failed) Conclude(false);
+        else { SetFeedback(_current.GoalText + ".", UiKit.Dim); _audio.PlayMove(); }
+        _busy = false;
+    }
+
+    private void Conclude(bool passed)
+    {
+        _over = true;
+        SetFeedback(passed ? "Solved! Goal achieved." : "Not this time - Retry.", passed ? UiKit.GreenHi : UiKit.Danger);
+        if (passed) { _audio.PlayCorrect(); TintLastMove(Good); } else _audio.PlayWrong();
+        Enable(_hintBtn, false);
+    }
+
+    // ---------------- controls ----------------
+
+    private IEnumerator StartAnalysis()
+    {
+        if (!File.Exists(_enginePath)) yield break;
+        var task = KaissaAnalysis.StartAsync(_enginePath);
+        while (!task.IsCompleted) yield return null;
+        if (task.IsFaulted) { Debug.LogWarning(task.Exception?.Message); yield break; }
+        _analysis = task.Result;
+    }
+
+    private async void ShowHint()
+    {
+        if (_analysis == null || _over || _game == null) return;
+        try
+        {
+            var line = await _analysis.EvaluateAsync(_fen, depth: 14, CancellationToken.None);
+            var best = line.BestMove;
+            if (!string.IsNullOrEmpty(best) && best.Length >= 4)
+            {
+                _board.HighlightSquare(best.Substring(0, 2), HintCol);
+                SetFeedback("Try the highlighted piece.", UiKit.Dim);
+            }
+        }
+        catch (Exception e) { Debug.LogWarning(e.Message); }
+    }
+
+    private void Flip()
+    {
+        _whiteBottom = !_whiteBottom;
+        _board.Render(_fen, canMove: !_over && !_busy, lastMove: null, whiteBottom: _whiteBottom);
+    }
+
+    private void Enable(Button b, bool on) { if (b != null) { b.SetEnabled(on); b.style.opacity = on ? 1f : 0.45f; } }
+
+    private void UpdateSideBadge()
+    {
+        bool white = IsWhiteToMove(_fen);
+        _sideText.text = white ? "White to move" : "Black to move";
+        _sideDot.style.backgroundColor = white ? Color.white : new Color(0.10f, 0.10f, 0.12f);
+        _sideBadge.style.backgroundColor = white ? new Color(1, 1, 1, 0.12f) : new Color(0, 0, 0, 0.28f);
+    }
+
+    private void SetFeedback(string text, Color color)
+    {
+        _feedback.text = text; _feedback.style.color = color;
+        _feedback.style.backgroundColor = string.IsNullOrEmpty(text) ? new Color(0, 0, 0, 0) : new Color(0, 0, 0, 0.55f);
+    }
+
+    private void TintLastMove(Color c)
+    {
+        // Best-effort: highlight the player's last move squares if known via move history.
+        var hist = _game?.MoveHistory;
+        if (hist is { Count: > 0 })
+        {
+            var m = hist[hist.Count - 1];
+            if (m.Length >= 4) { _board.HighlightSquare(m.Substring(0, 2), c); _board.HighlightSquare(m.Substring(2, 2), c); }
+        }
+    }
+
+    private static bool IsWhiteToMove(string fen)
+    {
+        var p = fen.Split(' ');
+        return p.Length < 2 || p[1] != "b";
+    }
+
+    private static string ApplyMove(string fen, string uci)
+    {
+        try { var g = ChessGame.FromFen(fen); if (g.TryMakeMove(uci)) return g.Fen; }
+        catch { }
+        return null;
     }
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            SceneManager.LoadScene("Menu");
+        var kb = Keyboard.current;
+        if (kb == null) return;
+        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        else if (kb.fKey.wasPressedThisFrame) Flip();
+        else if (kb.rKey.wasPressedThisFrame) LoadDrill(_index);
+        else if (kb.nKey.wasPressedThisFrame) NextDrill();
+    }
+
+    // ---------------- self-test ----------------
+
+    private IEnumerator AutoDemo()
+    {
+        string dir = ArgValue("-shotdir") ?? Path.Combine(Application.persistentDataPath, "shots");
+        Directory.CreateDirectory(dir);
+        string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_warmup.png"));
+        yield return new WaitForSeconds(2.5f); // let the first drill + engine start
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_start.png"));
+        yield return new WaitForSeconds(0.5f);
+
+        // Load the promotion drill (deterministic: one move to pass).
+        int promo = IndexOf(EndgameLibrary.ById("kp_promote"));
+        LoadDrill(promo);
+        yield return new WaitForSeconds(2.5f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_drill.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Hint, then solve by promoting.
+        ShowHint();
+        yield return new WaitForSeconds(1.2f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_hint.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        OnMove("e7e8q");
+        yield return new WaitForSeconds(1.6f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_passed.png"));
+        yield return new WaitForSeconds(0.5f);
+
+        // Retry resets the drill.
+        LoadDrill(promo);
+        yield return new WaitForSeconds(2.2f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_retry.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Next + flip.
+        NextDrill();
+        yield return new WaitForSeconds(2.2f);
+        Flip();
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_next_flip.png"));
+        yield return new WaitForSeconds(0.5f);
+        Application.Quit();
+    }
+
+    private static string ArgValue(string key)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == key) return args[i + 1];
+        return null;
     }
 
     private static void EnsureEventSystem()
