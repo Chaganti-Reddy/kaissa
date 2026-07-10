@@ -422,11 +422,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _masteryBody = scroll.contentContainer;
         mastery.Add(scroll);
         rail.Add(mastery);
-
-        // picker overlay host (theme / difficulty dropdowns)
-        _pickerHost = new VisualElement();
-        _pickerHost.style.position = Position.Absolute; _pickerHost.style.display = DisplayStyle.None;
-        rail.Add(_pickerHost);
         return rail;
     }
 
@@ -716,36 +711,38 @@ public sealed class KaissaBoardController : MonoBehaviour
 
     private void ToggleThemePicker()
     {
-        if (_pickerHost.style.display == DisplayStyle.Flex) { HidePicker(); return; }
-        _pickerHost.Clear();
-        var panel = PickerPanel("Choose a theme");
+        if (_pickerHost != null) { HidePicker(); return; }
+        var (panel, body) = PickerPanel("Choose a theme");
         foreach (var pid in _trainer.Library.Patterns)
         {
             var p = _trainer.Library.Describe(pid);
-            panel.Add(PickerRow(p.Name, () => SwitchMode(Mode.Theme, pid.Value, p.Name)));
+            body.Add(PickerRow(p.Name, () => SwitchMode(Mode.Theme, pid.Value, p.Name)));
         }
         ShowPicker(panel);
     }
 
     private void ToggleDifficultyPicker()
     {
-        if (_pickerHost.style.display == DisplayStyle.Flex) { HidePicker(); return; }
-        _pickerHost.Clear();
-        var panel = PickerPanel("Choose a difficulty");
-        panel.Add(PickerRow("Easy  (600-1100)", () => { HidePicker(); LoadDifficultyFeed(600, 1100, "Easy"); }));
-        panel.Add(PickerRow("Medium  (1100-1600)", () => { HidePicker(); LoadDifficultyFeed(1100, 1600, "Medium"); }));
-        panel.Add(PickerRow("Hard  (1600-2100)", () => { HidePicker(); LoadDifficultyFeed(1600, 2100, "Hard"); }));
-        panel.Add(PickerRow("Expert  (2100-2600)", () => { HidePicker(); LoadDifficultyFeed(2100, 2600, "Expert"); }));
+        if (_pickerHost != null) { HidePicker(); return; }
+        var (panel, body) = PickerPanel("Choose a difficulty");
+        body.Add(PickerRow("Easy  (600-1100)", () => { HidePicker(); LoadDifficultyFeed(600, 1100, "Easy"); }));
+        body.Add(PickerRow("Medium  (1100-1600)", () => { HidePicker(); LoadDifficultyFeed(1100, 1600, "Medium"); }));
+        body.Add(PickerRow("Hard  (1600-2100)", () => { HidePicker(); LoadDifficultyFeed(1600, 2100, "Hard"); }));
+        body.Add(PickerRow("Expert  (2100-2600)", () => { HidePicker(); LoadDifficultyFeed(2100, 2600, "Expert"); }));
         ShowPicker(panel);
     }
 
-    private VisualElement PickerPanel(string title)
+    // Returns the outer panel (for ShowPicker) and an inner scrollable body to add rows to, so a long
+    // list (e.g. all themes) scrolls inside a bounded modal instead of overflowing the screen.
+    private (VisualElement panel, VisualElement body) PickerPanel(string title)
     {
         var panel = Panel();
-        panel.style.width = 300; UiKit.Pad(panel, 10, 12, 10, 12);
+        panel.style.width = 320; UiKit.Pad(panel, 10, 12, 10, 12); panel.style.maxHeight = 620;
         var h = UiKit.Text_(title, 13, UiKit.Mute, bold: true); h.style.marginBottom = 6;
         panel.Add(h);
-        return panel;
+        var scroll = new ScrollView(); scroll.style.maxHeight = 560;
+        panel.Add(scroll);
+        return (panel, scroll.contentContainer);
     }
 
     private VisualElement PickerRow(string label, Action onClick)
@@ -760,15 +757,26 @@ public sealed class KaissaBoardController : MonoBehaviour
         return row;
     }
 
+    // A centered modal overlay (dim + panel), so the picker never overlaps the right-rail panels.
     private void ShowPicker(VisualElement panel)
     {
-        _pickerHost.Clear();
-        _pickerHost.Add(panel);
-        _pickerHost.style.top = 60; _pickerHost.style.right = 24;
-        _pickerHost.style.display = DisplayStyle.Flex;
+        HidePicker();
+        var dim = new VisualElement();
+        dim.style.position = Position.Absolute;
+        dim.style.left = 0; dim.style.top = 0; dim.style.right = 0; dim.style.bottom = 0;
+        dim.style.backgroundColor = new Color(0, 0, 0, 0.6f);
+        dim.style.alignItems = Align.Center; dim.style.justifyContent = Justify.Center;
+        dim.RegisterCallback<ClickEvent>(e => { if (e.target == dim) HidePicker(); }); // click backdrop to close
+        dim.Add(panel);
+        _pickerHost = dim;
+        _root.Add(dim);
     }
 
-    private void HidePicker() => _pickerHost.style.display = DisplayStyle.None;
+    private void HidePicker()
+    {
+        if (_pickerHost != null && _pickerHost.parent != null) _pickerHost.parent.Remove(_pickerHost);
+        _pickerHost = null;
+    }
 
     // ---------------- info / progression ----------------
 
