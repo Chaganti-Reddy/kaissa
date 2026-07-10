@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
-using Kaissa.Training.Api;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -10,22 +11,43 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Opening repertoire trainer, redesigned in UI Toolkit + the 2D board. Recall your own moves from
-// your repertoire, spaced-repetition scheduled; a wrong recall shows the book move and resurfaces it.
+// Openings page, rebuilt to mirror chess.com's opening surface and layered with Kaissa's training.
+// Three modes share the board (IBoardView, so 2D or 3D):
+//   Explore - play any moves; the current position is named (ECO + opening) and its book continuations
+//             are listed with the opening each leads to; click one to play it.
+//   Learn   - browse 3,790 named openings grouped by first move, search by name, and step a mainline.
+//   Drill   - spaced-repetition recall of your repertoire lines (find the book move).
+// The opening book is the CC0 Lichess dataset, loaded off the main thread so the scene stays responsive.
 public sealed class OpeningController : MonoBehaviour
 {
-    private OpeningProgress _progress;
-    private RepertoireSession _session;
-    private RepertoireCard _card;
+    private enum Mode { Explore, Learn, Drill }
+
+    private OpeningBook _book;
     private IBoardView _board;
     private VisualElement _boardHost;
     private PieceAudio _audio;
-    private bool _busy;
-    private float _shownTime;
     private bool _whiteBottom = true;
 
-    private Label _prompt;
-    private Label _feedback;
+    // explore / learn shared played path
+    private readonly List<string> _path = new(); // UCI from the start
+    private string _fen = ChessGame.StartFen;
+
+    // learn
+    private OpeningEntry _learnLine;
+    private int _learnPly;
+
+    // drill
+    private OpeningProgress _progress;
+    private RepertoireSession _repertoire;
+    private RepertoireCard _card;
+    private float _shownTime;
+    private bool _drillBusy;
+
+    private Mode _mode = Mode.Explore;
+
+    private VisualElement _root, _rightRail;
+    private Label _title, _nameLabel, _ecoLabel, _feedback, _statusHint, _historyBar;
+    private VisualElement _tabExplore, _tabLearn, _tabDrill;
 
     private void Start()
     {
@@ -34,9 +56,6 @@ public sealed class OpeningController : MonoBehaviour
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
         _audio = PieceAudio.Attach(gameObject);
-        _progress = KaissaOpenings.Load();
-        _session = new RepertoireSession(OpeningRepertoire.Default, _progress, new SystemClock());
-
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
         StartCoroutine(Build(doc));
@@ -45,62 +64,547 @@ public sealed class OpeningController : MonoBehaviour
     private IEnumerator Build(UIDocument doc)
     {
         yield return null;
-        var root = doc.rootVisualElement;
-        root.Clear();
-        root.style.flexDirection = FlexDirection.Row; root.style.flexGrow = 1; root.style.backgroundColor = UiKit.Bg;
-        root.Add(UiKit.NavRail("Opening"));
+        _root = doc.rootVisualElement;
+        _root.Clear();
+        _root.style.flexDirection = FlexDirection.Row; _root.style.flexGrow = 1; _root.style.backgroundColor = UiKit.Bg;
+        _root.Add(UiKit.NavRail("Opening"));
+        _root.Add(BuildCenter());
+        _root.Add(BuildRightRail());
 
+        _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnPlayerMove(uci), _audio);
+        _board.Render(ChessGame.StartFen, canMove: true, lastMove: null, whiteBottom: true);
+        var loading = UiKit.Text_("Loading openings...", 15, UiKit.Dim);
+        _rightRail.Add(loading);
+        yield return null;
+
+        // Parse fast, then build the position tree a chunk per frame. The rules engine used to build
+        // the tree is not thread-safe (a background Task.Run deadlocks in the player), so we spread the
+        // work across frames on the main thread instead - the window stays responsive, no freeze.
+        OpeningBook book;
+        try { book = OpeningBook.LoadDeferredDefault(); }
+        catch (Exception e) { loading.text = "Opening book failed to load."; Debug.LogError(e); yield break; }
+
+        int total = book.All.Count, done = 0;
+        var steps = book.BuildTreeChunked(80);
+        while (steps.MoveNext() && steps.Current)
+        {
+            done += 80;
+            loading.text = $"Loading openings... {Mathf.Min(100, done * 100 / Mathf.Max(1, total))}%";
+            yield return null;
+        }
+        _book = book;
+
+        _progress = KaissaOpenings.Load();
+        _repertoire = new RepertoireSession(OpeningRepertoire.Default, _progress, new SystemClock());
+
+        SetMode(Mode.Explore);
+
+        if (Environment.GetCommandLineArgs().Contains("-kaissa-openingtest"))
+            StartCoroutine(AutoDemo());
+    }
+
+    // Self-test: exercises every mode and control with dense burst recording so the whole page can be
+    // verified frame-by-frame without a human (2D and 3D).
+    private IEnumerator AutoDemo()
+    {
+        string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
+        System.IO.Directory.CreateDirectory(dir);
+        string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_warmup.png"));
+        yield return new WaitForSeconds(0.6f);
+
+        // Explore: start position + book moves.
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_start.png"));
+        yield return new WaitForSeconds(0.5f);
+
+        // Play into the Italian Game, filming each move.
+        foreach (var mv in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" })
+        {
+            PlayUci(mv);
+            yield return Burst(dir, $"op_{tag}_explore_{mv}", 5, 0.05f);
+        }
+        yield return new WaitForSeconds(0.4f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_named.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Back one move.
+        Back();
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_back.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Learn: browse + search + load a line + step.
+        SetMode(Mode.Learn);
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_list.png"));
+        yield return new WaitForSeconds(0.5f);
+
+        PopulateOpenings("Sicilian");
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_search.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        var line = _book.All.FirstOrDefault(e => e.Name.StartsWith("Sicilian Defense: Najdorf", StringComparison.Ordinal))
+                   ?? _book.All.First(e => e.Uci.Count >= 4);
+        LoadLearnLine(line);
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_loaded.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        LearnPrev(); yield return new WaitForSeconds(0.4f);
+        LearnPrev(); yield return new WaitForSeconds(0.4f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_prev.png"));
+        yield return new WaitForSeconds(0.4f);
+        LearnNext(); yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_next.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Drill: a correct recall, then a wrong one.
+        SetMode(Mode.Drill);
+        yield return new WaitForSeconds(0.7f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_drill_prompt.png"));
+        yield return new WaitForSeconds(0.4f);
+        if (_card != null)
+        {
+            OnDrillMove(_card.ExpectedMove);
+            yield return Burst(dir, $"op_{tag}_drill_correct", 6, 0.06f);
+        }
+        yield return new WaitForSeconds(1.0f);
+        if (_card != null)
+        {
+            var wrong = FirstLegalOtherThan(_card.Fen, _card.ExpectedMove);
+            if (wrong != null) OnDrillMove(wrong);
+            yield return Burst(dir, $"op_{tag}_drill_wrong", 6, 0.06f);
+        }
+        yield return new WaitForSeconds(0.8f);
+
+        // Flip (back in Explore).
+        SetMode(Mode.Explore);
+        yield return new WaitForSeconds(0.4f);
+        Flip();
+        yield return new WaitForSeconds(0.7f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_flip.png"));
+        yield return new WaitForSeconds(0.5f);
+        Application.Quit();
+    }
+
+    private IEnumerator Burst(string dir, string prefix, int count, float interval)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"{prefix}_{i:000}.png"));
+            yield return new WaitForSeconds(interval);
+        }
+    }
+
+    private static string FirstLegalOtherThan(string fen, string notUci)
+    {
+        foreach (var mv in ChessGame.FromFen(fen).LegalUciMoves())
+            if (!string.Equals(mv, notUci, StringComparison.OrdinalIgnoreCase))
+                return mv;
+        return null;
+    }
+
+    private static string ArgValue(string key)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == key) return args[i + 1];
+        return null;
+    }
+
+    // ---------------- layout ----------------
+
+    private VisualElement BuildCenter()
+    {
         var center = new VisualElement();
-        center.style.flexGrow = 1; center.style.alignItems = Align.Center; UiKit.Pad(center, 22, 24, 22, 24);
-        center.Add(UiKit.Text_("Openings", 24, UiKit.Text, bold: true));
-        _prompt = UiKit.Text_("", 15, UiKit.Dim); _prompt.style.marginBottom = 12; _prompt.style.marginTop = 4;
-        center.Add(_prompt);
+        center.style.flexGrow = 1; center.style.alignItems = Align.Center; UiKit.Pad(center, 18, 24, 18, 24);
+
+        var head = UiKit.Row();
+        head.style.width = 480; head.style.justifyContent = Justify.SpaceBetween; head.style.marginBottom = 10;
+        _title = UiKit.Text_("Openings", 24, UiKit.Text, bold: true);
+        head.Add(_title);
+        var tabs = UiKit.Row();
+        _tabExplore = Tab("Explore", () => SetMode(Mode.Explore));
+        _tabLearn = Tab("Learn", () => SetMode(Mode.Learn));
+        _tabDrill = Tab("Drill", () => SetMode(Mode.Drill));
+        tabs.Add(_tabExplore); tabs.Add(_tabLearn); tabs.Add(_tabDrill);
+        head.Add(tabs);
+        center.Add(head);
 
         _boardHost = new VisualElement();
         _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
         center.Add(_boardHost);
 
-        _feedback = UiKit.Text_("", 16, UiKit.Dim, bold: true);
-        _feedback.style.marginTop = 12; _feedback.style.unityTextAlign = TextAnchor.MiddleCenter;
-        center.Add(_feedback);
-        root.Add(center);
+        _historyBar = UiKit.Text_("", 14, UiKit.Dim);
+        _historyBar.style.marginTop = 10; _historyBar.style.width = 480; _historyBar.style.whiteSpace = WhiteSpace.Normal;
+        _historyBar.style.unityTextAlign = TextAnchor.MiddleCenter; _historyBar.style.minHeight = 20;
+        center.Add(_historyBar);
 
-        _board = BoardMount.Create(gameObject, _boardHost, root, uci => OnPlayerMove(uci), _audio);
-        NextCard();
+        _feedback = UiKit.Text_("", 15, UiKit.Dim, bold: true);
+        _feedback.style.marginTop = 6; _feedback.style.unityTextAlign = TextAnchor.MiddleCenter; _feedback.style.minHeight = 20;
+        center.Add(_feedback);
+
+        var controls = UiKit.Row();
+        controls.style.marginTop = 8;
+        controls.Add(Ctrl("Back", Back));
+        controls.Add(Ctrl("Reset", ResetToStart));
+        controls.Add(Ctrl("Flip", Flip));
+        center.Add(controls);
+        return center;
     }
 
-    private void NextCard()
+    private VisualElement Tab(string label, Action onClick)
     {
-        _card = _session.Next();
-        if (_card == null) { _prompt.text = "No repertoire lines."; return; }
+        var b = UiKit.Ghost(label, onClick, 13);
+        b.style.marginLeft = 6; UiKit.Pad(b, 6, 12, 6, 12);
+        return b;
+    }
+
+    private Button Ctrl(string label, Action onClick)
+    {
+        var b = UiKit.Ghost(label, onClick, 14);
+        b.style.marginLeft = 5; b.style.marginRight = 5; b.style.minWidth = 84;
+        return b;
+    }
+
+    private VisualElement BuildRightRail()
+    {
+        _rightRail = new VisualElement();
+        _rightRail.style.width = 360; UiKit.Pad(_rightRail, 18, 24, 18, 8);
+        return _rightRail;
+    }
+
+    private static VisualElement Panel()
+    {
+        var p = new VisualElement();
+        p.style.backgroundColor = UiKit.Panel;
+        p.style.borderTopWidth = p.style.borderBottomWidth = p.style.borderLeftWidth = p.style.borderRightWidth = 1;
+        p.style.borderTopColor = p.style.borderBottomColor = p.style.borderLeftColor = p.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(p, 12);
+        return p;
+    }
+
+    // ---------------- mode switching ----------------
+
+    private void SetMode(Mode m)
+    {
+        _mode = m;
+        HighlightTab(_tabExplore, m == Mode.Explore);
+        HighlightTab(_tabLearn, m == Mode.Learn);
+        HighlightTab(_tabDrill, m == Mode.Drill);
+        _feedback.text = "";
+        _rightRail.Clear();
+
+        switch (m)
+        {
+            case Mode.Explore: EnterExplore(); break;
+            case Mode.Learn: EnterLearn(); break;
+            case Mode.Drill: EnterDrill(); break;
+        }
+    }
+
+    private static void HighlightTab(VisualElement tab, bool on)
+    {
+        tab.style.backgroundColor = on ? UiKit.Green : UiKit.Panel2;
+    }
+
+    // ---------------- explore ----------------
+
+    private VisualElement _bookList;
+
+    private void EnterExplore()
+    {
+        ResetToStart();
+
+        var info = Panel(); UiKit.Pad(info, 14, 16, 14, 16);
+        _nameLabel = UiKit.Text_("Starting position", 18, UiKit.Text, bold: true);
+        _nameLabel.style.whiteSpace = WhiteSpace.Normal;
+        info.Add(_nameLabel);
+        _ecoLabel = UiKit.Text_("", 13, UiKit.Gold, bold: true);
+        info.Add(_ecoLabel);
+        _rightRail.Add(info);
+
+        var book = Panel(); book.style.marginTop = 14; UiKit.Pad(book, 12, 14, 12, 14);
+        book.Add(UiKit.Text_("Book moves", 12, UiKit.Mute, bold: true));
+        var scroll = new ScrollView(); scroll.style.maxHeight = 460; scroll.style.marginTop = 6;
+        _bookList = scroll.contentContainer;
+        book.Add(scroll);
+        _rightRail.Add(book);
+
+        RefreshExplore();
+    }
+
+    private void RefreshExplore()
+    {
+        var named = _book.Name(_fen);
+        if (named != null) { _nameLabel.text = named.Name; _ecoLabel.text = named.Eco; }
+        else if (_path.Count == 0) { _nameLabel.text = "Starting position"; _ecoLabel.text = ""; }
+        // else: keep the last known name (we're in a sub-line the book doesn't name)
+
+        _bookList.Clear();
+        var conts = _book.Continuations(_fen);
+        if (conts.Count == 0)
+            _bookList.Add(UiKit.Text_("Out of book - free play.", 13, UiKit.Mute));
+        foreach (var c in conts.OrderByDescending(c => c.Name != null))
+            _bookList.Add(BookRow(c));
+
+        UpdateHistory();
+    }
+
+    private VisualElement BookRow(OpeningMove c)
+    {
+        var row = UiKit.Row();
+        row.style.justifyContent = Justify.SpaceBetween;
+        UiKit.Pad(row, 7, 10, 7, 10); UiKit.Radius(row, 6);
+        var san = UiKit.Text_(c.San, 14, UiKit.Text, bold: true); san.style.minWidth = 54;
+        row.Add(san);
+        var name = UiKit.Text_(c.Name ?? "", 12, UiKit.Dim); name.style.whiteSpace = WhiteSpace.Normal; name.style.flexGrow = 1;
+        name.style.unityTextAlign = TextAnchor.MiddleRight;
+        row.Add(name);
+        row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
+        row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
+        row.RegisterCallback<ClickEvent>(_ => PlayUci(c.Uci));
+        return row;
+    }
+
+    // ---------------- learn ----------------
+
+    private VisualElement _openingList;
+
+    private void EnterLearn()
+    {
+        ResetToStart();
+        _learnLine = null; _learnPly = 0;
+
+        var pick = Panel(); UiKit.Pad(pick, 12, 14, 12, 14);
+        pick.Add(UiKit.Text_("Choose an opening", 12, UiKit.Mute, bold: true));
+        var search = new TextField { value = "" };
+        search.style.marginTop = 6; search.style.marginBottom = 6;
+        search.RegisterValueChangedCallback(e => PopulateOpenings(e.newValue));
+        pick.Add(search);
+        var scroll = new ScrollView(); scroll.style.maxHeight = 420;
+        _openingList = scroll.contentContainer;
+        pick.Add(scroll);
+        _rightRail.Add(pick);
+
+        // current line info reuses the name/eco labels
+        var info = Panel(); info.style.marginTop = 14; UiKit.Pad(info, 12, 14, 12, 14);
+        _nameLabel = UiKit.Text_("Pick an opening to study", 16, UiKit.Text, bold: true);
+        _nameLabel.style.whiteSpace = WhiteSpace.Normal;
+        info.Add(_nameLabel);
+        _ecoLabel = UiKit.Text_("", 13, UiKit.Gold, bold: true);
+        info.Add(_ecoLabel);
+        var stepRow = UiKit.Row(); stepRow.style.marginTop = 8;
+        stepRow.Add(Ctrl("Prev", LearnPrev));
+        stepRow.Add(Ctrl("Next", LearnNext));
+        info.Add(stepRow);
+        _rightRail.Add(info);
+
+        PopulateOpenings("");
+        UpdateHistory();
+    }
+
+    private void PopulateOpenings(string filter)
+    {
+        _openingList.Clear();
+        filter = filter?.Trim() ?? "";
+        int shown = 0;
+        foreach (var (group, entries) in _book.Grouped())
+        {
+            var matches = string.IsNullOrEmpty(filter)
+                ? entries
+                : entries.Where(e => e.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            if (matches.Count == 0) continue;
+
+            var header = UiKit.Text_(group, 12, UiKit.Mute, bold: true);
+            header.style.marginTop = 6; header.style.marginBottom = 2;
+            _openingList.Add(header);
+
+            foreach (var e in matches)
+            {
+                if (shown++ > 400) return; // keep the list responsive; searching narrows it
+                _openingList.Add(OpeningRow(e));
+            }
+        }
+    }
+
+    private VisualElement OpeningRow(OpeningEntry e)
+    {
+        var row = UiKit.Row();
+        UiKit.Pad(row, 6, 8, 6, 8); UiKit.Radius(row, 5);
+        var eco = UiKit.Text_(e.Eco, 11, UiKit.Gold, bold: true); eco.style.minWidth = 34;
+        row.Add(eco);
+        var name = UiKit.Text_(e.Name, 13, UiKit.Text); name.style.whiteSpace = WhiteSpace.Normal; name.style.flexGrow = 1;
+        row.Add(name);
+        row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
+        row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
+        row.RegisterCallback<ClickEvent>(_ => LoadLearnLine(e));
+        return row;
+    }
+
+    private void LoadLearnLine(OpeningEntry e)
+    {
+        _learnLine = e; _learnPly = e.Uci.Count;
+        _nameLabel.text = e.Name; _ecoLabel.text = e.Eco;
+        RebuildFromLearn();
+    }
+
+    private void LearnNext()
+    {
+        if (_learnLine == null || _learnPly >= _learnLine.Uci.Count) return;
+        _learnPly++; RebuildFromLearn();
+    }
+
+    private void LearnPrev()
+    {
+        if (_learnLine == null || _learnPly <= 0) return;
+        _learnPly--; RebuildFromLearn();
+    }
+
+    private void RebuildFromLearn()
+    {
+        _path.Clear();
+        for (int i = 0; i < _learnPly && i < _learnLine.Uci.Count; i++) _path.Add(_learnLine.Uci[i]);
+        _fen = FenOf(_path);
+        _whiteBottom = _learnLine.Uci.Count == 0 || _learnLine.Uci[0][1] != '7'; // white lines bottom; simple heuristic
+        var last = _path.Count > 0 ? _path[^1] : null;
+        _board.Render(_fen, canMove: false, lastMove: last, whiteBottom: _whiteBottom);
+        _feedback.style.color = UiKit.Dim;
+        _feedback.text = $"Move {_learnPly} / {_learnLine.Uci.Count}";
+        UpdateHistory();
+    }
+
+    // ---------------- drill ----------------
+
+    private void EnterDrill()
+    {
+        var panel = Panel(); UiKit.Pad(panel, 14, 16, 14, 16);
+        panel.Add(UiKit.Text_("Repertoire drill", 16, UiKit.Text, bold: true));
+        var sub = UiKit.Text_("Recall your book move. Misses come back sooner.", 13, UiKit.Dim);
+        sub.style.whiteSpace = WhiteSpace.Normal; sub.style.marginTop = 4;
+        panel.Add(sub);
+        _statusHint = UiKit.Text_("", 14, UiKit.Gold, bold: true); _statusHint.style.marginTop = 10;
+        panel.Add(_statusHint);
+        _rightRail.Add(panel);
+
+        _drillBusy = false;
+        DrillNext();
+    }
+
+    private void DrillNext()
+    {
+        if (_mode != Mode.Drill) return; // guard: a late coroutine must not clobber another mode
+        _card = _repertoire.Next();
+        if (_card == null) { _feedback.text = "No repertoire lines due."; return; }
         _shownTime = Time.time;
         _whiteBottom = _card.WhiteToMove;
+        _fen = _card.Fen; _path.Clear();
         _board.Render(_card.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
-        _prompt.text = $"{_card.LineName} — your move   ·   {_session.DueCount} due";
+        _feedback.style.color = UiKit.Dim;
+        _feedback.text = $"{_card.LineName} - your move";
+        _statusHint.text = $"{_repertoire.DueCount} due";
+        UpdateHistory();
     }
+
+    private void OnDrillMove(string uci)
+    {
+        if (_drillBusy || _card == null) return;
+        _drillBusy = true;
+        var result = _repertoire.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime));
+        KaissaOpenings.Save(_progress);
+        var after = ApplyMove(_card.Fen, uci);
+        if (after != null) _board.Render(after, false, uci, _whiteBottom);
+        _feedback.style.color = result.Correct ? UiKit.GreenHi : UiKit.Danger;
+        _feedback.text = result.Correct ? $"{_card.LineName} - correct" : $"Book move was {result.ExpectedMove}";
+        if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
+        StartCoroutine(DrillNextAfter(result.Correct ? 0.8f : 1.7f));
+    }
+
+    private IEnumerator DrillNextAfter(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        if (_mode != Mode.Drill) yield break; // mode switched while waiting; don't touch the board
+        _feedback.text = "";
+        _drillBusy = false;
+        DrillNext();
+    }
+
+    // ---------------- board input / shared ----------------
 
     private void OnPlayerMove(string uci)
     {
-        if (_busy || _card == null) return;
-        _busy = true;
-        var result = _session.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime));
-        KaissaOpenings.Save(_progress);
-
-        var afterFen = ApplyMove(_card.Fen, uci);
-        if (afterFen != null) _board.Render(afterFen, false, uci, _whiteBottom);
-
-        _feedback.style.color = result.Correct ? UiKit.GreenHi : UiKit.Danger;
-        _feedback.text = result.Correct ? $"{_card.LineName} — correct" : $"Book move was {result.ExpectedMove}";
-        if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
-        StartCoroutine(NextAfter(result.Correct ? 0.8f : 1.7f));
+        if (_book == null) return;
+        if (_mode == Mode.Drill) { OnDrillMove(uci); return; }
+        PlayUci(uci); // explore + learn: play a move onto the current path
     }
 
-    private IEnumerator NextAfter(float seconds)
+    private void PlayUci(string uci)
     {
-        yield return new WaitForSeconds(seconds);
-        _feedback.text = "";
-        _busy = false;
-        NextCard();
+        var after = ApplyMove(_fen, uci);
+        if (after == null) return;
+        _path.Add(uci);
+        _fen = after;
+        if (_mode == Mode.Learn) { _mode = Mode.Explore; SetMode(Mode.Explore); RebuildPath(); return; }
+        _board.Render(_fen, canMove: true, lastMove: uci, whiteBottom: _whiteBottom);
+        RefreshExplore();
+    }
+
+    private void Back()
+    {
+        if (_mode == Mode.Learn) { LearnPrev(); return; }
+        if (_mode == Mode.Drill || _path.Count == 0) return;
+        _path.RemoveAt(_path.Count - 1);
+        _fen = FenOf(_path);
+        var last = _path.Count > 0 ? _path[^1] : null;
+        _board.Render(_fen, canMove: true, lastMove: last, whiteBottom: _whiteBottom);
+        RefreshExplore();
+    }
+
+    private void ResetToStart()
+    {
+        _path.Clear();
+        _fen = ChessGame.StartFen;
+        _whiteBottom = true;
+        if (_board != null) _board.Render(_fen, canMove: _mode != Mode.Learn, lastMove: null, whiteBottom: true);
+        if (_mode == Mode.Explore && _bookList != null) RefreshExplore();
+        else UpdateHistory();
+    }
+
+    private void RebuildPath()
+    {
+        _board.Render(_fen, canMove: true, lastMove: _path.Count > 0 ? _path[^1] : null, whiteBottom: _whiteBottom);
+        RefreshExplore();
+    }
+
+    private void Flip()
+    {
+        _whiteBottom = !_whiteBottom;
+        _board.Render(_fen, canMove: _mode != Mode.Learn, lastMove: _path.Count > 0 ? _path[^1] : null, whiteBottom: _whiteBottom);
+    }
+
+    private void UpdateHistory() => _historyBar.text = SanPath(_path);
+
+    private static string SanPath(IReadOnlyList<string> path)
+    {
+        if (path.Count == 0) return "";
+        var g = ChessGame.Start();
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < path.Count; i++)
+        {
+            if (i % 2 == 0) sb.Append($"{i / 2 + 1}. ");
+            sb.Append(g.SanForUci(path[i]) ?? path[i]).Append(' ');
+            g.TryMakeMove(path[i]);
+        }
+        return sb.ToString().Trim();
+    }
+
+    private static string FenOf(IReadOnlyList<string> path)
+    {
+        var g = ChessGame.Start();
+        foreach (var m in path) g.TryMakeMove(m);
+        return g.Fen;
     }
 
     private static string ApplyMove(string fen, string uci)
@@ -112,8 +616,12 @@ public sealed class OpeningController : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            SceneManager.LoadScene("Menu");
+        var kb = Keyboard.current;
+        if (kb == null) return;
+        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        else if (kb.fKey.wasPressedThisFrame && _book != null) Flip();
+        else if (kb.leftArrowKey.wasPressedThisFrame) Back();
+        else if (kb.rightArrowKey.wasPressedThisFrame && _mode == Mode.Learn) LearnNext();
     }
 
     private static void EnsureEventSystem()
