@@ -22,6 +22,7 @@ public sealed class OpeningController : MonoBehaviour
 {
     private enum Mode { Explore, Learn, Drill }
 
+    private static OpeningBook _sharedBook; // built once per app run, reused across scene entries
     private OpeningBook _book;
     private IBoardView _board;
     private VisualElement _boardHost;
@@ -73,26 +74,17 @@ public sealed class OpeningController : MonoBehaviour
 
         _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnPlayerMove(uci), _audio);
         _board.Render(ChessGame.StartFen, canMove: true, lastMove: null, whiteBottom: true);
-        var loading = UiKit.Text_("Loading openings...", 15, UiKit.Dim);
-        _rightRail.Add(loading);
-        yield return null;
-
-        // Parse fast, then build the position tree a chunk per frame. The rules engine used to build
-        // the tree is not thread-safe (a background Task.Run deadlocks in the player), so we spread the
-        // work across frames on the main thread instead - the window stays responsive, no freeze.
-        OpeningBook book;
-        try { book = OpeningBook.LoadDeferredDefault(); }
-        catch (Exception e) { loading.text = "Opening book failed to load."; Debug.LogError(e); yield break; }
-
-        int total = book.All.Count, done = 0;
-        var steps = book.BuildTreeChunked(80);
-        while (steps.MoveNext() && steps.Current)
+        // The position index is precomputed offline (tools/OpeningImporter), so loading is just a fast
+        // deserialize - no replaying openings, no freeze. Cache it so only the first entry per run pays it.
+        if (_sharedBook == null)
         {
-            done += 80;
-            loading.text = $"Loading openings... {Mathf.Min(100, done * 100 / Mathf.Max(1, total))}%";
+            var loading = UiKit.Text_("Loading openings...", 15, UiKit.Dim);
+            _rightRail.Add(loading);
             yield return null;
+            try { _sharedBook = OpeningBook.LoadDefault(); }
+            catch (Exception e) { loading.text = "Opening book failed to load."; Debug.LogError(e); yield break; }
         }
-        _book = book;
+        _book = _sharedBook;
 
         _progress = KaissaOpenings.Load();
         _repertoire = new RepertoireSession(OpeningRepertoire.Default, _progress, new SystemClock());
@@ -366,6 +358,7 @@ public sealed class OpeningController : MonoBehaviour
         row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
         row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
         row.RegisterCallback<ClickEvent>(_ => PlayUci(c.Uci));
+        UiKit.Pointer(row);
         return row;
     }
 
@@ -441,6 +434,7 @@ public sealed class OpeningController : MonoBehaviour
         row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
         row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
         row.RegisterCallback<ClickEvent>(_ => LoadLearnLine(e));
+        UiKit.Pointer(row);
         return row;
     }
 
