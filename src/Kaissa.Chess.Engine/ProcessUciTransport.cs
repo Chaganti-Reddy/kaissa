@@ -50,7 +50,16 @@ public sealed class ProcessUciTransport : IUciTransport
         _process = new Process { StartInfo = startInfo };
         _process.Start();
         _pump = Task.Run(() => PumpOutputAsync(_process.StandardOutput), CancellationToken.None);
+        // Drain stderr too: it is redirected, so if the engine ever writes enough to it and no one reads,
+        // its OS pipe buffer fills and the engine blocks (a classic redirect deadlock). We discard it.
+        _ = Task.Run(() => DrainAsync(_process.StandardError), CancellationToken.None);
         return Task.CompletedTask;
+    }
+
+    private static async Task DrainAsync(StreamReader reader)
+    {
+        try { while (await reader.ReadLineAsync().ConfigureAwait(false) is not null) { } }
+        catch { /* stream closed on teardown */ }
     }
 
     private async Task PumpOutputAsync(StreamReader reader)

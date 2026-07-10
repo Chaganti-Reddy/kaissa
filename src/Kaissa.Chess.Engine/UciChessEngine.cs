@@ -100,9 +100,11 @@ public sealed class UciChessEngine : IChessEngine
     {
         await EnsureStartedAsync(cancellationToken).ConfigureAwait(false);
 
-        if (limits.MultiPv > 1)
-            await SetOptionAsync("MultiPV", limits.MultiPv.ToString(CultureInfo.InvariantCulture), cancellationToken)
-                .ConfigureAwait(false);
+        // Always set MultiPV (default 1) so a prior multi-line search - e.g. the analysis board asking
+        // for 3 lines - never leaks into a later single-line search (eval bar, bot move) on a shared
+        // engine, which would waste time computing extra lines.
+        await SetOptionAsync("MultiPV", limits.MultiPv.ToString(CultureInfo.InvariantCulture), cancellationToken)
+            .ConfigureAwait(false);
 
         var positionCommand = position is "startpos" or ""
             ? "position startpos"
@@ -114,28 +116,40 @@ public sealed class UciChessEngine : IChessEngine
         string bestMove = "";
         string? ponder = null;
 
-        await ReadUntilAsync(line =>
+        try
         {
-            if (line.StartsWith("info ", StringComparison.Ordinal) &&
-                line.Contains(" pv ", StringComparison.Ordinal))
+            await ReadUntilAsync(line =>
             {
-                if (TryParseInfo(line) is { } pv)
-                    lines[pv.MultiPvIndex] = pv;
+                if (line.StartsWith("info ", StringComparison.Ordinal) &&
+                    line.Contains(" pv ", StringComparison.Ordinal))
+                {
+                    if (TryParseInfo(line) is { } pv)
+                        lines[pv.MultiPvIndex] = pv;
+                    return false;
+                }
+
+                if (line.StartsWith("bestmove ", StringComparison.Ordinal))
+                {
+                    var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    bestMove = parts.Length > 1 ? parts[1] : "";
+                    var ponderIndex = Array.IndexOf(parts, "ponder");
+                    if (ponderIndex >= 0 && ponderIndex + 1 < parts.Length)
+                        ponder = parts[ponderIndex + 1];
+                    return true;
+                }
+
                 return false;
-            }
-
-            if (line.StartsWith("bestmove ", StringComparison.Ordinal))
-            {
-                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                bestMove = parts.Length > 1 ? parts[1] : "";
-                var ponderIndex = Array.IndexOf(parts, "ponder");
-                if (ponderIndex >= 0 && ponderIndex + 1 < parts.Length)
-                    ponder = parts[ponderIndex + 1];
-                return true;
-            }
-
-            return false;
-        }, cancellationToken).ConfigureAwait(false);
+            }, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // A cancelled search is still running in the engine and its "bestmove" is still coming. If we
+            // just bail, that stale line would be read as the NEXT search's result and desync the
+            // protocol. Tell the engine to stop and drain everything up to the ready ack, so the process
+            // is clean for the next command (matters for the eval bar, which cancels on every move).
+            await AbortSearchAsync().ConfigureAwait(false);
+            throw;
+        }
 
         var ordered = lines.Values.OrderBy(l => l.MultiPvIndex).ToList();
         return new SearchResult(bestMove, ponder, ordered);
@@ -143,6 +157,22 @@ public sealed class UciChessEngine : IChessEngine
 
     public Task StopAsync(CancellationToken cancellationToken = default) =>
         _transport.SendLineAsync("stop", cancellationToken).AsTask();
+
+    // Aborts an in-flight search and drains the engine's output back to a known-idle state.
+    private async Task AbortSearchAsync()
+    {
+        try
+        {
+            await _transport.SendLineAsync("stop", CancellationToken.None).ConfigureAwait(false);
+            await _transport.SendLineAsync("isready", CancellationToken.None).ConfigureAwait(false);
+            await ReadUntilAsync(line => line.AsSpan().Trim().SequenceEqual("readyok"), CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch
+        {
+            // Engine may have exited; the resync is best-effort.
+        }
+    }
 
     public ValueTask DisposeAsync() => _transport.DisposeAsync();
 

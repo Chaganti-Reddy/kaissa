@@ -16,14 +16,26 @@ public static class EngineHub
     public static string EnginePath => Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
     public static bool Available => File.Exists(EnginePath);
 
-    public static Task<IChessEngine> PlayEngineAsync() => _play ??= LaunchAsync();
-    public static Task<IChessEngine> AnalysisEngineAsync() => _analysis ??= LaunchAsync();
+    public static Task<IChessEngine> PlayEngineAsync() => _play ??= LaunchAsync(analysis: false);
+    public static Task<IChessEngine> AnalysisEngineAsync() => _analysis ??= LaunchAsync(analysis: true);
 
-    private static async Task<IChessEngine> LaunchAsync()
+    private static async Task<IChessEngine> LaunchAsync(bool analysis)
     {
         var engine = UciChessEngine.LaunchProcess(EnginePath);
         await engine.HandshakeAsync();
-        return new SerializedEngine(engine); // guard against overlapping searches on the shared process
+        IChessEngine wrapped = new SerializedEngine(engine); // guard overlapping searches on the shared process
+
+        if (analysis)
+        {
+            // The analysis engine (eval bar, hints, review, analysis board) runs at full strength, so give
+            // it real hash and a few threads - the play engine stays at defaults since the bot is capped.
+            int threads = Mathf.Clamp(SystemInfo.processorCount - 2, 1, 4);
+            await wrapped.SetOptionAsync("Threads", threads.ToString());
+            await wrapped.SetOptionAsync("Hash", "256"); // MB
+            await wrapped.ConfigureStrengthAsync(StrengthSettings.Full);
+        }
+
+        return wrapped;
     }
 
     // Spawn both processes in the background at launch, so no page ever shows "starting engine".
