@@ -725,10 +725,13 @@ public sealed class KaissaBoardController : MonoBehaviour
     {
         if (_pickerHost != null) { HidePicker(); return; }
         var (panel, body) = PickerPanel("Choose a difficulty");
-        body.Add(PickerRow("Easy  (600-1100)", () => { HidePicker(); LoadDifficultyFeed(600, 1100, "Easy"); }));
-        body.Add(PickerRow("Medium  (1100-1600)", () => { HidePicker(); LoadDifficultyFeed(1100, 1600, "Medium"); }));
-        body.Add(PickerRow("Hard  (1600-2100)", () => { HidePicker(); LoadDifficultyFeed(1600, 2100, "Hard"); }));
-        body.Add(PickerRow("Expert  (2100-2600)", () => { HidePicker(); LoadDifficultyFeed(2100, 2600, "Expert"); }));
+        body.Add(PickerRow("Beginner  (400-800)", () => { HidePicker(); LoadDifficultyFeed(400, 800, "Beginner"); }));
+        body.Add(PickerRow("Easy  (800-1200)", () => { HidePicker(); LoadDifficultyFeed(800, 1200, "Easy"); }));
+        body.Add(PickerRow("Medium  (1200-1600)", () => { HidePicker(); LoadDifficultyFeed(1200, 1600, "Medium"); }));
+        body.Add(PickerRow("Hard  (1600-2000)", () => { HidePicker(); LoadDifficultyFeed(1600, 2000, "Hard"); }));
+        body.Add(PickerRow("Expert  (2000-2400)", () => { HidePicker(); LoadDifficultyFeed(2000, 2400, "Expert"); }));
+        body.Add(PickerRow("Master  (2400-2800)", () => { HidePicker(); LoadDifficultyFeed(2400, 2800, "Master"); }));
+        body.Add(PickerRow("Grandmaster  (2800+)", () => { HidePicker(); LoadDifficultyFeed(2800, 3300, "Grandmaster"); }));
         ShowPicker(panel);
     }
 
