@@ -119,52 +119,97 @@ public sealed class KaissaBoardController : MonoBehaviour
             StartCoroutine(AutoDemo());
     }
 
-    // Self-test driver: exercises hint, a wrong move, and a full multi-move solve, capturing a labeled
-    // screenshot at each step so the whole flow can be verified without a human (2D and 3D).
+    // Self-test driver: exercises every control and interaction on the Puzzles page and films the
+    // motion densely, so the whole page can be verified frame-by-frame without a human (2D and 3D).
+    // Covers: setup arrival, Hint (both stages), a wrong move (snap-back + red flash + reveal), a full
+    // multi-move solve (glide + green flash + reply), Next, Solution (played out), Retry, the Themes and
+    // Difficulty pickers, and board flip.
     private System.Collections.IEnumerator AutoDemo()
     {
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
         System.IO.Directory.CreateDirectory(dir);
         string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
 
-        yield return new WaitForSeconds(1.4f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_1_start.png"));
+        // Warm-up (first capture of a session is unreliable), then the loaded position.
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_warmup.png"));
         yield return new WaitForSeconds(0.6f);
+        yield return Burst(dir, $"pz_{tag}_setup", 8, 0.05f);
 
+        // Hint: first press highlights the piece, second reveals the move.
         ShowHint();
-        yield return new WaitForSeconds(0.8f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_2_hint.png"));
-        yield return new WaitForSeconds(0.6f);
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_hint1.png"));
+        ShowHint();
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_hint2.png"));
+        yield return new WaitForSeconds(0.3f);
 
+        // Wrong move: film the snap-back, red flash, and revealed square.
         var wrong = FindLegalNonSolution();
-        if (wrong != null)
-        {
-            OnPlayerMove(wrong);
-            yield return new WaitForSeconds(1.0f);
-            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_3_wrong.png"));
-            yield return new WaitForSeconds(0.6f);
-        }
+        if (wrong != null) OnPlayerMove(wrong);
+        yield return Burst(dir, $"pz_{tag}_wrong", 14, 0.05f);
 
+        // Solve the whole line: film the glide, correct flash, and opponent reply.
         int guard = 0;
         while (!_concluded && _session != null && _session.ExpectedMove is { } mv && guard++ < 20)
         {
             OnPlayerMove(mv);
-            if (_concluded)
-            {
-                yield return new WaitForSeconds(0.3f); // inside the correct-flash window
-                ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_4_solved.png"));
-                break;
-            }
-            yield return new WaitForSeconds(0.7f);
+            yield return Burst(dir, $"pz_{tag}_solve{guard}", 6, 0.05f);
         }
-        yield return new WaitForSeconds(0.6f);
+        yield return new WaitForSeconds(0.4f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_solved.png"));
 
-        // exercise the difficulty picker + next
+        // Next puzzle.
         LoadNext();
         yield return new WaitForSeconds(1.0f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_5_next.png"));
-        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_next.png"));
+
+        // Solution button: play out the whole line.
+        ShowSolution();
+        yield return Burst(dir, $"pz_{tag}_solution", 16, 0.06f);
+
+        // Retry after a fresh puzzle + a wrong move: the board resets to the start.
+        LoadNext();
+        yield return new WaitForSeconds(0.8f);
+        var w2 = FindLegalNonSolution();
+        if (w2 != null) OnPlayerMove(w2);
+        yield return new WaitForSeconds(0.8f);
+        Retry();
+        yield return new WaitForSeconds(0.7f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_retry.png"));
+
+        // Themes picker. Close with HidePicker (deterministic) and always yield AFTER a capture
+        // before mutating, so the screenshot reflects the intended frame, not the next one.
+        ToggleThemePicker();
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_themes.png"));
+        yield return new WaitForSeconds(0.4f);
+        HidePicker();
+        yield return new WaitForSeconds(0.3f);
+
+        // Difficulty picker.
+        ToggleDifficultyPicker();
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_difficulty.png"));
+        yield return new WaitForSeconds(0.4f);
+        HidePicker();
+        yield return new WaitForSeconds(0.3f);
+
+        // Board flip.
+        Flip();
+        yield return new WaitForSeconds(0.7f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_flip.png"));
+        yield return new WaitForSeconds(0.4f);
         Application.Quit();
+    }
+
+    private System.Collections.IEnumerator Burst(string dir, string prefix, int count, float interval)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"{prefix}_{i:000}.png"));
+            yield return new WaitForSeconds(interval);
+        }
     }
 
     private string FindLegalNonSolution()
@@ -824,11 +869,15 @@ public sealed class KaissaBoardController : MonoBehaviour
         else if (kb.hKey.wasPressedThisFrame) ShowHint();
         else if (kb.nKey.wasPressedThisFrame && _concluded) LoadNext();
         else if (kb.rKey.wasPressedThisFrame) Retry();
-        else if (kb.fKey.wasPressedThisFrame && _session != null)
-        {
-            _whiteBottom = !_whiteBottom;
-            _board.Render(_session.Fen, !_concluded && !_busy, null, _whiteBottom);
-        }
+        else if (kb.fKey.wasPressedThisFrame) Flip();
+    }
+
+    private void Flip()
+    {
+        if (_session == null) return;
+        _whiteBottom = !_whiteBottom;
+        _board.Render(_session.Fen, !_concluded && !_busy, null, _whiteBottom);
+        UpdateSideBadge();
     }
 
     private void ShowSummary()
