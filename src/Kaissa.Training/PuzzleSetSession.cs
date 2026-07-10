@@ -2,7 +2,7 @@ namespace Kaissa.Training;
 
 /// <summary>
 /// Drills an arbitrary set of puzzles, difficulty-matched to a running rating. Powers rating-range
-/// practice, custom sets, and the weakness-report practice set — anything that is "here is a list
+/// practice, custom sets, and the weakness-report practice set - anything that is "here is a list
 /// of puzzles, work through them" without spaced scheduling.
 /// </summary>
 public sealed class PuzzleSetSession

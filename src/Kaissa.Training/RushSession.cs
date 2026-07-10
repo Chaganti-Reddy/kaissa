@@ -12,7 +12,7 @@ public readonly record struct RushResult(
 /// <summary>
 /// Puzzle Rush: solve as many puzzles as possible before running out of lives. Difficulty ramps
 /// up with each solve, so it keeps pushing the player's edge. Unlike the training loop this is an
-/// arcade mode — no spaced scheduling — but it reuses the same content and grading. A client adds
+/// arcade mode - no spaced scheduling - but it reuses the same content and grading. A client adds
 /// the timer; the core tracks score, streak, and lives.
 /// </summary>
 public sealed class RushSession

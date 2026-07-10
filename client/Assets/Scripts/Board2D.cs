@@ -14,7 +14,7 @@ public sealed class Board2D : IBoardView
 {
     public readonly VisualElement Root = new();
 
-    // When set, a click reports the clicked square (e.g. "e4") instead of making a move — used by the
+    // When set, a click reports the clicked square (e.g. "e4") instead of making a move - used by the
     // coordinate drill. When true (default) edge coordinate labels show, honoring the global setting.
     public Action<string> SquareClickHandler { get; set; }
     public bool ShowCoordinates = true;
@@ -86,7 +86,7 @@ public sealed class Board2D : IBoardView
 
     private void Build()
     {
-        // rows top→bottom; recomputed on flip in Render via cell colors + glyphs.
+        // rows top->bottom; recomputed on flip in Render via cell colors + glyphs.
         for (int row = 0; row < 8; row++)
         {
             var rowEl = new VisualElement();
@@ -490,7 +490,7 @@ public sealed class Board2D : IBoardView
         OnCellClicked(rc.row, rc.col, e.altKey); // a tap
     }
 
-    // Applies from→to if legal, opening a promotion picker when needed (auto-queen honored; hold Alt
+    // Applies from->to if legal, opening a promotion picker when needed (auto-queen honored; hold Alt
     // to under-promote when auto-queen is on). Returns true if it made or started a move.
     private bool AttemptMove(string from, string to, bool alt)
     {
@@ -597,7 +597,7 @@ public sealed class Board2D : IBoardView
         {
             if (s == (f, r)) { ClearSelection(); return; }
             if (AttemptMove(Uci(s), Uci((f, r)), alt)) return;
-            // not a legal move — clicked another own piece → reselect; else clear
+            // not a legal move - clicked another own piece -> reselect; else clear
             if (IsOwnPiece(game, f, r)) { Select(game, (f, r)); }
             else ClearSelection();
             return;

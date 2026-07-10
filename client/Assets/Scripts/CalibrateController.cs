@@ -77,7 +77,7 @@ public sealed class CalibrateController : MonoBehaviour
         bool whiteBottom = !KaissaSettings.Flip || _current.WhiteToMove;
         _board.Render(scenario.Fen, canMove: true, lastMove: null, whiteBottom: whiteBottom);
         string side = _current.WhiteToMove ? "White" : "Black";
-        _prompt.text = $"Puzzle {_session.Answered + 1}/{_session.Total}   ·   {side} to move   ·   est {_session.EstimatedRating:0}";
+        _prompt.text = $"Puzzle {_session.Answered + 1}/{_session.Total}   -   {side} to move   -   est {_session.EstimatedRating:0}";
     }
 
     private void Finish()
@@ -88,7 +88,7 @@ public sealed class CalibrateController : MonoBehaviour
         var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();
         model.RatingEstimate = rating;
         KaissaProgress.Save(model.ToJson());
-        _prompt.text = $"Your starting rating: {rating}.   Esc — menu";
+        _prompt.text = $"Your starting rating: {rating}.   Esc - menu";
         _board.Render("8/8/8/8/8/8/8/8 w - - 0 1", canMove: false, lastMove: null, whiteBottom: true);
     }
 

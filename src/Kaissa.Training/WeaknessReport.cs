@@ -2,7 +2,7 @@ namespace Kaissa.Training;
 
 /// <summary>
 /// Finds the patterns a player is weakest at and builds a focused practice set from them. This
-/// uses the skill model to target exactly what needs work — a personalised drill the incumbents
+/// uses the skill model to target exactly what needs work - a personalised drill the incumbents
 /// do not offer.
 /// </summary>
 public static class WeaknessReport

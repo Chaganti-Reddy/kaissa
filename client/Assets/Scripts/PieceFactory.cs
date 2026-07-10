@@ -2,7 +2,7 @@ using UnityEngine;
 
 // Builds our own chess pieces as lathed geometry (a spun silhouette) plus a few detail bits for
 // the parts that are not rotationally symmetric (rook battlements, king cross, queen crown, knight
-// head). Fully procedural — our IP, no assets. A single capsule collider on the root handles clicks.
+// head). Fully procedural - our IP, no assets. A single capsule collider on the root handles clicks.
 public static class PieceFactory
 {
     // Marble ivory vs polished obsidian.

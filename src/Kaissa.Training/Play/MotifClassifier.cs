@@ -18,7 +18,7 @@ public enum Motif
 }
 
 /// <summary>
-/// Recognises the motif of a move from the board. Detects the cases that can be judged precisely —
+/// Recognises the motif of a move from the board. Detects the cases that can be judged precisely -
 /// checkmate, a fork (the moved piece attacks two or more valuable enemy pieces), and winning an
 /// undefended piece. Pins, skewers, and discovered attacks need deeper analysis and fall back to
 /// <see cref="Motif.Unclassified"/> rather than guess.

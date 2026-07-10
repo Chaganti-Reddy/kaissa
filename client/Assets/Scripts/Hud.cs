@@ -24,8 +24,8 @@ public static class Hud
     }
 
     // Every screen's layout is authored in 1280x720 coordinates. Scaling with screen size (rather
-    // than the default constant-pixel mode) keeps those layouts proportional at any window size —
-    // maximized, fullscreen, or resized — instead of clustering in a corner. match 0.5 balances
+    // than the default constant-pixel mode) keeps those layouts proportional at any window size -
+    // maximized, fullscreen, or resized - instead of clustering in a corner. match 0.5 balances
     // width and height so nothing clips on off-16:9 aspect ratios.
     public static void ConfigureScaler(CanvasScaler scaler)
     {

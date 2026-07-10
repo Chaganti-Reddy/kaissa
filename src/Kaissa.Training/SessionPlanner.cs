@@ -14,7 +14,7 @@ public sealed class SessionPlanner
         if (patterns.Count == 0)
             return null;
 
-        // 1. Anything due for review — most overdue first.
+        // 1. Anything due for review - most overdue first.
         var mostOverdue = model.Due(now)
             .OrderBy(c => c.DueUtc)
             .Select(c => (PatternId?)c.Pattern)

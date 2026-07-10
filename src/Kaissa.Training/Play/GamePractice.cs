@@ -14,7 +14,7 @@ public static class GamePractice
     public static Pattern FromYourGames { get; } = new(
         new PatternId("tactic.from_your_games"),
         "From your games",
-        "A position where you went wrong — find the move you missed.");
+        "A position where you went wrong - find the move you missed.");
 
     private static readonly PatternId ForkPattern = new("tactic.fork");
     private static readonly PatternId HangingPattern = new("tactic.hanging_piece");

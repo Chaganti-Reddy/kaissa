@@ -13,7 +13,7 @@ public static class SceneEnvironment
             return; // HDRI not added yet
 
         // Shader.Find only sees shaders the build kept. Skybox/Panoramic is referenced solely from
-        // code, so it gets stripped from player builds and Find returns null — guard it, or the
+        // code, so it gets stripped from player builds and Find returns null - guard it, or the
         // Material ctor throws and takes the whole scene down (blank screen). Falls back to the
         // coded key/fill lighting set up by the caller. Add it to Graphics > Always Included Shaders
         // to get the HDRI skybox in builds.

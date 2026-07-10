@@ -3,7 +3,7 @@ using UnityEngine;
 
 // Builds a surface of revolution ("turned" shape) by spinning a 2D profile (radius, height) around
 // the Y axis. Most chess pieces are rotationally symmetric, so this yields clean lathed pawns,
-// rooks, bishops, queens, and kings from a silhouette — our own geometry, no assets.
+// rooks, bishops, queens, and kings from a silhouette - our own geometry, no assets.
 public static class LatheMesh
 {
     public static Mesh Build(Vector2[] profile, int segments = 28)

@@ -120,7 +120,7 @@ static void RunInteractive(ScenarioLibrary library, string progressPath)
     var model = File.Exists(progressPath) ? SkillModel.FromJson(File.ReadAllText(progressPath)) : new SkillModel();
     var session = new TrainingSession(library, model, new SystemClock());
 
-    Console.WriteLine("Kaissa — training loop (Phase 1 prototype)");
+    Console.WriteLine("Kaissa - training loop (Phase 1 prototype)");
     Console.WriteLine("Type a move as SAN (e.g. Ra8) or UCI (e.g. a1a8). Commands: 'solution', 'quit'.\n");
 
     while (true)
@@ -134,7 +134,7 @@ static void RunInteractive(ScenarioLibrary library, string progressPath)
 
         var pattern = library.Describe(scenario.Pattern);
         Console.WriteLine($"Your rating: {model.RatingEstimate:0}");
-        Console.WriteLine($"Pattern: {pattern.Name} — {pattern.Description}");
+        Console.WriteLine($"Pattern: {pattern.Name} - {pattern.Description}");
         Console.WriteLine($"{scenario.Prompt}  (puzzle rating {scenario.Rating})");
         PrintBoard(scenario.Fen);
 

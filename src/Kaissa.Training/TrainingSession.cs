@@ -14,8 +14,8 @@ public sealed record SubmitOutcome(
 
 /// <summary>
 /// The headless training loop: pick a scenario, take the player's move, grade it, update the
-/// schedule, repeat. It ties the three cores together — rules (move checking), learning (FSRS),
-/// and content — with no UI and no engine dependency, so the loop can be proven before any 3D
+/// schedule, repeat. It ties the three cores together - rules (move checking), learning (FSRS),
+/// and content - with no UI and no engine dependency, so the loop can be proven before any 3D
 /// work. Presentation layers drive this class; they do not reimplement it.
 /// </summary>
 public sealed class TrainingSession
@@ -69,7 +69,7 @@ public sealed class TrainingSession
     /// <summary>
     /// Grades the player's move for the current scenario and updates the schedule. If the answer was
     /// assisted (a hint was used) it is treated as a lapse and earns no rating credit, so the pattern
-    /// is resurfaced soon — a hinted answer is not genuine recall.
+    /// is resurfaced soon - a hinted answer is not genuine recall.
     /// </summary>
     public SubmitOutcome Submit(string move, TimeSpan thinkingTime, bool assisted = false)
     {

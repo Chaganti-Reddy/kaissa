@@ -31,7 +31,7 @@ public sealed class WindowChrome : MonoBehaviour
                 return;
             int on = 1;
             // 20 = DWMWA_USE_IMMERSIVE_DARK_MODE (Windows 10 2004+). 19 was the pre-release id;
-            // set both so older builds are covered — an unknown id is simply ignored.
+            // set both so older builds are covered - an unknown id is simply ignored.
             DwmSetWindowAttribute(hwnd, 20, ref on, sizeof(int));
             DwmSetWindowAttribute(hwnd, 19, ref on, sizeof(int));
         }

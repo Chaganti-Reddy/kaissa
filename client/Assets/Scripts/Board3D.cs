@@ -68,7 +68,7 @@ public static class Board3D
         return root;
     }
 
-    /// <summary>Adds a–h / 1–8 edge labels to a board root (public so all screens can match). No-op
+    /// <summary>Adds a-h / 1-8 edge labels to a board root (public so all screens can match). No-op
     /// when the coordinates setting is off.</summary>
     public static void AddCoordinates(Transform root)
     {
@@ -114,7 +114,7 @@ public static class Board3D
         go.GetComponent<Renderer>().material = material;
     }
 
-    /// <summary>Positions the camera so the chosen side is at the bottom (a true 180° board flip).</summary>
+    /// <summary>Positions the camera so the chosen side is at the bottom (a true 180-degree board flip).</summary>
     public static void OrientCamera(bool whiteBottom)
     {
         if (CameraOrbit3D.Instance != null) { CameraOrbit3D.Instance.SetSide(whiteBottom); return; }

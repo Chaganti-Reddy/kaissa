@@ -157,7 +157,7 @@ public sealed class BoardInteractor : MonoBehaviour
             return;
         }
 
-        // Handle the press/release first so a fresh click resets _pressPos before the drag check —
+        // Handle the press/release first so a fresh click resets _pressPos before the drag check -
         // otherwise a click while a piece is still selected compares against a stale press position
         // and teleports the piece to the cursor.
         if (mouse.leftButton.wasPressedThisFrame)

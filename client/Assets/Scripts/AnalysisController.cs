@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Analysis board: explore any position freely — play/branch moves, step back and forth, and see the
+// Analysis board: explore any position freely - play/branch moves, step back and forth, and see the
 // engine's evaluation, best move, and line for the current position. Navigation is the core
 // AnalysisSession; evaluation is KaissaAnalysis (Stockfish).
 public sealed class AnalysisController : MonoBehaviour
@@ -83,7 +83,7 @@ public sealed class AnalysisController : MonoBehaviour
         rail.style.width = 340; UiKit.Pad(rail, 24, 24, 24, 0);
 
         var panel = Panel();
-        _eval = UiKit.Text_("Evaluation —", 20, UiKit.Text, bold: true); UiKit.Pad(_eval, 16, 16, 4, 16);
+        _eval = UiKit.Text_("Evaluation -", 20, UiKit.Text, bold: true); UiKit.Pad(_eval, 16, 16, 4, 16);
         panel.Add(_eval);
         _best = UiKit.Text_("", 14, UiKit.Dim); UiKit.Pad(_best, 0, 16, 14, 16); _best.style.whiteSpace = WhiteSpace.Normal;
         panel.Add(_best);
@@ -170,7 +170,7 @@ public sealed class AnalysisController : MonoBehaviour
         {
             var line = await _engine.EvaluateAsync(fen, depth: 16, ct);
             if (ct.IsCancellationRequested) return;
-            _eval.text = string.IsNullOrEmpty(line.Score) ? "Evaluation —" : $"Evaluation  {line.Score}";
+            _eval.text = string.IsNullOrEmpty(line.Score) ? "Evaluation -" : $"Evaluation  {line.Score}";
             _best.text = string.IsNullOrEmpty(line.BestMove) ? "" : $"Best: {line.BestMove}";
         }
         catch (OperationCanceledException) { }

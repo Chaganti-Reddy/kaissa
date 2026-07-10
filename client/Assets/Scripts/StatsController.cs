@@ -78,11 +78,11 @@ public sealed class StatsController : MonoBehaviour
         var sb = new StringBuilder();
 
         if (KaissaGameLog.Count > 0)
-            sb.AppendLine($"Games played   {KaissaGameLog.Count}   ·   avg accuracy {KaissaGameLog.Average:0.0}%").AppendLine();
+            sb.AppendLine($"Games played   {KaissaGameLog.Count}   -   avg accuracy {KaissaGameLog.Average:0.0}%").AppendLine();
 
         if (stats.TotalAttempts == 0)
         {
-            sb.AppendLine("No puzzle progress yet. Train some puzzles — progress saves automatically.");
+            sb.AppendLine("No puzzle progress yet. Train some puzzles - progress saves automatically.");
             return sb.ToString();
         }
 

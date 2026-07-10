@@ -122,7 +122,7 @@ public sealed class MainMenuController : MonoBehaviour
         grid.Add(Card("Daily puzzle", "One position a day. Solve it to keep your streak.", "SampleScene", daily: true));
         grid.Add(Card("Puzzles", "Adaptive, spaced practice across 15 patterns.", "SampleScene"));
         grid.Add(Card("Puzzle Blitz", "Solve as many as you can before three misses.", "Rush"));
-        grid.Add(Card("Openings", "Drill your repertoire — recall your moves, spaced.", "Opening"));
+        grid.Add(Card("Openings", "Drill your repertoire - recall your moves, spaced.", "Opening"));
         grid.Add(Card("Learn patterns", "Browse each motif with an example, then drill it.", "Library"));
         main.Add(grid);
         return main;
@@ -142,7 +142,7 @@ public sealed class MainMenuController : MonoBehaviour
                 chips.Add(UiKit.Chip($"{trainer.DueCount()} due for review", UiKit.Gold));
             }
         }
-        catch { /* new player — no chips */ }
+        catch { /* new player - no chips */ }
         return chips;
     }
 

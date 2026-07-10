@@ -9,7 +9,7 @@ public readonly record struct ThemedResult(
     double Rating);
 
 /// <summary>
-/// Drill a single pattern on demand ("practice forks"). No spaced scheduling — it just serves that
+/// Drill a single pattern on demand ("practice forks"). No spaced scheduling - it just serves that
 /// pattern's positions, difficulty-matched to a running rating. Complements the adaptive loop for
 /// players who want to grind a specific idea.
 /// </summary>
