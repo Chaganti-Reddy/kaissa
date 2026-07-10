@@ -72,7 +72,7 @@ public sealed class BatchTwoTests
             Assert.NotEmpty(game.LegalUciMoves());
         }
 
-        Assert.NotNull(EndgameLibrary.ById("kq_v_k"));
+        Assert.NotNull(EndgameLibrary.ById("mate_kq"));
         Assert.Null(EndgameLibrary.ById("nope"));
     }
 
