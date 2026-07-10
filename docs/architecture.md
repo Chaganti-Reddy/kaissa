@@ -2,14 +2,10 @@
 
 ## Principles
 
-- Local-first. The core experience runs offline with no backend dependency. Cloud features are
-  additive and come later.
-- The learning core is plain C# with no Unity references, so it can be unit-tested on its own and
-  moved to a server later if needed.
-- The chess engine sits behind a single interface and a process boundary, so it can be swapped,
-  mocked, or run remotely.
-- Content (patterns, scenarios, curricula) is data, not code, loaded through one path. This keeps
-  content addable without releases and leaves room for generated content later.
+- Local-first. The core experience runs offline with no backend dependency. Cloud features are additive and come later.
+- The learning core is plain C# with no Unity references, so it can be unit-tested on its own and moved to a server later if needed.
+- The chess engine sits behind a single interface and a process boundary, so it can be swapped, mocked, or run remotely.
+- Content (patterns, scenarios, curricula) is data, not code, loaded through one path. This keeps content addable without releases and leaves room for generated content later.
 
 ## Layers
 
@@ -27,17 +23,11 @@ Unity client (C#)
 
 ### Presentation
 
-Rendering and interaction only. Uses the Universal Render Pipeline so one project scales from
-mobile to desktop. Input (touch, mouse, controller) is behind one abstraction. UI is kept
-separate from the 3D scene. Presentation renders state and emits intents; it does not own game
-state.
+Rendering and interaction only. Uses the Universal Render Pipeline so one project scales from mobile to desktop. Input (touch, mouse, controller) is behind one abstraction. UI is kept separate from the 3D scene. Presentation renders state and emits intents; it does not own game state.
 
 ### Game layer
 
-Drives session flow as a state machine (menu, setup, play, review, schedule update). A session
-may be a full game, an endgame drill, a tactic, or a run of positions, all expressed as scenario
-data run by a scenario runner. Translates player intents into legal moves via the rules service
-and queries the engine via the UCI client.
+Drives session flow as a state machine (menu, setup, play, review, schedule update). A session may be a full game, an endgame drill, a tactic, or a run of positions, all expressed as scenario data run by a scenario runner. Translates player intents into legal moves via the rules service and queries the engine via the UCI client.
 
 ### Learning core
 
@@ -45,25 +35,18 @@ The training logic. No Unity dependencies. Components:
 
 - `SkillModel` — per-player state, one FSRS card per pattern, plus a live rating estimate.
 - `Scheduler` — FSRS wrapper; determines which patterns are due or fading and what to practice.
-- `DifficultyController` — sets opponent strength and biases content selection to keep the player
-  in a productive difficulty range.
-- `GradeExtractor` — converts in-game behavior into a review grade, so the player is never asked
-  to self-rate.
+- `DifficultyController` — sets opponent strength and biases content selection to keep the player in a productive difficulty range.
+- `GradeExtractor` — converts in-game behavior into a review grade, so the player is never asked to self-rate.
 
 ### Core services
 
-- `ChessRules` — legal move generation, board state, FEN/PGN, check/mate/draw detection.
-  Implementation choice (existing library vs. minimal bitboard) is an open item.
-- `UciClient` — spawns and manages the Stockfish process, sends UCI commands, parses evaluations
-  and best moves, and caps strength for adaptive opponents. Asynchronous and cancellable.
-- `Persistence` — local storage of the skill model, history, and settings, with a versioned
-  schema. SQLite is the current preference.
+- `ChessRules` — legal move generation, board state, FEN/PGN, check/mate/draw detection. Implementation choice (existing library vs. minimal bitboard) is an open item.
+- `UciClient` — spawns and manages the Stockfish process, sends UCI commands, parses evaluations and best moves, and caps strength for adaptive opponents. Asynchronous and cancellable.
+- `Persistence` — local storage of the skill model, history, and settings, with a versioned schema. SQLite is the current preference.
 
 ### Backend (later)
 
-Deferred. When added, it provides accounts and cross-device sync, and a data pipeline for future
-machine-learning work. It will be AGPLv3. To keep that path open, the learning core avoids Unity
-dependencies and structured events are logged from the start.
+Deferred. When added, it provides accounts and cross-device sync, and a data pipeline for future machine-learning work. It will be AGPLv3. To keep that path open, the learning core avoids Unity dependencies and structured events are logged from the start.
 
 ## Data flow
 
