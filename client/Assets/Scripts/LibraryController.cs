@@ -141,6 +141,7 @@ public sealed class LibraryController : MonoBehaviour
                 mark.style.width = 8; mark.style.height = 8; UiKit.Radius(mark, 4); mark.style.marginRight = 8; mark.style.flexShrink = 0;
                 mark.style.backgroundColor = done ? UiKit.Green : UiKit.Mute;
                 var row = UiKit.Row(mark, UiKit.Text_(lesson.Title, 14, active ? UiKit.Text : UiKit.Dim, bold: active));
+                row.name = "lesson-" + lesson.Id;
                 UiKit.Pad(row, 7, 10, 7, 10); UiKit.Radius(row, 6);
                 if (active) row.style.backgroundColor = UiKit.Panel2;
                 row.RegisterCallback<MouseEnterEvent>(_ => { if (lesson.Id != _lesson?.Id) row.style.backgroundColor = UiKit.Panel2; });
@@ -321,39 +322,85 @@ public sealed class LibraryController : MonoBehaviour
 
     // ---------------- self-test ----------------
 
+    private bool _recording, _pauseRec;
+    private int _seq;
+
+    // End-to-end self-test driven by REAL UI events (not controller method calls): clicks the lesson
+    // rows and the Next/Hint/Restart buttons through the panel, and plays each challenge move through
+    // the board's real click-to-move input path. A dense frame recorder runs the whole time so the run
+    // can be reviewed like a video, and labeled milestone frames are captured at each step.
     private IEnumerator AutoDemo()
     {
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
+        string burst = System.IO.Path.Combine(dir, "burst");
         System.IO.Directory.CreateDirectory(dir);
+        System.IO.Directory.CreateDirectory(burst);
         string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+        KaissaSettings.AutoQueen = true; // never let a promotion picker block the scripted solve
 
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"learn_{tag}_warmup.png"));
-        yield return new WaitForSeconds(1.2f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"learn_{tag}_intro.png"));
-        yield return new WaitForSeconds(0.6f);
+        _recording = true;
+        StartCoroutine(DenseRecord(burst, tag));
 
-        // Advance intro -> first challenge.
-        NextPressed();
-        yield return new WaitForSeconds(0.8f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"learn_{tag}_challenge.png"));
-        yield return new WaitForSeconds(0.5f);
+        yield return Shot(dir, tag, "warmup", 1.0f);
 
-        // Show a hint, then solve every challenge with the expected move to complete the lesson.
-        ShowHint();
-        yield return new WaitForSeconds(0.8f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"learn_{tag}_hint.png"));
-        yield return new WaitForSeconds(0.5f);
+        // Real click on a lesson row to prove list selection wiring.
+        UiAutomation.Click(_root.Q("lesson-skewer"));
+        yield return Shot(dir, tag, "select_skewer", 0.9f);
+        UiAutomation.Click(_root.Q("lesson-fork"));
+        yield return Shot(dir, tag, "intro", 0.9f);
 
+        // Real click on Next advances the intro to the first challenge.
+        UiAutomation.Click(_nextBtn);
+        yield return Shot(dir, tag, "challenge", 0.8f);
+
+        // Real click on Hint highlights the key piece.
+        UiAutomation.Click(_hintBtn);
+        yield return Shot(dir, tag, "hint", 0.8f);
+
+        // Solve each challenge through the board's real click-to-move path.
         int guard = 0;
         while (!_completed && _step is { Interactive: true } && !string.IsNullOrEmpty(_step.ExpectedMove) && guard++ < 12)
         {
-            OnMove(_step.ExpectedMove);
-            yield return new WaitForSeconds(1.1f);
+            string uci = _step.ExpectedMove;
+            if (uci.Length == 4) _board.DebugClickMove(uci.Substring(0, 2), uci.Substring(2, 2));
+            else OnMove(uci); // promotions: use the move path directly (picker is bypassed by AutoQueen anyway)
+            yield return Shot(dir, tag, $"solve_{guard}", 1.1f);
         }
-        yield return new WaitForSeconds(0.6f);
-        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"learn_{tag}_complete.png"));
-        yield return new WaitForSeconds(0.5f);
+
+        yield return Shot(dir, tag, "complete", 0.6f);
+
+        // Real click on Restart replays the lesson (proves the button path + fresh session).
+        UiAutomation.Click(_retryBtn);
+        yield return Shot(dir, tag, "restart", 0.8f);
+
+        _recording = false;
+        yield return new WaitForSeconds(0.3f);
         Application.Quit();
+    }
+
+    private IEnumerator DenseRecord(string dir, string tag)
+    {
+        while (_recording)
+        {
+            // ScreenCapture honors only one capture per frame, so yield the slot while a milestone frame
+            // is being taken - otherwise the two collide and one of the PNGs is silently dropped.
+            if (!_pauseRec)
+            {
+                ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"{tag}_{_seq:0000}.png"));
+                _seq++;
+            }
+            yield return new WaitForSeconds(0.15f);
+        }
+    }
+
+    private IEnumerator Shot(string dir, string tag, string label, float hold)
+    {
+        _pauseRec = true;
+        yield return null; // let the frame settle after the action, with the dense recorder paused
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"learn_{tag}_{label}.png"));
+        yield return new WaitForSeconds(0.25f);
+        _pauseRec = false;
+        yield return new WaitForSeconds(Mathf.Max(0f, hold - 0.25f));
     }
 
     private static string ArgValue(string key)

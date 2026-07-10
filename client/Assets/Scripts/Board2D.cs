@@ -413,6 +413,17 @@ public sealed class Board2D : IBoardView
         Render(_fen, false, _lastMove, _whiteBottom);
     }
 
+    public void DebugClickMove(string from, string to)
+    {
+        // Exercise the true click-to-move path: tap the from-square (select), then tap the target.
+        var (ff, fr) = Sq(from);
+        var (tf, tr) = Sq(to);
+        var (frow, fcol) = ScreenOf(ff, fr);
+        var (trow, tcol) = ScreenOf(tf, tr);
+        OnCellClicked(frow, fcol);
+        OnCellClicked(trow, tcol);
+    }
+
     private void OnPointerDown(PointerDownEvent e, int row, int col)
     {
         if (e.button == 1) { _rDown = (row, col); Root.CapturePointer(e.pointerId); return; } // right = annotate

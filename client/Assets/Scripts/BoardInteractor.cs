@@ -472,6 +472,9 @@ public sealed class BoardInteractor : MonoBehaviour
         go.GetComponent<Renderer>().material = m;
     }
 
+    // Test hook: run a move through the same TryMove path a raycast click funnels into.
+    public void DebugTryMove(string from, string to) => TryMove(from, to);
+
     // Sample annotations for the screenshot harness to verify the 3D overlay.
     public void DebugAnnotate()
     {

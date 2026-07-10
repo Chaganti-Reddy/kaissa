@@ -9,4 +9,8 @@ public interface IBoardView
     void HighlightSquare(string sq, Color color);
     Action<string> SquareClickHandler { get; set; }
     bool AllowPremove { get; set; }
+
+    // Test hook: drive a move through the same input path a real click uses (select from-square, then
+    // target), so automated self-tests exercise the board input handlers, not just the move callback.
+    void DebugClickMove(string from, string to);
 }

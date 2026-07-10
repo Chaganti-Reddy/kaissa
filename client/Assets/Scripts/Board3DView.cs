@@ -38,4 +38,6 @@ public sealed class Board3DView : IBoardView
         if (_root3d != null && !string.IsNullOrEmpty(sq) && sq.Length >= 2)
             Board3D.Highlight(_root3d, sq.Substring(0, 2), color);
     }
+
+    public void DebugClickMove(string from, string to) => _interactor.DebugTryMove(from, to);
 }
