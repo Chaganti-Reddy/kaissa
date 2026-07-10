@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using Kaissa.Chess.Rules;
 using Kaissa.Training;
 using Kaissa.Training.Api;
@@ -10,30 +11,39 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Puzzle Blitz: solve as many as possible before three misses. Redesigned in UI Toolkit + the 2D
-// board. Drives RushSession; a hint scores nothing and breaks the streak (but costs no life).
+// Puzzle Blitz (chess.com Puzzle Rush): solve as many puzzles as you can under pressure. Three modes -
+// 3 minutes, 5 minutes, or Survival (no clock). Three wrong moves end the run in every mode; the clock
+// running out ends the timed modes. Difficulty ramps with each solve (RushSession). Puzzles are
+// multi-move (PuzzleSession) and a wrong move at any step is a strike. No hints, no takebacks - that is
+// the point. Per-mode personal bests are kept. Works on the 2D or 3D board through IBoardView.
 public sealed class RushController : MonoBehaviour
 {
+    private enum RushMode { ThreeMin, FiveMin, Survival }
+
+    private ScenarioLibrary _library;
     private RushSession _rush;
     private IBoardView _board;
     private VisualElement _boardHost;
     private PieceAudio _audio;
-    private Scenario _current;
-    private float _shownTime;
-    private bool _busy;
-    private bool _whiteBottom = true;
-    private bool _hintUsed;
-    private string _currentFen;
 
-    private VisualElement _root;
-    private Label _scoreLabel;
-    private Label _livesLabel;
-    private Label _streakLabel;
-    private Label _feedbackLabel;
+    private RushMode _mode = RushMode.ThreeMin;
+    private float _timeLimit;      // seconds; 0 = survival (count up)
+    private float _timeLeft;
+    private float _elapsed;
+    private bool _timing;
+
+    private PuzzleSession _session;
+    private Scenario _scenario;
+    private bool _started, _over, _busy, _whiteBottom = true;
+    private bool _graded;          // one strike/solve recorded per puzzle
+
+    private VisualElement _root, _overlayHost;
+    private VisualElement _sideBadge, _sideDot, _badge;
+    private Label _sideText, _timerLabel, _scoreLabel, _streakLabel, _feedbackLabel, _bestLabel;
+    private readonly VisualElement[] _strikeMarks = new VisualElement[3];
 
     private static readonly Color Good = new(0.30f, 0.85f, 0.45f, 0.55f);
     private static readonly Color Bad = new(0.92f, 0.33f, 0.33f, 0.55f);
-    private static readonly Color HintCol = new(0.51f, 0.72f, 0.30f, 0.55f);
 
     private void Start()
     {
@@ -42,7 +52,7 @@ public sealed class RushController : MonoBehaviour
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
         _audio = PieceAudio.Attach(gameObject);
-        _rush = RushSession.CreateDefault(startRating: 800, lives: 3);
+        _library = ScenarioLibrary.LoadDefault();
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -61,141 +71,512 @@ public sealed class RushController : MonoBehaviour
         _root.Add(UiKit.NavRail("Rush"));
         _root.Add(BuildCenter());
         _root.Add(BuildRightRail());
+
         _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnPlayerMove(uci), _audio);
-        DealNext();
+
+        _overlayHost = new VisualElement();
+        _overlayHost.style.position = Position.Absolute;
+        _overlayHost.style.left = 0; _overlayHost.style.top = 0; _overlayHost.style.right = 0; _overlayHost.style.bottom = 0;
+        _root.Add(_overlayHost);
+
+        if (Environment.GetCommandLineArgs().Contains("-kaissa-rushtest"))
+            StartCoroutine(AutoDemo());
+        else
+            ShowStartOverlay();
     }
+
+    // ---------------- layout ----------------
 
     private VisualElement BuildCenter()
     {
         var center = new VisualElement();
         center.style.flexGrow = 1; center.style.alignItems = Align.Center;
-        UiKit.Pad(center, 22, 24, 22, 24);
-        var title = UiKit.Text_("Puzzle Blitz", 24, UiKit.Text, bold: true);
-        title.style.marginBottom = 12; center.Add(title);
+        UiKit.Pad(center, 18, 24, 18, 24);
 
+        var head = UiKit.Row();
+        head.style.width = 480; head.style.justifyContent = Justify.SpaceBetween; head.style.marginBottom = 10;
+        head.Add(UiKit.Text_("Puzzle Blitz", 24, UiKit.Text, bold: true));
+        _timerLabel = UiKit.Text_("", 22, UiKit.Gold, bold: true);
+        head.Add(_timerLabel);
+        center.Add(head);
+
+        var sideRow = UiKit.Row();
+        sideRow.style.width = 480; sideRow.style.justifyContent = Justify.SpaceBetween; sideRow.style.marginBottom = 8;
+        _sideBadge = MakeSideBadge();
+        sideRow.Add(_sideBadge);
+        sideRow.Add(BuildStrikes());
+        center.Add(sideRow);
+
+        var boardWrap = new VisualElement();
+        boardWrap.style.width = 480; boardWrap.style.height = 480; boardWrap.style.flexShrink = 0;
         _boardHost = new VisualElement();
-        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.flexShrink = 0;
-        center.Add(_boardHost);
+        _boardHost.style.width = 480; _boardHost.style.height = 480; _boardHost.style.position = Position.Absolute;
+        boardWrap.Add(_boardHost);
+        boardWrap.Add(BuildBadge());
+        center.Add(boardWrap);
 
         _feedbackLabel = UiKit.Text_("", 16, UiKit.Dim, bold: true);
-        _feedbackLabel.style.marginTop = 12; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+        _feedbackLabel.style.marginTop = 10; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+        UiKit.Pad(_feedbackLabel, 6, 14, 6, 14); UiKit.Radius(_feedbackLabel, 8);
         center.Add(_feedbackLabel);
         return center;
+    }
+
+    private VisualElement MakeSideBadge()
+    {
+        _sideDot = new VisualElement();
+        _sideDot.style.width = 12; _sideDot.style.height = 12; UiKit.Radius(_sideDot, 6);
+        _sideDot.style.marginRight = 8;
+        _sideDot.style.borderTopWidth = _sideDot.style.borderBottomWidth = _sideDot.style.borderLeftWidth = _sideDot.style.borderRightWidth = 1;
+        _sideDot.style.borderTopColor = _sideDot.style.borderBottomColor = _sideDot.style.borderLeftColor = _sideDot.style.borderRightColor = UiKit.Line;
+        _sideText = UiKit.Text_("", 16, UiKit.Text, bold: true);
+        var row = UiKit.Row(_sideDot, _sideText);
+        UiKit.Pad(row, 6, 12, 6, 12); UiKit.Radius(row, 6);
+        return row;
+    }
+
+    private VisualElement BuildStrikes()
+    {
+        var row = UiKit.Row();
+        for (int i = 0; i < 3; i++)
+        {
+            var mark = new VisualElement();
+            mark.style.width = 16; mark.style.height = 16; UiKit.Radius(mark, 3);
+            mark.style.marginLeft = 6;
+            mark.style.borderTopWidth = mark.style.borderBottomWidth = mark.style.borderLeftWidth = mark.style.borderRightWidth = 2;
+            mark.style.borderTopColor = mark.style.borderBottomColor = mark.style.borderLeftColor = mark.style.borderRightColor = UiKit.Mute;
+            _strikeMarks[i] = mark;
+            row.Add(mark);
+        }
+        return row;
+    }
+
+    private VisualElement BuildBadge()
+    {
+        _badge = new VisualElement();
+        _badge.style.position = Position.Absolute;
+        _badge.style.width = 84; _badge.style.height = 84; UiKit.Radius(_badge, 42);
+        _badge.style.left = 198; _badge.style.top = 198;
+        _badge.style.borderTopWidth = _badge.style.borderBottomWidth = _badge.style.borderLeftWidth = _badge.style.borderRightWidth = 6;
+        _badge.style.display = DisplayStyle.None;
+        _badge.pickingMode = PickingMode.Ignore;
+        return _badge;
     }
 
     private VisualElement BuildRightRail()
     {
         var rail = new VisualElement();
-        rail.style.width = 340; UiKit.Pad(rail, 24, 24, 24, 0);
+        rail.style.width = 340; UiKit.Pad(rail, 18, 24, 18, 8);
 
-        var panel = new VisualElement();
-        panel.style.backgroundColor = UiKit.Panel;
-        panel.style.borderTopWidth = panel.style.borderBottomWidth = panel.style.borderLeftWidth = panel.style.borderRightWidth = 1;
-        panel.style.borderTopColor = panel.style.borderBottomColor = panel.style.borderLeftColor = panel.style.borderRightColor = UiKit.Line;
-        UiKit.Radius(panel, 12); UiKit.Pad(panel, 16);
-
-        var row = UiKit.Row(Stat("Score", out _scoreLabel), Stat("Lives", out _livesLabel), Stat("Streak", out _streakLabel));
-        row.style.justifyContent = Justify.SpaceBetween;
-        panel.Add(row);
-
-        var hint = UiKit.Ghost("Hint  (no score, breaks streak)", ShowHint, 13);
-        hint.style.marginTop = 16;
-        panel.Add(hint);
+        var panel = Panel(); UiKit.Pad(panel, 16);
+        panel.Add(UiKit.Text_("SCORE", 11, UiKit.Mute, bold: true));
+        _scoreLabel = UiKit.Text_("0", 40, UiKit.Text, bold: true);
+        panel.Add(_scoreLabel);
+        _streakLabel = UiKit.Text_("", 13, UiKit.Dim, bold: true);
+        panel.Add(_streakLabel);
         rail.Add(panel);
+
+        var best = Panel(); best.style.marginTop = 14; UiKit.Pad(best, 14, 16, 14, 16);
+        best.Add(UiKit.Text_("Personal best", 12, UiKit.Mute, bold: true));
+        _bestLabel = UiKit.Text_("", 14, UiKit.Text, bold: true);
+        _bestLabel.style.marginTop = 4; _bestLabel.style.whiteSpace = WhiteSpace.Normal;
+        best.Add(_bestLabel);
+        rail.Add(best);
         return rail;
     }
 
-    private VisualElement Stat(string key, out Label value)
+    private static VisualElement Panel()
     {
-        var k = UiKit.Text_(key.ToUpperInvariant(), 11, UiKit.Mute, bold: true);
-        value = UiKit.Text_("0", 24, UiKit.Text, bold: true);
-        return UiKit.Col(k, value);
+        var p = new VisualElement();
+        p.style.backgroundColor = UiKit.Panel;
+        p.style.borderTopWidth = p.style.borderBottomWidth = p.style.borderLeftWidth = p.style.borderRightWidth = 1;
+        p.style.borderTopColor = p.style.borderBottomColor = p.style.borderLeftColor = p.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(p, 12);
+        return p;
+    }
+
+    // ---------------- run lifecycle ----------------
+
+    private void ShowStartOverlay()
+    {
+        _started = false; _over = false; _timing = false;
+        _timerLabel.text = ""; SetFeedback("", UiKit.Dim);
+        UpdateBestLabel();
+
+        var dim = Overlay();
+        var panel = Panel(); UiKit.Pad(panel, 28); panel.style.alignItems = Align.Center; panel.style.width = 420;
+        panel.Add(UiKit.Text_("Puzzle Blitz", 28, UiKit.Text, bold: true));
+        var sub = UiKit.Text_("Solve as many as you can. Three misses ends the run.", 14, UiKit.Dim);
+        sub.style.marginTop = 8; sub.style.marginBottom = 18; sub.style.whiteSpace = WhiteSpace.Normal; sub.style.unityTextAlign = TextAnchor.MiddleCenter;
+        panel.Add(sub);
+
+        panel.Add(ModeButton("3 Minutes", KaissaSettings.RushBest3, () => StartRun(RushMode.ThreeMin)));
+        panel.Add(ModeButton("5 Minutes", KaissaSettings.RushBest5, () => StartRun(RushMode.FiveMin)));
+        panel.Add(ModeButton("Survival", KaissaSettings.RushBestSurvival, () => StartRun(RushMode.Survival)));
+
+        dim.Add(panel);
+        _overlayHost.Add(dim);
+        _overlayHost.style.display = DisplayStyle.Flex;
+    }
+
+    private VisualElement ModeButton(string label, int best, Action onClick)
+    {
+        var btn = UiKit.Primary(label, onClick, 16);
+        btn.style.width = 320; btn.style.marginBottom = 10;
+        btn.text = best > 0 ? $"{label}      best {best}" : label;
+        return btn;
+    }
+
+    private void StartRun(RushMode mode)
+    {
+        _mode = mode;
+        _timeLimit = mode switch { RushMode.ThreeMin => 180f, RushMode.FiveMin => 300f, _ => 0f };
+        _timeLeft = _timeLimit; _elapsed = 0f;
+        _rush = new RushSession(_library, startRating: 600, lives: 3);
+        _started = true; _over = false; _timing = true;
+        _overlayHost.style.display = DisplayStyle.None;
+        _overlayHost.Clear();
+        UpdateHud();
+        DealNext();
     }
 
     private void DealNext()
     {
-        var scenario = _rush.Next();
-        if (scenario == null) return;
-        _current = scenario;
-        _shownTime = Time.time;
-        _hintUsed = false;
-        _currentFen = scenario.Fen;
-        var board = BoardView.FromFen(scenario.Fen);
-        _whiteBottom = !KaissaSettings.Flip || board.WhiteToMove;
-        _board.Render(scenario.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
-        UpdateHud();
+        _scenario = _rush.Next();
+        if (_scenario == null) { EndRun("Out of puzzles"); return; }
+        _session = new PuzzleSession(_scenario);
+        _graded = false; _busy = false;
+        HideBadge();
+        SetFeedback("", UiKit.Dim);
+        _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
+        UpdateSideBadge();
+        _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
     }
 
     private void OnPlayerMove(string uci)
     {
-        if (_busy || _rush.IsOver) return;
-        var result = _rush.Submit(uci, TimeSpan.FromSeconds(Time.time - _shownTime), _hintUsed);
-        KaissaStreak.RecordToday();
+        if (!_started || _over || _busy || _session == null) return;
 
-        var afterFen = ApplyMove(_currentFen, uci);
-        if (afterFen != null) _board.Render(afterFen, false, uci, _whiteBottom);
-        if (result.Solutions.Count > 0) HighlightSolution(result.Solutions[0], result.Correct ? Good : Bad);
-        _feedbackLabel.style.color = result.Correct ? UiKit.GreenHi : UiKit.Danger;
-        _feedbackLabel.text = result.Correct ? "Correct!" : $"Missed — {string.Join(", ", result.Solutions)}";
-        if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
-        UpdateHud();
+        var result = _session.Submit(uci);
 
-        StartCoroutine(FeedbackThenNext(result.Correct ? 0.6f : 1.3f, result.IsOver, result.Score));
+        if (result.Outcome == PuzzleOutcome.Wrong)
+        {
+            RecordStrike(uci);
+            return;
+        }
+
+        _audio.PlayCorrect();
+        TintMove(result.PlayerMove, Good);
+
+        if (result.Outcome == PuzzleOutcome.Continue)
+        {
+            _busy = true;
+            StartCoroutine(PlayReply(result));
+        }
+        else
+        {
+            _board.Render(result.FenAfterReply, canMove: false, lastMove: result.ReplyMove, whiteBottom: _whiteBottom);
+            RecordSolve();
+        }
     }
 
-    private IEnumerator FeedbackThenNext(float seconds, bool over, int score)
+    private IEnumerator PlayReply(PuzzleMoveResult result)
+    {
+        yield return new WaitForSeconds(0.22f);
+        _board.Render(result.FenAfterReply, canMove: true, lastMove: result.ReplyMove, whiteBottom: _whiteBottom);
+        UpdateSideBadge();
+        _busy = false;
+    }
+
+    private void RecordSolve()
+    {
+        if (_graded) return;
+        _graded = true;
+        _rush.Submit(_scenario.Solutions[0], TimeSpan.Zero);
+        FlashBadge(true);
+        UpdateHud();
+        StartCoroutine(NextAfter(0.45f));
+    }
+
+    private void RecordStrike(string wrongMove)
+    {
+        if (_graded)
+            return;
+        _graded = true;
+        _rush.Submit(wrongMove, TimeSpan.Zero); // grades as a miss -> costs a life
+        _board.Render(_session.Fen, canMove: false, lastMove: null, whiteBottom: _whiteBottom); // snap back
+        TintMove(wrongMove, Bad);
+        var sol = _session.ExpectedMove;
+        if (!string.IsNullOrEmpty(sol)) TintMove(sol, Good); // show the move that was there
+        FlashBadge(false);
+        _audio.PlayWrong();
+        SetFeedback("Strike!", UiKit.Danger);
+        UpdateHud();
+        if (_rush.IsOver) { StartCoroutine(EndAfter(1.0f, "Three strikes")); return; }
+        StartCoroutine(NextAfter(1.0f));
+    }
+
+    private IEnumerator NextAfter(float seconds)
     {
         _busy = true;
         yield return new WaitForSeconds(seconds);
-        _feedbackLabel.text = "";
         _busy = false;
-        if (over)
+        if (!_over) DealNext();
+    }
+
+    private IEnumerator EndAfter(float seconds, string reason)
+    {
+        _busy = true;
+        yield return new WaitForSeconds(seconds);
+        EndRun(reason);
+    }
+
+    private void EndRun(string reason)
+    {
+        if (_over) return;
+        _over = true; _timing = false; _started = false;
+        _audio.PlayGameEnd();
+
+        int score = _rush.Score;
+        bool record = SaveBest(score);
+
+        var dim = Overlay();
+        var panel = Panel(); UiKit.Pad(panel, 28); panel.style.alignItems = Align.Center; panel.style.width = 420;
+        panel.Add(UiKit.Text_(reason, 16, UiKit.Dim, bold: true));
+        panel.Add(UiKit.Text_(score.ToString(), 56, UiKit.Text, bold: true));
+        panel.Add(UiKit.Text_("puzzles solved", 13, UiKit.Mute));
+        if (record)
         {
-            _audio.PlayGameEnd();
-            _feedbackLabel.style.color = UiKit.Gold;
-            _feedbackLabel.text = $"Game over!  Score {score}.   Esc — menu";
+            var badge = UiKit.Text_("New personal best", 15, UiKit.Gold, bold: true);
+            badge.style.marginTop = 8; panel.Add(badge);
         }
-        else DealNext();
+        else
+        {
+            var b = UiKit.Text_($"Best {BestFor(_mode)}", 14, UiKit.Dim); b.style.marginTop = 8; panel.Add(b);
+        }
+
+        var again = UiKit.Primary("Play again", () => StartRun(_mode), 15);
+        again.style.width = 320; again.style.marginTop = 18; again.style.marginBottom = 8; panel.Add(again);
+        var change = UiKit.Ghost("Change mode", ShowStartOverlay); change.style.width = 320; change.style.marginBottom = 8; panel.Add(change);
+        var menu = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu")); menu.style.width = 320; panel.Add(menu);
+
+        dim.Add(panel);
+        _overlayHost.Add(dim);
+        _overlayHost.style.display = DisplayStyle.Flex;
     }
 
-    private void ShowHint()
-    {
-        if (_busy || _rush.IsOver) return;
-        var sq = _rush.Hint();
-        if (sq != null) { _board.HighlightSquare(sq, HintCol); _hintUsed = true; }
-    }
-
-    private void HighlightSolution(string uci, Color color)
-    {
-        if (string.IsNullOrEmpty(uci) || uci.Length < 4) return;
-        _board.HighlightSquare(uci.Substring(0, 2), color);
-        _board.HighlightSquare(uci.Substring(2, 2), color);
-    }
+    // ---------------- hud / helpers ----------------
 
     private void UpdateHud()
     {
+        if (_rush == null) return;
         _scoreLabel.text = _rush.Score.ToString();
-        _livesLabel.text = _rush.Lives.ToString();
-        _streakLabel.text = _rush.Streak.ToString();
+        _streakLabel.text = _rush.Streak > 1 ? $"{_rush.Streak} in a row" : "";
+        int strikes = Mathf.Clamp(3 - _rush.Lives, 0, 3);
+        for (int i = 0; i < 3; i++)
+        {
+            bool hit = i < strikes;
+            _strikeMarks[i].style.backgroundColor = hit ? UiKit.Danger : new Color(0, 0, 0, 0);
+            var edge = hit ? UiKit.Danger : UiKit.Mute;
+            _strikeMarks[i].style.borderTopColor = _strikeMarks[i].style.borderBottomColor =
+                _strikeMarks[i].style.borderLeftColor = _strikeMarks[i].style.borderRightColor = edge;
+        }
     }
 
-    private static string ApplyMove(string fen, string uci)
+    private void UpdateBestLabel()
     {
-        try { var g = ChessGame.FromFen(fen); if (g.TryMakeMove(uci)) return g.Fen; }
-        catch { }
-        return null;
+        _bestLabel.text = $"3 min: {KaissaSettings.RushBest3}\n5 min: {KaissaSettings.RushBest5}\nSurvival: {KaissaSettings.RushBestSurvival}";
+    }
+
+    private int BestFor(RushMode m) => m switch
+    {
+        RushMode.ThreeMin => KaissaSettings.RushBest3,
+        RushMode.FiveMin => KaissaSettings.RushBest5,
+        _ => KaissaSettings.RushBestSurvival,
+    };
+
+    private bool SaveBest(int score)
+    {
+        if (score <= BestFor(_mode)) return false;
+        switch (_mode)
+        {
+            case RushMode.ThreeMin: KaissaSettings.RushBest3 = score; break;
+            case RushMode.FiveMin: KaissaSettings.RushBest5 = score; break;
+            default: KaissaSettings.RushBestSurvival = score; break;
+        }
+        return true;
+    }
+
+    private void UpdateSideBadge()
+    {
+        bool white = IsWhiteToMove(_session.Fen);
+        _sideText.text = white ? "White to move" : "Black to move";
+        _sideDot.style.backgroundColor = white ? Color.white : new Color(0.10f, 0.10f, 0.12f);
+        _sideBadge.style.backgroundColor = white ? new Color(1, 1, 1, 0.12f) : new Color(0, 0, 0, 0.28f);
+    }
+
+    private void SetFeedback(string text, Color color)
+    {
+        _feedbackLabel.text = text;
+        _feedbackLabel.style.color = color;
+        _feedbackLabel.style.backgroundColor = string.IsNullOrEmpty(text) ? new Color(0, 0, 0, 0) : new Color(0, 0, 0, 0.55f);
+    }
+
+    private void FlashBadge(bool correct)
+    {
+        var fill = correct ? new Color(0.30f, 0.72f, 0.35f, 0.55f) : new Color(0.80f, 0.28f, 0.24f, 0.55f);
+        var ring = correct ? new Color(0.35f, 0.85f, 0.42f, 0.95f) : new Color(0.92f, 0.36f, 0.30f, 0.95f);
+        _badge.style.backgroundColor = fill;
+        _badge.style.borderTopColor = _badge.style.borderBottomColor = _badge.style.borderLeftColor = _badge.style.borderRightColor = ring;
+        _badge.style.display = DisplayStyle.Flex;
+        CancelInvoke(nameof(HideBadge));
+        Invoke(nameof(HideBadge), 0.6f);
+    }
+
+    private void HideBadge() { if (_badge != null) _badge.style.display = DisplayStyle.None; }
+
+    private void TintMove(string uci, Color c)
+    {
+        if (string.IsNullOrEmpty(uci) || uci.Length < 4) return;
+        _board.HighlightSquare(uci.Substring(0, 2), c);
+        _board.HighlightSquare(uci.Substring(2, 2), c);
+    }
+
+    private VisualElement Overlay()
+    {
+        _overlayHost.Clear();
+        var dim = new VisualElement();
+        dim.style.flexGrow = 1;
+        dim.style.backgroundColor = new Color(0, 0, 0, 0.80f);
+        dim.style.alignItems = Align.Center; dim.style.justifyContent = Justify.Center;
+        return dim;
+    }
+
+    private static bool IsWhiteToMove(string fen)
+    {
+        var parts = fen.Split(' ');
+        return parts.Length < 2 || parts[1] != "b";
+    }
+
+    private static string Fmt(float seconds)
+    {
+        int s = Mathf.Max(0, Mathf.CeilToInt(seconds));
+        return $"{s / 60}:{s % 60:00}";
     }
 
     private void Update()
     {
-        if (Keyboard.current == null) return;
-        if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
-        else if (Keyboard.current.hKey.wasPressedThisFrame) ShowHint();
-        else if (Keyboard.current.fKey.wasPressedThisFrame && _currentFen != null)
+        if (_timing)
+        {
+            if (_timeLimit > 0f)
+            {
+                _timeLeft -= Time.deltaTime;
+                _timerLabel.text = Fmt(_timeLeft);
+                if (_timeLeft <= 0f) { _timing = false; EndRun("Time's up"); }
+            }
+            else
+            {
+                _elapsed += Time.deltaTime;
+                _timerLabel.text = Fmt(_elapsed);
+            }
+        }
+
+        var kb = Keyboard.current;
+        if (kb == null) return;
+        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        else if (kb.fKey.wasPressedThisFrame && _session != null && !_busy)
         {
             _whiteBottom = !_whiteBottom;
-            _board.Render(_currentFen, !_busy, null, _whiteBottom);
+            _board.Render(_session.Fen, !_over, null, _whiteBottom);
         }
+    }
+
+    // Self-test: films the whole flow densely so every frame of motion can be reviewed, not just
+    // endpoints - the mode picker, the setup-move arrival, a solve (move glide + correct flash +
+    // opponent reply), a wrong move (snap-back + strike flash + revealed solution), and the game-over
+    // summary. Runs in 2D and 3D. Frames are a dense burst (~0.05s apart) so the animation is visible.
+    private IEnumerator AutoDemo()
+    {
+        string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
+        System.IO.Directory.CreateDirectory(dir);
+        string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+
+        // Warm-up capture: the very first ScreenCapture of a session is unreliable, so spend it on a
+        // throwaway frame before the real ones.
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_warmup.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Mode picker overlay.
+        ShowStartOverlay();
+        yield return new WaitForSeconds(1.2f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_a_modes.png"));
+        yield return new WaitForSeconds(0.3f);
+
+        // Start a run and film the setup-move arriving on the board.
+        StartRun(RushMode.ThreeMin);
+        yield return Burst(dir, $"rush_{tag}_setup", 10, 0.05f);
+
+        // Film one solver move: the glide, the correct flash, and the opponent's reply.
+        if (_session?.ExpectedMove is { } mv)
+            OnPlayerMove(mv);
+        yield return Burst(dir, $"rush_{tag}_solve", 16, 0.05f);
+        yield return new WaitForSeconds(0.3f);
+
+        // Film a wrong move: the attempted piece snapping back, the red strike flash, and the
+        // correct move being revealed in green.
+        var wrong = FindLegalNonSolution();
+        if (wrong != null)
+            OnPlayerMove(wrong);
+        yield return Burst(dir, $"rush_{tag}_wrong", 18, 0.05f);
+
+        // Two more misses to reach the game-over summary.
+        yield return MissOnce();
+        yield return MissOnce();
+        yield return new WaitForSeconds(1.4f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_z_gameover.png"));
+        yield return new WaitForSeconds(0.5f);
+        Application.Quit();
+    }
+
+    private IEnumerator Burst(string dir, string prefix, int count, float interval)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"{prefix}_{i:000}.png"));
+            yield return new WaitForSeconds(interval);
+        }
+    }
+
+    private IEnumerator MissOnce()
+    {
+        int lives = _rush.Lives;
+        int guard = 0;
+        while (!_over && _rush.Lives == lives && guard++ < 4)
+        {
+            var wrong = FindLegalNonSolution();
+            if (wrong == null) break;
+            OnPlayerMove(wrong);
+            yield return new WaitForSeconds(0.9f);
+        }
+        yield return new WaitForSeconds(0.6f);
+    }
+
+    private string FindLegalNonSolution()
+    {
+        if (_session == null) return null;
+        var expected = _session.ExpectedMove;
+        foreach (var mv in ChessGame.FromFen(_session.Fen).LegalUciMoves())
+            if (!string.Equals(mv, expected, StringComparison.OrdinalIgnoreCase))
+                return mv;
+        return null;
+    }
+
+    private static string ArgValue(string key)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == key) return args[i + 1];
+        return null;
     }
 
     private static void EnsureEventSystem()
