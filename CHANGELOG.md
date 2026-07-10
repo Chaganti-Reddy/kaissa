@@ -9,6 +9,7 @@ A page-by-page rebuild and expansion of the training and study screens, each don
 - Puzzle Blitz: rebuilt as Puzzle Rush — 3-minute, 5-minute, and Survival modes, a countdown timer, a three-strike indicator, difficulty ramp, and per-mode personal bests.
 - Openings: rebuilt into an explorer (play moves; the position is named with its ECO and book continuations, each showing the opening it leads to), a browse/learn mode over 3,790 named openings grouped by first move with search and mainline stepping, and the repertoire drill.
 - Endgames: rebuilt into a drill trainer — play instructive endgames against the engine with a goal (win, draw, or promote) and a pass/fail result, grouped by category, with hint, retry, next, flip.
+- Learn: rebuilt into a guided lesson trainer. Each lesson explains a motif in plain terms, then has you solve it on a series of real positions with feedback and commentary; lessons are grouped by topic, completion is saved, and there are hint, restart, and flip controls.
 - Performance: opening and puzzle indexes are precomputed offline and shipped, parsed once per run, and warmed on a background thread at launch, so pages open near-instantly.
 
 ## v0.2.0 (alpha) — 2026-07-09

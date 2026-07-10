@@ -55,8 +55,9 @@ Status: `[x]` built (core + client) · `[~]` core built, client UI pending · `[
 
 ## Learn
 
-- [~] Pattern library browser: browse each motif, see an example, drill it — `ScenarioLibrary`
-- [ ] Structured lessons and courses with guided interactive positions and progress tracking
+- [x] Guided lessons: each teaches a motif in plain terms, then drills it on real positions you solve on the board, with feedback and completion tracking — `LessonLibrary` / `LessonSession`
+- [x] Lessons grouped by topic (Tactics, Checkmates); hint, restart, flip, and per-lesson progress saved
+- [ ] Longer courses and a wider lesson catalogue
 
 ## Vision and coordinates
 
