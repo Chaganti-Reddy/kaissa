@@ -75,3 +75,4 @@ Kaissa-Windows-*.zip
 
 # Opening source TSVs (CC0); the generated openings.json is committed
 third_party/openings/
+/shotsEg/

@@ -25,7 +25,8 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact")
             && !args.Contains("-kaissa-record") && !args.Contains("-kaissa-playtest")
             && !args.Contains("-annotate3d") && !args.Contains("-kaissa-puzzletest")
-            && !args.Contains("-kaissa-rushtest") && !args.Contains("-kaissa-openingtest"))
+            && !args.Contains("-kaissa-rushtest") && !args.Contains("-kaissa-openingtest")
+            && !args.Contains("-kaissa-endgametest"))
             return;
         Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
         var go = new GameObject("ScreenshotHarness");
@@ -81,6 +82,15 @@ public sealed class ScreenshotHarness : MonoBehaviour
         {
             // The Openings controller loads the book, exercises every mode, self-captures, and quits.
             SceneManager.LoadScene("Opening");
+            yield return new WaitForSeconds(45f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-endgametest"))
+        {
+            // The Endgames controller plays a drill vs the engine, self-captures, and quits.
+            SceneManager.LoadScene("Endgame");
             yield return new WaitForSeconds(45f);
             Application.Quit();
             yield break;
