@@ -14,8 +14,13 @@ public sealed record AnalysisLine(string Score, int Centipawns, string BestMove,
 public sealed class KaissaAnalysis : IAsyncDisposable
 {
     private readonly IChessEngine _engine;
+    private readonly bool _ownsEngine;
 
-    private KaissaAnalysis(IChessEngine engine) => _engine = engine;
+    private KaissaAnalysis(IChessEngine engine, bool ownsEngine)
+    {
+        _engine = engine;
+        _ownsEngine = ownsEngine;
+    }
 
     public static async Task<KaissaAnalysis> StartAsync(string enginePath, CancellationToken cancellationToken = default)
     {
@@ -23,12 +28,21 @@ public sealed class KaissaAnalysis : IAsyncDisposable
         await engine.HandshakeAsync(cancellationToken).ConfigureAwait(false);
         await engine.NewGameAsync(cancellationToken).ConfigureAwait(false);
         await engine.ConfigureStrengthAsync(StrengthSettings.Full, cancellationToken).ConfigureAwait(false);
-        return new KaissaAnalysis(engine);
+        return new KaissaAnalysis(engine, ownsEngine: true);
     }
+
+    /// <summary>
+    /// Analyzes on an already-running engine (e.g. a shared, app-wide analysis process). Not owned:
+    /// disposing leaves the process running. Full strength is set before each search so a shared engine
+    /// always analyzes at full strength even if some other consumer capped it.
+    /// </summary>
+    public static KaissaAnalysis Attach(IChessEngine engine) => new(engine, ownsEngine: false);
 
     /// <summary>Evaluates a position (FEN or "startpos") to the given depth.</summary>
     public async Task<AnalysisLine> EvaluateAsync(string position, int depth = 16, CancellationToken cancellationToken = default)
     {
+        // Full strength every time: a shared engine may have been capped by a bot game between calls.
+        await _engine.ConfigureStrengthAsync(StrengthSettings.Full, cancellationToken).ConfigureAwait(false);
         var result = await _engine.AnalyzeAsync(position, SearchLimits.ToDepth(depth), cancellationToken)
             .ConfigureAwait(false);
 
@@ -37,5 +51,5 @@ public sealed class KaissaAnalysis : IAsyncDisposable
         return new AnalysisLine(result.Evaluation?.ToString() ?? "", cp, result.BestMove, moves);
     }
 
-    public ValueTask DisposeAsync() => _engine.DisposeAsync();
+    public ValueTask DisposeAsync() => _ownsEngine ? _engine.DisposeAsync() : default;
 }

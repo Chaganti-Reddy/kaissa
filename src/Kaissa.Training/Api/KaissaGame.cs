@@ -12,17 +12,19 @@ namespace Kaissa.Training.Api;
 public sealed class KaissaGame : IAsyncDisposable
 {
     private readonly IChessEngine _engine;
+    private readonly bool _ownsEngine;
     private GameSession _session;
     private Side _playerSide;
 
-    private KaissaGame(IChessEngine engine, GameSession session, Side playerSide)
+    private KaissaGame(IChessEngine engine, GameSession session, Side playerSide, bool ownsEngine)
     {
         _engine = engine;
         _session = session;
         _playerSide = playerSide;
+        _ownsEngine = ownsEngine;
     }
 
-    /// <summary>Starts a game against an engine at the given executable path.</summary>
+    /// <summary>Starts a game against an engine at the given executable path (owns that process).</summary>
     public static async Task<KaissaGame> StartAsync(
         string enginePath,
         Side playerSide,
@@ -34,11 +36,29 @@ public sealed class KaissaGame : IAsyncDisposable
     {
         var engine = UciChessEngine.LaunchProcess(enginePath);
         await engine.HandshakeAsync(cancellationToken).ConfigureAwait(false);
+        return await AttachAsync(engine, playerSide, playerRating, fen, botThinkTime, fixedOpponentElo, ownsEngine: true, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Plays on an already-running engine (e.g. a shared, app-wide process). The engine is NOT owned:
+    /// disposing this game leaves the process running for the next screen to reuse.
+    /// </summary>
+    public static async Task<KaissaGame> AttachAsync(
+        IChessEngine engine,
+        Side playerSide,
+        double playerRating,
+        string? fen = null,
+        TimeSpan? botThinkTime = null,
+        int? fixedOpponentElo = null,
+        bool ownsEngine = false,
+        CancellationToken cancellationToken = default)
+    {
         await engine.NewGameAsync(cancellationToken).ConfigureAwait(false);
 
         var opponent = new AdaptiveOpponent(engine, botThinkTime ?? TimeSpan.FromMilliseconds(200), fixedElo: fixedOpponentElo);
         var session = new GameSession(engine, playerSide, playerRating, fen, opponent);
-        var game = new KaissaGame(engine, session, playerSide);
+        var game = new KaissaGame(engine, session, playerSide, ownsEngine);
 
         // If the player is Black, the bot (White) opens.
         if (session.SideToMove != playerSide && !session.IsGameOver)
@@ -124,5 +144,5 @@ public sealed class KaissaGame : IAsyncDisposable
         return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy, evalSeries, phaseAccuracy);
     }
 
-    public ValueTask DisposeAsync() => _engine.DisposeAsync();
+    public ValueTask DisposeAsync() => _ownsEngine ? _engine.DisposeAsync() : default;
 }
