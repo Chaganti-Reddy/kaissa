@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -25,69 +26,21 @@ public static class UiKit
 
     public static Color Hex(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f);
 
-    // ---- pointer (hand) cursor ----
-    // Unity has no built-in link/hand cursor at runtime, so we generate a clean anti-aliased pointing
-    // hand once and apply it to clickable elements. Swap _hand for a CC0 PNG later if a crisper look is
-    // wanted. NOTE: the hardware cursor is not captured by ScreenCapture, so this can't be self-verified.
-    private static Texture2D _hand;
-    private static readonly Vector2 HandHotspot = new(10f, 2f);
-
-    public static void Pointer(VisualElement e)
+    // ---- clickable interaction feedback ----
+    // A springy, glassy feel on anything clickable: a smooth scale "pop" on hover with a slight
+    // overshoot (EaseOutBack) and a quick press-in on mouse-down. Applied via inline style transitions
+    // so no stylesheet asset is needed. Call Interactive(e) on buttons, nav items, and rows.
+    public static void Interactive(VisualElement e, float hover = 1.05f)
     {
-        e.style.cursor = new StyleCursor(new UnityEngine.UIElements.Cursor { texture = HandTex(), hotspot = HandHotspot });
-    }
+        e.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50));
+        e.style.transitionProperty = new List<StylePropertyName> { new("scale"), new("background-color") };
+        e.style.transitionDuration = new List<TimeValue> { new(130, TimeUnit.Millisecond) };
+        e.style.transitionTimingFunction = new List<EasingFunction> { new(EasingMode.EaseOutBack) };
 
-    private static Texture2D HandTex()
-    {
-        if (_hand != null) return _hand;
-        const int w = 32, h = 40, ss = 3;
-        var px = new Color[w * h];
-        var white = new Color(0.97f, 0.97f, 0.98f);
-        var dark = new Color(0.07f, 0.07f, 0.09f);
-        for (int y = 0; y < h; y++)
-        for (int x = 0; x < w; x++)
-        {
-            float fill = 0f, band = 0f;
-            for (int sy = 0; sy < ss; sy++)
-            for (int sx = 0; sx < ss; sx++)
-            {
-                float d = HandSdf(x + (sx + 0.5f) / ss, y + (sy + 0.5f) / ss);
-                if (d < 0f) fill++;
-                if (d < 1.7f) band++;
-            }
-            float n = ss * ss;
-            fill /= n; band /= n;
-            var rgb = Color.Lerp(dark, white, fill);
-            // Texture origin is bottom-left; our SDF is authored top-down, so flip Y.
-            px[(h - 1 - y) * w + x] = new Color(rgb.r, rgb.g, rgb.b, Mathf.Max(fill, band));
-        }
-        _hand = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
-        _hand.SetPixels(px);
-        _hand.Apply();
-        return _hand;
-    }
-
-    // Signed distance to a pointing hand: index finger + fist + curled-finger bumps + thumb (top-down).
-    private static float HandSdf(float x, float y)
-    {
-        float d = Capsule(x, y, 10f, 3f, 10f, 18f, 3.4f);     // index finger
-        d = Mathf.Min(d, Circle(x, y, 13f, 29f, 8.6f));        // fist / palm
-        d = Mathf.Min(d, Circle(x, y, 18f, 24f, 3.6f));        // knuckles
-        d = Mathf.Min(d, Circle(x, y, 21f, 27f, 3.6f));
-        d = Mathf.Min(d, Circle(x, y, 23f, 31f, 3.6f));
-        d = Mathf.Min(d, Capsule(x, y, 6.5f, 25f, 8.5f, 32f, 2.8f)); // thumb
-        return d;
-    }
-
-    private static float Circle(float x, float y, float cx, float cy, float r)
-        => Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) - r;
-
-    private static float Capsule(float x, float y, float ax, float ay, float bx, float by, float r)
-    {
-        float pax = x - ax, pay = y - ay, bax = bx - ax, bay = by - ay;
-        float hh = Mathf.Clamp01((pax * bax + pay * bay) / (bax * bax + bay * bay));
-        float dx = pax - bax * hh, dy = pay - bay * hh;
-        return Mathf.Sqrt(dx * dx + dy * dy) - r;
+        e.RegisterCallback<MouseEnterEvent>(_ => e.style.scale = new Scale(new Vector3(hover, hover, 1f)));
+        e.RegisterCallback<MouseLeaveEvent>(_ => e.style.scale = new Scale(Vector3.one));
+        e.RegisterCallback<MouseDownEvent>(_ => e.style.scale = new Scale(new Vector3(0.96f, 0.96f, 1f)));
+        e.RegisterCallback<MouseUpEvent>(_ => e.style.scale = new Scale(new Vector3(hover, hover, 1f)));
     }
 
     public static VisualElement Col(params VisualElement[] kids)
@@ -157,7 +110,7 @@ public static class UiKit
         b.style.marginTop = 0; b.style.marginBottom = 0; b.style.marginLeft = 0; b.style.marginRight = 0;
         b.RegisterCallback<MouseEnterEvent>(_ => b.style.backgroundColor = GreenHi);
         b.RegisterCallback<MouseLeaveEvent>(_ => b.style.backgroundColor = Green);
-        Pointer(b);
+        Interactive(b);
         return b;
     }
 
@@ -174,7 +127,7 @@ public static class UiKit
         b.style.marginTop = 0; b.style.marginBottom = 0; b.style.marginLeft = 0; b.style.marginRight = 0;
         b.RegisterCallback<MouseEnterEvent>(_ => b.style.backgroundColor = Hex(0x45, 0x42, 0x39));
         b.RegisterCallback<MouseLeaveEvent>(_ => b.style.backgroundColor = Panel2);
-        Pointer(b);
+        Interactive(b);
         return b;
     }
 
@@ -235,7 +188,7 @@ public static class UiKit
         item.RegisterCallback<MouseEnterEvent>(_ => { if (!active) item.style.backgroundColor = Panel2; });
         item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = idle);
         item.RegisterCallback<ClickEvent>(_ => UnityEngine.SceneManagement.SceneManager.LoadScene(scene));
-        Pointer(item);
+        Interactive(item, 1.03f);
         return item;
     }
 
