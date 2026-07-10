@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Kaissa.Chess.Rules;
@@ -19,66 +18,62 @@ public sealed record OpeningEntry(string Eco, string Name, IReadOnlyList<string>
 public sealed record OpeningMove(string Uci, string San, string? Name, string? Eco);
 
 /// <summary>
-/// The opening book: every named ECO opening (from the CC0 Lichess dataset) plus a position tree so
-/// any position can be named and its book continuations listed. Pure logic, embedded data, so it is
-/// unit-testable and portable. Positions are keyed by placement+side+castling+ep (counters ignored),
-/// so transpositions unify.
+/// The opening book: every named ECO opening (CC0 Lichess dataset) plus a precomputed position index
+/// so any position can be named and its book continuations listed. The index is built offline by
+/// tools/OpeningImporter and shipped in openings.json, so at runtime this only deserializes lookup
+/// tables - no replaying openings, no freeze. Pure logic, embedded data; unit-testable and portable.
+/// Positions are keyed by placement+side+castling+ep (counters ignored) so transpositions unify.
 /// </summary>
 public sealed class OpeningBook
 {
     private readonly List<OpeningEntry> _all;
-    private readonly Dictionary<string, OpeningEntry> _named = new();       // position key -> named opening ending there
-    private readonly Dictionary<string, List<string>> _edges = new();        // position key -> book continuation moves (UCI)
+    private readonly Dictionary<string, OpeningEntry> _named;    // position key -> opening naming it
+    private readonly Dictionary<string, List<string>> _edges;    // position key -> book continuation moves (UCI)
 
-    private OpeningBook(List<OpeningEntry> all) => _all = all;
+    private OpeningBook(List<OpeningEntry> all, Dictionary<string, OpeningEntry> named, Dictionary<string, List<string>> edges)
+    {
+        _all = all; _named = named; _edges = edges;
+    }
 
     public IReadOnlyList<OpeningEntry> All => _all;
 
-    /// <summary>True once the position tree is built and Name/Continuations are usable.</summary>
-    public bool IsIndexed { get; private set; }
+    /// <summary>Kept for symmetry with other content; the index is always ready after Load.</summary>
+    public bool IsIndexed => true;
 
-    /// <summary>Parses the bundled book and builds its tree eagerly (for core/tests).</summary>
-    public static OpeningBook LoadDefault() => Load(OpenDefault());
+    // The book is immutable once loaded, so parse it once per run and share it. Thread-safe, so a
+    // launch-time preloader can warm it on a background thread and every page entry is then instant.
+    private static OpeningBook? _default;
+    private static readonly object _defaultLock = new();
 
-    /// <summary>Parses the bundled book WITHOUT building the tree, so a caller can build it
-    /// incrementally (see <see cref="BuildTreeChunked"/>) and keep the UI responsive.</summary>
-    public static OpeningBook LoadDeferredDefault() => ParseOnly(OpenDefault());
+    public static OpeningBook LoadDefault()
+    {
+        lock (_defaultLock)
+        {
+            if (_default != null) return _default;
+            var assembly = typeof(OpeningBook).Assembly;
+            var name = assembly.GetManifestResourceNames().Single(n => n.EndsWith("openings.json", StringComparison.Ordinal));
+            using var stream = assembly.GetManifestResourceStream(name)
+                ?? throw new InvalidOperationException("Bundled openings.json is missing.");
+            return _default = Load(stream);
+        }
+    }
 
     public static OpeningBook Load(Stream json)
     {
-        var book = ParseOnly(json);
-        book.BuildTree();
-        return book;
-    }
-
-    private static OpeningBook ParseOnly(Stream json)
-    {
         var dto = JsonSerializer.Deserialize<ContentDto>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? throw new InvalidOperationException("openings.json could not be parsed.");
+
         var all = dto.Openings.Select(o => new OpeningEntry(o.Eco, o.Name, o.Uci, o.Fen)).ToList();
-        return new OpeningBook(all);
-    }
-
-    private static Stream OpenDefault()
-    {
-        var assembly = typeof(OpeningBook).Assembly;
-        var name = assembly.GetManifestResourceNames().Single(n => n.EndsWith("openings.json", StringComparison.Ordinal));
-        return assembly.GetManifestResourceStream(name)
-            ?? throw new InvalidOperationException("Bundled openings.json is missing.");
-    }
-
-    /// <summary>Builds the position tree a chunk of entries at a time, yielding between chunks so a
-    /// coroutine can spread the work across frames. Iterate to completion before calling Name/Continuations.</summary>
-    public IEnumerator<bool> BuildTreeChunked(int perStep)
-    {
-        int i = 0;
-        foreach (var entry in _all)
+        var named = new Dictionary<string, OpeningEntry>(dto.Positions.Count);
+        var edges = new Dictionary<string, List<string>>(dto.Positions.Count);
+        foreach (var (key, pos) in dto.Positions)
         {
-            ProcessEntry(entry);
-            if (++i % perStep == 0) yield return true;
+            if (!string.IsNullOrEmpty(pos.Name))
+                named[key] = new OpeningEntry(pos.Eco ?? "", pos.Name!, Array.Empty<string>(), "");
+            if (pos.Moves.Count > 0)
+                edges[key] = pos.Moves;
         }
-        IsIndexed = true;
-        yield return false;
+        return new OpeningBook(all, named, edges);
     }
 
     /// <summary>The opening that names this exact position, or null.</summary>
@@ -90,7 +85,7 @@ public sealed class OpeningBook
         if (!_edges.TryGetValue(Key(fen), out var moves))
             return Array.Empty<OpeningMove>();
 
-        var game = ChessGame.FromFen(fen);
+        var game = ChessGame.FromFen(fen); // one position, computed on demand - cheap
         var result = new List<OpeningMove>(moves.Count);
         foreach (var uci in moves)
         {
@@ -113,33 +108,6 @@ public sealed class OpeningBook
             .ToList();
     }
 
-    private void BuildTree()
-    {
-        foreach (var entry in _all) ProcessEntry(entry);
-        IsIndexed = true;
-    }
-
-    private void ProcessEntry(OpeningEntry entry)
-    {
-        if (!string.IsNullOrEmpty(entry.Fen))
-        {
-            var termKey = Key(entry.Fen);
-            // Prefer the longest line naming a position (most specific), else keep the first.
-            if (!_named.TryGetValue(termKey, out var cur) || entry.Uci.Count > cur.Uci.Count)
-                _named[termKey] = entry;
-        }
-
-        // Replay to record each book edge (position -> next move).
-        var game = ChessGame.Start();
-        foreach (var uci in entry.Uci)
-        {
-            var key = Key(game.Fen);
-            if (!_edges.TryGetValue(key, out var list)) _edges[key] = list = new List<string>();
-            if (!list.Contains(uci)) list.Add(uci);
-            if (!game.TryMakeMove(uci)) break;
-        }
-    }
-
     private static string? Apply(string fen, string uci)
     {
         try { var g = ChessGame.FromFen(fen); return g.TryMakeMove(uci) ? g.Fen : null; }
@@ -156,6 +124,7 @@ public sealed class OpeningBook
     private sealed class ContentDto
     {
         [JsonPropertyName("openings")] public List<OpeningDto> Openings { get; init; } = new();
+        [JsonPropertyName("positions")] public Dictionary<string, PositionDto> Positions { get; init; } = new();
     }
 
     private sealed class OpeningDto
@@ -164,5 +133,12 @@ public sealed class OpeningBook
         [JsonPropertyName("name")] public string Name { get; init; } = "";
         [JsonPropertyName("uci")] public List<string> Uci { get; init; } = new();
         [JsonPropertyName("fen")] public string Fen { get; init; } = "";
+    }
+
+    private sealed class PositionDto
+    {
+        [JsonPropertyName("name")] public string? Name { get; init; }
+        [JsonPropertyName("eco")] public string? Eco { get; init; }
+        [JsonPropertyName("moves")] public List<string> Moves { get; init; } = new();
     }
 }

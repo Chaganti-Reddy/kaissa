@@ -61,33 +61,52 @@ public sealed class ScenarioLibrary
         }
     }
 
-    /// <summary>Loads the bundled default content shipped as an embedded resource.</summary>
+    // The bundled content is 51k puzzles (~16 MB). Parse it once per run and cache the immutable
+    // pattern/scenario lists; each LoadDefault then just re-indexes them (~50 ms) instead of re-parsing
+    // (~1-2 s). Thread-safe so a launch-time preloader can warm it on a background thread.
+    private static (List<Pattern> Patterns, List<Scenario> Scenarios)? _defaultContent;
+    private static readonly object _defaultLock = new();
+
+    /// <summary>Loads the bundled default content shipped as an embedded resource (parsed once, cached).</summary>
     public static ScenarioLibrary LoadDefault()
+    {
+        lock (_defaultLock)
+        {
+            _defaultContent ??= ParseDefault();
+        }
+        var c = _defaultContent.Value;
+        return new ScenarioLibrary(c.Patterns, c.Scenarios);
+    }
+
+    private static (List<Pattern>, List<Scenario>) ParseDefault()
     {
         var assembly = Assembly.GetExecutingAssembly();
         var resourceName = assembly.GetManifestResourceNames()
             .Single(n => n.EndsWith("scenarios.json", StringComparison.Ordinal));
-
         using var stream = assembly.GetManifestResourceStream(resourceName)
             ?? throw new InvalidOperationException("Bundled scenarios.json is missing.");
-
-        return Load(stream);
+        return Parse(stream);
     }
 
     public static ScenarioLibrary Load(Stream json)
+    {
+        var (patterns, scenarios) = Parse(json);
+        return new ScenarioLibrary(patterns, scenarios);
+    }
+
+    private static (List<Pattern>, List<Scenario>) Parse(Stream json)
     {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var dto = JsonSerializer.Deserialize<ContentDto>(json, options)
             ?? throw new InvalidOperationException("Content could not be parsed.");
 
-        var patterns = dto.Patterns.Select(p => new Pattern(new PatternId(p.Id), p.Name, p.Description));
+        var patterns = dto.Patterns.Select(p => new Pattern(new PatternId(p.Id), p.Name, p.Description)).ToList();
         var scenarios = dto.Scenarios.Select(s =>
             new Scenario(s.Id, new PatternId(s.Pattern), s.Fen, s.Solutions, s.Prompt, s.Rating,
                 s.Line is { Count: > 0 } ? s.Line : null,
                 s.Themes is { Count: > 0 } ? s.Themes : null,
-                string.IsNullOrEmpty(s.Setup) ? null : s.Setup));
-
-        return new ScenarioLibrary(patterns, scenarios);
+                string.IsNullOrEmpty(s.Setup) ? null : s.Setup)).ToList();
+        return (patterns, scenarios);
     }
 
     private sealed class ContentDto
