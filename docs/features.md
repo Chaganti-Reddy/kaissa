@@ -9,7 +9,8 @@ Status: `[x]` built (core + client) · `[~]` core built, client UI pending · `[
 ## Puzzles / tactics
 
 - [x] Multi-move puzzles: play the whole solution line; the opponent's replies play automatically — `PuzzleSession`
-- [x] Large bundled set — 51,000 positions across all rating bands, with theme tags
+- [x] Large bundled set — 52,500 positions spanning the full rating range (about 400 to 3100, i.e. beginner through grandmaster), with theme tags
+- [x] Difficulty bands from Beginner to Grandmaster; the hardest puzzles (2600+) are included, not capped
 - [x] Rated adaptive mode: Glicko-style rating with spaced repetition per pattern — the core loop
 - [x] Custom practice by theme and by difficulty band — on-page mode picker
 - [x] Daily puzzle — `DailyPuzzle`
