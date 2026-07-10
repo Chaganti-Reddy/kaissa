@@ -25,7 +25,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (!args.Contains("-kaissa-shots") && !args.Contains("-kaissa-interact")
             && !args.Contains("-kaissa-record") && !args.Contains("-kaissa-playtest")
             && !args.Contains("-annotate3d") && !args.Contains("-kaissa-puzzletest")
-            && !args.Contains("-kaissa-rushtest"))
+            && !args.Contains("-kaissa-rushtest") && !args.Contains("-kaissa-openingtest"))
             return;
         Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
         var go = new GameObject("ScreenshotHarness");
@@ -77,6 +77,15 @@ public sealed class ScreenshotHarness : MonoBehaviour
             yield break;
         }
 
+        if (args.Contains("-kaissa-openingtest"))
+        {
+            // The Openings controller loads the book, exercises every mode, self-captures, and quits.
+            SceneManager.LoadScene("Opening");
+            yield return new WaitForSeconds(45f);
+            Application.Quit();
+            yield break;
+        }
+
         if (args.Contains("-annotate3d"))
         {
             KaissaSettings.BoardView = 1; // force 3D
@@ -117,7 +126,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
     }
 
     // Drives Board2D through each interaction state and captures a PNG of each, logging any move it
-    // reports — so the interactions can be verified without a human.
+    // reports - so the interactions can be verified without a human.
     private IEnumerator InteractPass(string dir)
     {
         var camGo = new GameObject("cam");
