@@ -345,12 +345,62 @@ public sealed class KaissaGameController : MonoBehaviour
     // the bot replies, and captured pieces / move list populate — all observable in the frame captures.
     private System.Collections.IEnumerator AutoPlay()
     {
-        yield return new WaitForSeconds(2.5f);
+        string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
+        System.IO.Directory.CreateDirectory(dir);
+        string tag = KaissaSettings.BoardView == 1 ? "3d" : "2d";
+
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_warmup.png"));
+        yield return new WaitForSeconds(1.8f); // board + clock settle
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_start.png"));
+        yield return new WaitForSeconds(0.5f); // let the start frame flush before moving
+
+        // Opening move: film the glide + capture animation while the bot thinks.
         if (_game != null && !_busy) OnMove("e2e4");
-        yield return new WaitForSeconds(3f);
+        yield return Burst(dir, $"play_{tag}_move", 12, 0.06f);
+        yield return new WaitForSeconds(2.5f); // bot reply
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_afterbot.png"));
+
         if (_game != null && !_busy && !_game.IsGameOver) OnMove("g1f3");
-        yield return new WaitForSeconds(3f);
-        if (_game != null && !_busy && !_game.IsGameOver) OnMove("f1c4");
+        yield return new WaitForSeconds(2.8f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_midgame.png"));
+
+        // Flip the board, then back. Yield AFTER the capture before flipping back, or the capture
+        // (grabbed at end of frame) would record the already-reverted board.
+        Flip(); yield return new WaitForSeconds(0.8f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_flip.png"));
+        yield return new WaitForSeconds(0.4f);
+        Flip(); yield return new WaitForSeconds(0.3f);
+
+        // Takeback the last move.
+        Takeback(); yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_takeback.png"));
+
+        // Move-list navigation: jump to an earlier ply.
+        RowClicked(0); yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_movenav.png"));
+
+        // New-game picker (time control + opponent).
+        NewGame(); yield return new WaitForSeconds(0.8f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_picker.png"));
+        yield return new WaitForSeconds(0.4f);
+        Application.Quit();
+    }
+
+    private System.Collections.IEnumerator Burst(string dir, string prefix, int count, float interval)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"{prefix}_{i:000}.png"));
+            yield return new WaitForSeconds(interval);
+        }
+    }
+
+    private static string ArgValue(string key)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == key) return args[i + 1];
+        return null;
     }
 
     private async void OnMove(string uci)
