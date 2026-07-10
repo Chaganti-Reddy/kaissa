@@ -27,6 +27,9 @@ public static class KaissaSettings
         public string lastActive = ""; // yyyy-MM-dd of the last active day
         public long puzzleXp;         // total puzzle XP earned (hybrid progression / tiers)
         public int puzzleBestStreak;  // best consecutive-solve run in a single puzzle session
+        public int rushBest3;         // Puzzle Rush best score: 3-minute mode
+        public int rushBest5;         // Puzzle Rush best score: 5-minute mode
+        public int rushBestSurvival;  // Puzzle Rush best score: survival mode
     }
 
     private static Data _data;
@@ -62,4 +65,7 @@ public static class KaissaSettings
     public static string LastActive { get => D.lastActive; set { D.lastActive = value; Save(); } }
     public static long PuzzleXp { get => D.puzzleXp; set { D.puzzleXp = value; Save(); } }
     public static int PuzzleBestStreak { get => D.puzzleBestStreak; set { D.puzzleBestStreak = value; Save(); } }
+    public static int RushBest3 { get => D.rushBest3; set { D.rushBest3 = value; Save(); } }
+    public static int RushBest5 { get => D.rushBest5; set { D.rushBest5 = value; Save(); } }
+    public static int RushBestSurvival { get => D.rushBestSurvival; set { D.rushBestSurvival = value; Save(); } }
 }
