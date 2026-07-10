@@ -71,3 +71,7 @@ Kaissa-Windows-*.zip
 /shotsPZ/
 /shotsRush/
 /shotsVerify/
+/shotsOp/
+
+# Opening source TSVs (CC0); the generated openings.json is committed
+third_party/openings/
