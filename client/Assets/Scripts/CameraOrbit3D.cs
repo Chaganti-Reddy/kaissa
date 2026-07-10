@@ -9,8 +9,9 @@ public sealed class CameraOrbit3D : MonoBehaviour
 
     private static readonly Vector3 Center = new(3.5f, 0f, 3.5f);
     private float _yaw = 180f;   // 180 = behind White
-    private float _pitch = 64f;  // elevation - steeper for a cleaner, less-foreshortened view
-    private float _dist = 10.5f;
+    private float _pitch = 66f;  // elevation - steeper for a cleaner, less-foreshortened view
+    private float _dist = 11.8f; // pulled back so the whole board fits inside the panel without its
+                                 // near edge spilling over the feedback pill / clocks below it
 
     private void Awake() => Instance = this;
     private void OnDestroy() { if (Instance == this) Instance = null; }
