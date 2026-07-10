@@ -26,5 +26,10 @@ public static class KaissaPreloader
             try { ScenarioLibrary.LoadDefault(); }
             catch (System.Exception e) { Debug.LogWarning($"Preload scenarios failed: {e.Message}"); }
         });
+
+        // Launch the shared Stockfish processes now (on the main thread) so Play/Endgames/Analysis
+        // never pay a per-page engine spawn - the ~1-2s launch happens once, in the background, at start.
+        try { EngineHub.Warm(); }
+        catch (System.Exception e) { Debug.LogWarning($"Preload engine failed: {e.Message}"); }
     }
 }

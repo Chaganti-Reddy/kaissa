@@ -150,12 +150,11 @@ public sealed class AnalysisController : MonoBehaviour
 
     private IEnumerator StartEngine()
     {
-        var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
-        if (!File.Exists(enginePath)) { _eval.text = "Engine not found"; yield break; }
-        var task = KaissaAnalysis.StartAsync(enginePath);
+        if (!EngineHub.Available) { _eval.text = "Engine not found"; yield break; }
+        var task = EngineHub.AnalysisEngineAsync();
         while (!task.IsCompleted) yield return null;
         if (task.IsFaulted) { _eval.text = "Engine failed"; Debug.LogError(task.Exception); yield break; }
-        _engine = task.Result;
+        _engine = KaissaAnalysis.Attach(task.Result);
         Evaluate();
     }
 

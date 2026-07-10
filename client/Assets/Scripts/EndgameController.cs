@@ -223,7 +223,7 @@ public sealed class EndgameController : MonoBehaviour
         SetFeedback(_game == null ? "Starting engine..." : _current.GoalText + ".", UiKit.Dim);
         _whiteBottom = _current.PlayerWhite;
 
-        if (!File.Exists(_enginePath))
+        if (!EngineHub.Available)
         {
             SetFeedback("Stockfish not found. Run scripts/build-unity-plugins.ps1.", UiKit.Danger);
             _board.Render(_current.Fen, canMove: false, lastMove: null, whiteBottom: _whiteBottom);
@@ -233,8 +233,10 @@ public sealed class EndgameController : MonoBehaviour
         var side = _current.PlayerWhite ? Side.White : Side.Black;
         try
         {
+            // Shared, app-wide play engine (spawned once at launch); reused across every drill.
+            var engine = await EngineHub.PlayEngineAsync();
             if (_game == null)
-                _game = await KaissaGame.StartAsync(_enginePath, side, 1500,
+                _game = await KaissaGame.AttachAsync(engine, side, 1500,
                     fen: _current.Fen, botThinkTime: TimeSpan.FromMilliseconds(300), fixedOpponentElo: 2200);
             else
                 await _game.ResetAsync(side, 1500,
@@ -293,11 +295,11 @@ public sealed class EndgameController : MonoBehaviour
 
     private IEnumerator StartAnalysis()
     {
-        if (!File.Exists(_enginePath)) yield break;
-        var task = KaissaAnalysis.StartAsync(_enginePath);
+        if (!EngineHub.Available) yield break;
+        var task = EngineHub.AnalysisEngineAsync();
         while (!task.IsCompleted) yield return null;
         if (task.IsFaulted) { Debug.LogWarning(task.Exception?.Message); yield break; }
-        _analysis = task.Result;
+        _analysis = KaissaAnalysis.Attach(task.Result);
     }
 
     private async void ShowHint()

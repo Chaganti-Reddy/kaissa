@@ -315,8 +315,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private async System.Threading.Tasks.Task StartGameCore(string label, int? fixedElo)
     {
-        var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
-        if (!File.Exists(enginePath))
+        if (!EngineHub.Available)
         {
             _statusLabel.text = "Stockfish not found. Run scripts/build-unity-plugins.ps1.";
             return;
@@ -331,9 +330,10 @@ public sealed class KaissaGameController : MonoBehaviour
         _gameStartFen = startFen ?? ChessGame.StartFen;
         try
         {
-            // Reuse the live engine when starting another game, so New/Rematch is instant (no respawn).
+            // Use the shared, app-wide play engine (spawned once at launch); reuse it across games.
+            var engine = await EngineHub.PlayEngineAsync();
             if (_game == null)
-                _game = await KaissaGame.StartAsync(enginePath, Side.White, playerRating,
+                _game = await KaissaGame.AttachAsync(engine, Side.White, playerRating,
                     fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
             else
                 await _game.ResetAsync(Side.White, playerRating,
@@ -551,12 +551,11 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private System.Collections.IEnumerator StartAnalysis()
     {
-        var enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
-        if (!File.Exists(enginePath)) yield break;
-        var task = KaissaAnalysis.StartAsync(enginePath);
+        if (!EngineHub.Available) yield break;
+        var task = EngineHub.AnalysisEngineAsync();
         while (!task.IsCompleted) yield return null;
         if (task.IsFaulted) { Debug.LogError(task.Exception); yield break; }
-        _analysis = task.Result;
+        _analysis = KaissaAnalysis.Attach(task.Result);
         EvaluateEval(_currentFen);
     }
 
