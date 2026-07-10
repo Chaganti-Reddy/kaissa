@@ -64,7 +64,10 @@ public sealed class LessonSession
     {
         var pool = library.ForPattern(lesson.Pattern).ToList();
         if (seed is { } s) Shuffle(pool, s);
-        int want = Math.Min(lesson.Challenges, Math.Max(0, pool.Count));
+
+        // Reserve pool[0] as the intro's illustrative position, then draw challenges from pool[1..] so the
+        // position the player is asked to solve is never the same one the intro just walked through.
+        int want = Math.Min(lesson.Challenges, Math.Max(0, pool.Count - 1));
 
         int total = want + 1; // intro + challenges
         if (pool.Count > 0)
@@ -73,7 +76,7 @@ public sealed class LessonSession
 
         for (int i = 0; i < want; i++)
         {
-            var sc = pool[i];
+            var sc = pool[i + 1];
             _steps.Add(new LessonStep(sc.Fen, "Your turn - find it.", true, sc.Solutions.Count > 0 ? sc.Solutions[0] : null,
                 "Correct.", WhiteToMove(sc.Fen), i + 1, total));
         }

@@ -40,6 +40,7 @@ public class LessonTests
         {
             Assert.True(session[i].Interactive);              // challenges ask for a move
             Assert.False(string.IsNullOrEmpty(session[i].ExpectedMove));
+            Assert.NotEqual(session[0].Fen, session[i].Fen);  // never re-show the intro's position as a challenge
         }
     }
 
