@@ -210,20 +210,19 @@ public sealed class RushController : MonoBehaviour
         sub.style.marginTop = 8; sub.style.marginBottom = 18; sub.style.whiteSpace = WhiteSpace.Normal; sub.style.unityTextAlign = TextAnchor.MiddleCenter;
         panel.Add(sub);
 
-        panel.Add(ModeButton("3 Minutes", KaissaSettings.RushBest3, () => StartRun(RushMode.ThreeMin)));
-        panel.Add(ModeButton("5 Minutes", KaissaSettings.RushBest5, () => StartRun(RushMode.FiveMin)));
-        panel.Add(ModeButton("Survival", KaissaSettings.RushBestSurvival, () => StartRun(RushMode.Survival)));
+        panel.Add(ModeButton("3 Minutes", () => StartRun(RushMode.ThreeMin)));
+        panel.Add(ModeButton("5 Minutes", () => StartRun(RushMode.FiveMin)));
+        panel.Add(ModeButton("Survival", () => StartRun(RushMode.Survival)));
 
         dim.Add(panel);
         _overlayHost.Add(dim);
         _overlayHost.style.display = DisplayStyle.Flex;
     }
 
-    private VisualElement ModeButton(string label, int best, Action onClick)
+    private VisualElement ModeButton(string label, Action onClick)
     {
         var btn = UiKit.Primary(label, onClick, 16);
         btn.style.width = 320; btn.style.marginBottom = 10;
-        btn.text = best > 0 ? $"{label}      best {best}" : label;
         return btn;
     }
 
@@ -234,6 +233,7 @@ public sealed class RushController : MonoBehaviour
         _timeLeft = _timeLimit; _elapsed = 0f;
         _rush = new RushSession(_library, startRating: 600, lives: 3);
         _started = true; _over = false; _timing = true;
+        _timerLabel.text = Fmt(_timeLimit > 0f ? _timeLimit : 0f); // paint the clock immediately, not next frame
         _overlayHost.style.display = DisplayStyle.None;
         _overlayHost.Clear();
         UpdateHud();
