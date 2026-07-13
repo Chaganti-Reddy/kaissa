@@ -68,6 +68,7 @@ Status: `[x]` built (core + client) · `[~]` core built, client UI pending · `[
 
 ## Progression and motivation
 
+- [x] Insights dashboard: headline stat tiles, a rating-over-time chart, tier/XP progression, puzzle / Puzzle Blitz / play summaries, and the pattern-mastery map, with a one-tap drill of the weakest motif
 - [x] Player rating with history, streaks, and accuracy — `KaissaTrainer.GetStats()`
 - [x] Per-pattern mastery map derived from the spaced-repetition schedule — the pattern library made visible — `PuzzleProgression`
 - [x] Hybrid XP and named tiers (Wood through Grandmaster) alongside the rating — `PuzzleProgression`
