@@ -26,6 +26,7 @@ public sealed class KaissaGameController : MonoBehaviour
     private bool _busy;
     private string _lastMove;
     private bool _whiteBottom = true;
+    private bool _playerWhite = true;
     private string _currentFen = ChessGame.StartFen;
     private bool _canMove;
 
@@ -44,13 +45,16 @@ public sealed class KaissaGameController : MonoBehaviour
     private Label _matLabel;
     private Label _topName;
     private Label _botName;
-    private Label _botCaptured;
-    private Label _youCaptured;
+    private VisualElement _botCaptured;   // mini captured-piece tray (opponent plate)
+    private VisualElement _youCaptured;   // mini captured-piece tray (player plate)
+    private Label _botMat, _youMat;       // material advantage "+N" on the side that is ahead
     private Label _botClock;
     private Label _youClock;
+    private double _playerRating;
     private bool _timed, _flagged, _activeWhite = true;
     private double _clockWhite, _clockBlack, _increment;
     private int _tcIndex;
+    private int _pickSide; // 0 White, 1 Black, 2 Random
     private string _lastLabel; private int? _lastElo;
     private static readonly (string name, int secs, int inc)[] TimeControls =
     {
@@ -116,9 +120,10 @@ public sealed class KaissaGameController : MonoBehaviour
         center.Add(_titleLabel);
 
         _botName = UiKit.Text_("Bot", 15, UiKit.Dim, bold: true);
-        _botCaptured = UiKit.Text_("", 16, UiKit.Mute);
+        _botCaptured = CapturedRow();
+        _botMat = UiKit.Text_("", 13, UiKit.Dim, bold: true);
         _botClock = ClockLabel();
-        center.Add(Strip(_botName, _botCaptured, _botClock));
+        center.Add(Strip(_botName, _botCaptured, _botMat, _botClock));
 
         var boardRow = new VisualElement();
         boardRow.style.flexDirection = FlexDirection.Row;
@@ -141,9 +146,10 @@ public sealed class KaissaGameController : MonoBehaviour
         center.Add(boardRow);
 
         _topName = UiKit.Text_("you", 15, UiKit.Text, bold: true);
-        _youCaptured = UiKit.Text_("", 16, UiKit.Mute);
+        _youCaptured = CapturedRow();
+        _youMat = UiKit.Text_("", 13, UiKit.Dim, bold: true);
         _youClock = ClockLabel();
-        center.Add(Strip(_topName, _youCaptured, _youClock));
+        center.Add(Strip(_topName, _youCaptured, _youMat, _youClock));
 
         _statusLabel = UiKit.Text_("", 15, UiKit.Dim);
         _statusLabel.style.marginTop = 12;
@@ -152,18 +158,56 @@ public sealed class KaissaGameController : MonoBehaviour
         return center;
     }
 
-    private VisualElement Strip(Label name, Label captured, Label clock)
+    private VisualElement Strip(Label name, VisualElement captured, Label mat, Label clock)
     {
         // Drawn avatar chip (no glyph): a small neutral disc next to the player name.
         var av = new VisualElement();
-        av.style.width = 18; av.style.height = 18; UiKit.Radius(av, 9);
+        av.style.width = 22; av.style.height = 22; UiKit.Radius(av, 11);
         av.style.backgroundColor = UiKit.Panel3; av.style.flexShrink = 0;
         av.style.marginRight = 8;
         captured.style.marginLeft = 10;
+        mat.style.marginLeft = 6;
         var spacer = new VisualElement(); spacer.style.flexGrow = 1;
-        var s = UiKit.Row(av, name, captured, spacer, clock);
+        var s = UiKit.Row(av, name, captured, mat, spacer, clock);
         s.style.width = 480; UiKit.Pad(s, 6, 4, 6, 4);
         return s;
+    }
+
+    private static VisualElement CapturedRow()
+    {
+        var r = UiKit.Row();
+        r.style.flexShrink = 1; r.style.flexWrap = Wrap.NoWrap;
+        return r;
+    }
+
+    // Fill a plate's tray with mini art of the captured pieces of the given colour (start minus current).
+    private static void FillCaptured(VisualElement row, BoardView board, bool white)
+    {
+        row.Clear();
+        var start = new Dictionary<char, int> { ['P'] = 8, ['N'] = 2, ['B'] = 2, ['R'] = 2, ['Q'] = 1 };
+        var cur = new Dictionary<char, int> { ['P'] = 0, ['N'] = 0, ['B'] = 0, ['R'] = 0, ['Q'] = 0 };
+        foreach (var p in board.Pieces)
+            if (char.IsUpper(p.Piece) == white)
+            {
+                char u = char.ToUpperInvariant(p.Piece);
+                if (cur.ContainsKey(u)) cur[u]++;
+            }
+        foreach (var k in new[] { 'Q', 'R', 'B', 'N', 'P' })
+        {
+            char code = white ? k : char.ToLowerInvariant(k);
+            var tex = PieceArt.Get(code);
+            for (int i = 0; i < start[k] - cur[k]; i++)
+            {
+                var img = new VisualElement { pickingMode = PickingMode.Ignore };
+                img.style.width = 16; img.style.height = 18; img.style.marginRight = -3; // overlap slightly, chess.com-style
+                if (tex != null)
+                {
+                    img.style.backgroundImage = new StyleBackground(tex);
+                    img.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                }
+                row.Add(img);
+            }
+        }
     }
 
     private static Label ClockLabel()
@@ -176,23 +220,6 @@ public sealed class KaissaGameController : MonoBehaviour
     }
 
     // Glyphs for the pieces of `white` colour that have been captured (start count minus current).
-    private static string CapturedGlyphs(BoardView board, bool white)
-    {
-        var start = new Dictionary<char, int> { ['P'] = 8, ['N'] = 2, ['B'] = 2, ['R'] = 2, ['Q'] = 1 };
-        var cur = new Dictionary<char, int> { ['P'] = 0, ['N'] = 0, ['B'] = 0, ['R'] = 0, ['Q'] = 0 };
-        foreach (var p in board.Pieces)
-            if (char.IsUpper(p.Piece) == white)
-            {
-                char u = char.ToUpperInvariant(p.Piece);
-                if (cur.ContainsKey(u)) cur[u]++;
-            }
-        var glyph = new Dictionary<char, string> { ['P'] = "♟", ['N'] = "♞", ['B'] = "♝", ['R'] = "♜", ['Q'] = "♛" };
-        var sb = new System.Text.StringBuilder();
-        foreach (var k in new[] { 'Q', 'R', 'B', 'N', 'P' })
-            for (int i = 0; i < start[k] - cur[k]; i++) sb.Append(glyph[k]);
-        return sb.ToString();
-    }
-
     private VisualElement BuildRightRail()
     {
         var rail = new VisualElement();
@@ -260,6 +287,25 @@ public sealed class KaissaGameController : MonoBehaviour
         }
         panel.Add(tcRow);
 
+        // colour selector: play as White, Black, or Random
+        var colorRow = UiKit.Row(); colorRow.style.marginBottom = 12;
+        var colorNames = new[] { "White", "Black", "Random" };
+        var colorBtns = new List<VisualElement>();
+        for (int i = 0; i < colorNames.Length; i++)
+        {
+            int idx = i;
+            var b = UiKit.Ghost(colorNames[i], () =>
+            {
+                _pickSide = idx;
+                for (int j = 0; j < colorBtns.Count; j++)
+                    colorBtns[j].style.backgroundColor = j == idx ? UiKit.Green : UiKit.Panel2;
+            }, 12);
+            b.style.marginLeft = 3; b.style.marginRight = 3;
+            if (i == _pickSide) b.style.backgroundColor = UiKit.Green;
+            colorBtns.Add(b); colorRow.Add(b);
+        }
+        panel.Add(colorRow);
+
         panel.Add(PickBtn("Adaptive - matches your level", () => { _root.Remove(dim); StartGame("Adaptive", null); }));
         foreach (var bot in BotRoster.All)
         {
@@ -325,18 +371,23 @@ public sealed class KaissaGameController : MonoBehaviour
         _titleLabel.text = $"Play vs {label}";
         _statusLabel.text = "Starting engine...";
         double playerRating = KaissaTrainer.CreateDefault(KaissaProgress.Load()).PlayerRating;
+        _playerRating = playerRating;
         var startFen = EndgameRoute.Fen;
         EndgameRoute.Fen = null;
         _gameStartFen = startFen ?? ChessGame.StartFen;
+        // Resolve the chosen colour (0 White, 1 Black, 2 Random). An endgame-drill FEN forces White.
+        _playerWhite = startFen != null ? true : _pickSide switch { 1 => false, 2 => UnityEngine.Random.value < 0.5f, _ => true };
+        _whiteBottom = _playerWhite;
+        var playerSide = _playerWhite ? Side.White : Side.Black;
         try
         {
             // Use the shared, app-wide play engine (spawned once at launch); reuse it across games.
             var engine = await EngineHub.PlayEngineAsync();
             if (_game == null)
-                _game = await KaissaGame.AttachAsync(engine, Side.White, playerRating,
+                _game = await KaissaGame.AttachAsync(engine, playerSide, playerRating,
                     fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
             else
-                await _game.ResetAsync(Side.White, playerRating,
+                await _game.ResetAsync(playerSide, playerRating,
                     fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
         }
         catch (Exception e)
@@ -347,12 +398,13 @@ public sealed class KaissaGameController : MonoBehaviour
         }
 
         _botName.text = $"{label}  ~{_game.OpponentElo}";
-        _statusLabel.text = "You are White. Your move.   -   N new - R resign - U takeback - F flip";
+        _topName.text = $"you  {playerRating:0}";
+        _statusLabel.text = $"You are {(_playerWhite ? "White" : "Black")}. {(_playerWhite ? "Your move." : "Bot moves first.")}   -   N new - R resign - U takeback - F flip";
         _lastMove = null;
 
         var tc = TimeControls[Mathf.Clamp(_tcIndex, 0, TimeControls.Length - 1)];
         _timed = tc.secs > 0; _clockWhite = _clockBlack = tc.secs; _increment = tc.inc;
-        _activeWhite = true; _flagged = false;
+        _activeWhite = _playerWhite; _flagged = false; // after any bot opening it is the player's turn
         _botClock.style.display = _youClock.style.display = _timed ? DisplayStyle.Flex : DisplayStyle.None;
         UpdateClockLabels();
 
@@ -597,8 +649,12 @@ public sealed class KaissaGameController : MonoBehaviour
 
         int material = Material(_game.Board);
         _matLabel.text = material == 0 ? "even" : material > 0 ? $"White +{material}" : $"Black +{-material}";
-        if (_botCaptured != null) _botCaptured.text = CapturedGlyphs(_game.Board, white: true);
-        if (_youCaptured != null) _youCaptured.text = CapturedGlyphs(_game.Board, white: false);
+        // Trays: next to each plate, the pieces that side captured (i.e. the other colour's losses).
+        FillCaptured(_botCaptured, _game.Board, white: _playerWhite);   // bot captured the player's colour
+        FillCaptured(_youCaptured, _game.Board, white: !_playerWhite);  // you captured the opponent's colour
+        int forPlayer = _playerWhite ? material : -material;            // >0 = player ahead
+        _youMat.text = forPlayer > 0 ? $"+{forPlayer}" : "";
+        _botMat.text = forPlayer < 0 ? $"+{-forPlayer}" : "";
 
         var moves = _game.MoveHistorySan();
         for (int i = 0; i < moves.Count; i += 2)
