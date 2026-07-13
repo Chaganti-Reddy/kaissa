@@ -75,6 +75,14 @@ public static class EndgameLibrary
             "8/8/8/4k3/8/4K1N1/4P3/8 w - - 0 1", DrillGoal.Win,
             "Shepherd the pawn with the king while the knight controls key squares, then promote."),
 
+        // ---- Rook endgames: the most common ending (both FENs engine-verified) ----
+        new EndgamePosition("rk_lucena", "Rook", "Win with the Lucena",
+            "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1", DrillGoal.Win,
+            "Build a bridge: shield your king from the checks with the rook, then escort the pawn in."),
+        new EndgamePosition("rk_hold", "Rook", "Hold the rook-endgame draw",
+            "3k4/8/3K4/3P4/8/8/1r6/3R4 b - - 0 1", DrillGoal.Draw,
+            "King in front of the pawn, rook active from behind - a single extra pawn cannot break through."),
+
         // ---- Queen technique ----
         new EndgamePosition("q_vs_p", "Queen", "Queen vs pawn",
             "8/8/8/8/8/1k6/1p6/4K1Q1 w - - 0 1", DrillGoal.Win,
