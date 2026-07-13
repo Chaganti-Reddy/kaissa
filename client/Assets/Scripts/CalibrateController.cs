@@ -160,6 +160,7 @@ public sealed class CalibrateController : MonoBehaviour
     private void Finish()
     {
         _running = false;
+        _audio.PlayVictory(); // finishing calibration is a positive milestone
         int rating = (int)Math.Round(_session.EstimatedRating);
         var saved = KaissaProgress.Load();
         var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();

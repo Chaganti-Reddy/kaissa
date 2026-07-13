@@ -294,6 +294,11 @@ public sealed class ScreenshotHarness : MonoBehaviour
         board.DebugPremove("e2", "e4"); // queued premove (orange highlight)
         yield return new WaitForSeconds(0.3f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, "i-premove.png")); yield return new WaitForSeconds(0.4f);
+
+        // Check: white king in check -> red highlight + a one-shot pulse ring (caught mid-animation).
+        board.Render("4k3/8/8/8/8/8/4q3/4K3 w - - 0 1", true, null, true);
+        yield return new WaitForSeconds(0.1f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, "i-check.png")); yield return new WaitForSeconds(0.4f);
         Debug.Log("ScreenshotHarness: interact done");
     }
 

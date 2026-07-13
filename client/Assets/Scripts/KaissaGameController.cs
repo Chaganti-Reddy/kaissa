@@ -463,7 +463,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
             if (outcome.IsGameOver)
             {
-                _audio.PlayGameEnd();
+                PlayResultCue(outcome.Result);
                 _statusLabel.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. Reviewing...";
                 var review = await _game.ReviewAsync();
                 _statusLabel.text = $"Game over: {outcome.Result}. {review.Accuracy:0.0}% accuracy, " +
@@ -500,7 +500,7 @@ public sealed class KaissaGameController : MonoBehaviour
         if (_game == null || _busy || _reviewMode || _game.IsGameOver)
             return;
         _busy = true;
-        _audio.PlayGameEnd();
+        _audio.PlayDefeat();
         _statusLabel.text = "You resigned. Reviewing...";
         try
         {
@@ -698,9 +698,22 @@ public sealed class KaissaGameController : MonoBehaviour
         UpdateClockLabels();
     }
 
+    // The player is always White in Play, so WhiteWins is a win: victory cue + a celebration flourish.
+    private void PlayResultCue(string result)
+    {
+        switch (result)
+        {
+            case "WhiteWins": _audio.PlayVictory(); BoardCelebrate.Burst(_boardHost); break;
+            case "BlackWins": _audio.PlayDefeat(); break;
+            case "Draw": _audio.PlayDraw(); break;
+            default: _audio.PlayGameEnd(); break;
+        }
+    }
+
     private void OnFlag(bool playerLost)
     {
-        _audio.PlayGameEnd();
+        if (playerLost) _audio.PlayDefeat();
+        else { _audio.PlayVictory(); BoardCelebrate.Burst(_boardHost); }
         _statusLabel.text = playerLost ? "Time - you lost.   -   N: new game" : "Time - the bot flagged. You win!   -   N: new game";
         RenderBoard(_currentFen, canMove: false);
     }

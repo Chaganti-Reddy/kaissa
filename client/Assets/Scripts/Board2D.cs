@@ -303,14 +303,20 @@ public sealed class Board2D : IBoardView
             Highlight(Sq(lastMove.Substring(2, 2)), Sel);
         }
 
-        // check highlight (red on the side-to-move king if in check)
+        // check highlight (red on the side-to-move king if in check) + a one-shot pulse when the check
+        // first appears (not on re-renders of the same position from a select/flip).
         var game = SafeGame(fen);
         if (game != null && game.IsCheck)
         {
             bool whiteToMove = game.SideToMove == Side.White;
-            if (whiteToMove && wkF >= 0) Highlight((wkF, wkR), Check);
-            if (!whiteToMove && bkF >= 0) Highlight((bkF, bkR), Check);
+            int kf = whiteToMove ? wkF : bkF, kr = whiteToMove ? wkR : bkR;
+            if (kf >= 0)
+            {
+                Highlight((kf, kr), Check);
+                if (fen != _lastPulsedCheck) { PulseCheck(kf, kr); _lastPulsedCheck = fen; }
+            }
         }
+        else _lastPulsedCheck = null;
 
         // premove: show it while the opponent moves; play it as soon as it becomes our turn
         if (_premoveSel is { } psel) Highlight(psel, PremoveCol);
@@ -339,6 +345,7 @@ public sealed class Board2D : IBoardView
 
     private string _lastAnimated;
     private string _prevFenForAnim;
+    private string _lastPulsedCheck;
 
     private void AnimateGlide(string uci)
     {
@@ -645,6 +652,32 @@ public sealed class Board2D : IBoardView
         g.style.unityTextOutlineColor = white ? UiKit.Hex(0x33, 0x33, 0x33) : UiKit.Hex(0xe8, 0xe8, 0xe8);
         g.style.fontSize = Mathf.RoundToInt(Root.resolvedStyle.width / 8f * 0.78f);
         return g;
+    }
+
+    // An expanding red ring on the king square when a check first appears - a quick attention cue.
+    private void PulseCheck(int f, int r)
+    {
+        float w = Root.resolvedStyle.width;
+        if (w <= 1f) return;
+        float sq = w / 8f;
+        var (row, col) = ScreenOf(f, r);
+        var ring = new VisualElement { pickingMode = PickingMode.Ignore };
+        ring.style.position = Position.Absolute;
+        ring.style.left = col * sq; ring.style.top = row * sq; ring.style.width = sq; ring.style.height = sq;
+        ring.style.borderTopWidth = ring.style.borderBottomWidth = ring.style.borderLeftWidth = ring.style.borderRightWidth = 3;
+        var c = new Color(0.90f, 0.26f, 0.22f, 1f);
+        ring.style.borderTopColor = ring.style.borderBottomColor = ring.style.borderLeftColor = ring.style.borderRightColor = c;
+        UiKit.Radius(ring, sq * 0.5f);
+        ring.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50));
+        Root.Add(ring);
+        ring.experimental.animation
+            .Start(0f, 1f, 380, (e, v) =>
+            {
+                float s = 0.7f + 0.95f * v;
+                e.style.scale = new Scale(new Vector3(s, s, 1f));
+                e.style.opacity = 1f - v;
+            })
+            .OnCompleted(() => { if (ring.parent != null) Root.Remove(ring); });
     }
 
     // Shrink-and-fade the captured piece at a screen cell (chess.com-style capture feedback).

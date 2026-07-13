@@ -319,10 +319,10 @@ public sealed class RushController : MonoBehaviour
     {
         if (_over) return;
         _over = true; _timing = false; _started = false;
-        _audio.PlayGameEnd();
 
         int score = _rush.Score;
         bool record = SaveBest(score);
+        if (record) _audio.PlayVictory(); else _audio.PlayGameEnd();
 
         var dim = Overlay();
         var panel = Panel(); UiKit.Pad(panel, 28); panel.style.alignItems = Align.Center; panel.style.width = 420;

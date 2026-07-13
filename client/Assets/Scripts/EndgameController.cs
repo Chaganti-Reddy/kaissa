@@ -287,7 +287,7 @@ public sealed class EndgameController : MonoBehaviour
     {
         _over = true;
         SetFeedback(passed ? "Solved! Goal achieved." : "Not this time - Retry.", passed ? UiKit.GreenHi : UiKit.Danger);
-        if (passed) { _audio.PlayCorrect(); TintLastMove(Good); } else _audio.PlayWrong();
+        if (passed) { _audio.PlayVictory(); BoardCelebrate.Burst(_boardHost); TintLastMove(Good); } else _audio.PlayWrong();
         Enable(_hintBtn, false);
     }
 
