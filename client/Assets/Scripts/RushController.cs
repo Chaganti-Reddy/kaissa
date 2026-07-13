@@ -234,7 +234,9 @@ public sealed class RushController : MonoBehaviour
         _session = new PuzzleSession(_scenario);
         _graded = false; _busy = false;
         SetFeedback("", UiKit.Dim);
-        _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
+        // Orient to the solver's side (setup move flips the side, so XOR its presence).
+        bool solverWhite = IsWhiteToMove(_session.StartFen) ^ (_session.SetupMove != null);
+        _whiteBottom = !KaissaSettings.Flip || solverWhite;
         UpdateSideBadge();
         _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
     }

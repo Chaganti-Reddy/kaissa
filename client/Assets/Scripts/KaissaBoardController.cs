@@ -561,7 +561,10 @@ public sealed class KaissaBoardController : MonoBehaviour
         _solutionShown = false; _concluded = false; _busy = false;
         _elapsed = 0f; _timing = true;
         SetFeedback("", UiKit.Dim);
-        _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
+        // Orient to the SOLVER's side (their colour at the bottom). The setup move is one ply that flips
+        // the side, so the solver is White iff StartFen's side XOR (a setup move exists) is White.
+        bool solverWhite = IsWhiteToMove(_session.StartFen) ^ (_session.SetupMove != null);
+        _whiteBottom = !KaissaSettings.Flip || solverWhite;
 
         UpdateSideBadge();
         UpdateThemeChips();
@@ -720,7 +723,10 @@ public sealed class KaissaBoardController : MonoBehaviour
         _hintUsed = false; _hintStage = 0; _wrongThisPuzzle = false; _solutionShown = false;
         _concluded = false; _busy = false; _elapsed = 0f; _timing = true;
         SetFeedback("", UiKit.Dim);
-        _whiteBottom = !KaissaSettings.Flip || IsWhiteToMove(_session.StartFen);
+        // Orient to the SOLVER's side (their colour at the bottom). The setup move is one ply that flips
+        // the side, so the solver is White iff StartFen's side XOR (a setup move exists) is White.
+        bool solverWhite = IsWhiteToMove(_session.StartFen) ^ (_session.SetupMove != null);
+        _whiteBottom = !KaissaSettings.Flip || solverWhite;
         UpdateSideBadge();
         SetControlsSolving();
         _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
