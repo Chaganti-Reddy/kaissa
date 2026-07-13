@@ -26,6 +26,9 @@ A page-by-page rebuild and expansion of the training and study screens, each don
 - Home: a Rematch card offers your last opponent again at the same time control, one click.
 - Settings: new options - highlight last move, piece-animation speed, confirm resign, low-time warning, and (Windows) minimize to a system-tray icon.
 - Learn: lessons are now scored 1-3 crowns based on a clean run, shown on each lesson.
+- Endgames: a timed Challenge mode plays five drills back to back and keeps your fastest clean run, alongside untimed practice; added bishop-and-pawn, knight-and-pawn, and two-connected-pawns drills.
+- Stats: a Recent games panel shows your win/draw/loss split and a bar chart of your last dozen game accuracies.
+- Coordinates: a "read moves" mode shows a move like Nf3 and asks you to click its destination square.
 - Board Vision and Coordinates: rebuilt into timed 30-second drills with a score, a per-run best, and start/game-over screens. Board Vision asks light-or-dark (L/D keys); Coordinates shows a square to click, lets you pick your side and hide the labels to train recall, flashes green on a hit and reveals the right square on a miss.
 - Stats: rebuilt into an Insights dashboard - headline stat tiles, a rating-over-time chart, tier and XP progression, puzzle / Puzzle Blitz / play summaries, and the per-pattern mastery map, with a one-tap drill of your weakest motif.
 - Analysis: rebuilt into a full analysis board - an evaluation bar, several engine lines at once (click one to play it), a best-move arrow and an optional threat arrow, a clickable move list, the opening name, load-a-FEN and copy FEN/PGN, and play-vs-computer from the current position. Works on the 2D or 3D board.
