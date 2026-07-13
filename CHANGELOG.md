@@ -32,6 +32,10 @@ A page-by-page rebuild and expansion of the training and study screens, each don
 - Endgames: a Rook category with a Lucena winning technique and a defensive rook-endgame draw to hold.
 - Learn: lessons are grouped by skill level (Beginner, Intermediate, Advanced), with the motif shown alongside.
 - Stats: deeper insights - your move-quality mix across games and your accuracy by game phase (opening, middlegame, endgame).
+- Window: the desktop window is now freely resizable with working maximize and restore, and the interface scales to fit whatever size you choose.
+- Close to tray: an optional setting (Windows) hides the app to a system-tray icon when you close the window instead of quitting; minimizing still just minimizes. Click the tray icon to restore, or right-click for Restore and Quit.
+- Analysis board editor now works on the 3D board too (click a square to place the selected piece), not only the flat board.
+- Sound: the default sound theme is now the Sfx set (still switchable, including back to the original Classic cues).
 - Board Vision and Coordinates: rebuilt into timed 30-second drills with a score, a per-run best, and start/game-over screens. Board Vision asks light-or-dark (L/D keys); Coordinates shows a square to click, lets you pick your side and hide the labels to train recall, flashes green on a hit and reveals the right square on a miss.
 - Stats: rebuilt into an Insights dashboard - headline stat tiles, a rating-over-time chart, tier and XP progression, puzzle / Puzzle Blitz / play summaries, and the per-pattern mastery map, with a one-tap drill of your weakest motif.
 - Analysis: rebuilt into a full analysis board - an evaluation bar, several engine lines at once (click one to play it), a best-move arrow and an optional threat arrow, a clickable move list, the opening name, load-a-FEN and copy FEN/PGN, and play-vs-computer from the current position. Works on the 2D or 3D board.
