@@ -93,6 +93,16 @@ public sealed class AnalysisSession
     public void GoToStart() => _index = 0;
     public void GoToEnd() => _index = _moves.Count;
 
+    /// <summary>Jumps to a specific ply in the current line (clamped to the line's length).</summary>
+    public void GoToPly(int ply) => _index = Math.Clamp(ply, 0, _moves.Count);
+
+    /// <summary>Plays a whole sequence of moves (UCI/SAN) from the current point; stops at the first illegal one.</summary>
+    public void PlayLine(IEnumerable<string> moves)
+    {
+        foreach (var m in moves)
+            if (!Play(m)) break;
+    }
+
     /// <summary>Replaces the whole session with a fresh position from a FEN.</summary>
     public void LoadFen(string fen)
     {

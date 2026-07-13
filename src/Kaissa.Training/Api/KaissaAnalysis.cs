@@ -51,5 +51,24 @@ public sealed class KaissaAnalysis : IAsyncDisposable
         return new AnalysisLine(result.Evaluation?.ToString() ?? "", cp, result.BestMove, moves);
     }
 
+    /// <summary>
+    /// Evaluates the top <paramref name="count"/> candidate lines (MultiPV) for a position at the given
+    /// depth, ordered best first. Each line carries its own evaluation and principal continuation. Used
+    /// by the analysis board to show several engine lines at once.
+    /// </summary>
+    public async Task<IReadOnlyList<AnalysisLine>> EvaluateLinesAsync(
+        string position, int depth = 18, int count = 3, CancellationToken cancellationToken = default)
+    {
+        await _engine.ConfigureStrengthAsync(StrengthSettings.Full, cancellationToken).ConfigureAwait(false);
+        var result = await _engine.AnalyzeAsync(position, SearchLimits.ToDepth(depth, Math.Max(1, count)), cancellationToken)
+            .ConfigureAwait(false);
+
+        var lines = new List<AnalysisLine>();
+        foreach (var pv in result.Lines) // already ordered by MultiPV index (best first)
+            lines.Add(new AnalysisLine(pv.Score.ToString(), MoveClassifier.ToCentipawns(pv.Score),
+                pv.Moves.Count > 0 ? pv.Moves[0] : "", pv.Moves));
+        return lines;
+    }
+
     public ValueTask DisposeAsync() => _ownsEngine ? _engine.DisposeAsync() : default;
 }
