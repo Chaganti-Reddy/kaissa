@@ -40,4 +40,7 @@ public sealed class Board3DView : IBoardView
     }
 
     public void DebugClickMove(string from, string to) => _interactor.DebugTryMove(from, to);
+
+    public void SetEngineArrows(System.Collections.Generic.IReadOnlyList<(string from, string to, Color color)> arrows)
+        => _interactor.SetEngineArrows(arrows);
 }

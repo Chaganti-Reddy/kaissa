@@ -13,4 +13,8 @@ public interface IBoardView
     // Test hook: drive a move through the same input path a real click uses (select from-square, then
     // target), so automated self-tests exercise the board input handlers, not just the move callback.
     void DebugClickMove(string from, string to);
+
+    // Engine-drawn arrows (best move, threat), kept separate from the player's right-click annotations.
+    // Passing an empty list clears them. Colors let the analysis board distinguish best move vs threat.
+    void SetEngineArrows(System.Collections.Generic.IReadOnlyList<(string from, string to, Color color)> arrows);
 }

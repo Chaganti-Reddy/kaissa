@@ -439,9 +439,24 @@ public sealed class BoardInteractor : MonoBehaviour
         PaintAnn(q, col);
     }
 
-    private void AddArrow(string from, string to, Color col)
+    private void AddArrow(string from, string to, Color col) => AddArrowTo(EnsureAnnRoot(), from, to, col);
+
+    private Transform _engineRoot;
+
+    // Engine best-move / threat arrows, kept in their own root so the player's right-click annotations
+    // (which clear _annRoot) do not remove them and vice versa. Re-applied by the controller each eval.
+    public void SetEngineArrows(System.Collections.Generic.IReadOnlyList<(string from, string to, Color color)> arrows)
     {
-        var root = EnsureAnnRoot();
+        if (_engineRoot != null) { Destroy(_engineRoot.gameObject); _engineRoot = null; }
+        if (arrows == null || arrows.Count == 0 || _root == null) return;
+        var go = new GameObject("engineArrows");
+        go.transform.SetParent(_root, false);
+        _engineRoot = go.transform;
+        foreach (var a in arrows) AddArrowTo(_engineRoot, a.from, a.to, a.color);
+    }
+
+    private void AddArrowTo(Transform root, string from, string to, Color col)
+    {
         Vector3 a = Center(from), b = Center(to), dir = b - a;
         float len = dir.magnitude;
         if (len < 0.1f) return;

@@ -137,7 +137,16 @@ public sealed class Board2D : IBoardView
     private VisualElement _annotations;
     private readonly List<(string sq, Color c)> _annSquares = new();
     private readonly List<(string from, string to, Color c)> _annArrows = new();
+    private readonly List<(string from, string to, Color c)> _engineArrows = new(); // best move / threat
     private (int row, int col)? _rDown;
+
+    public void SetEngineArrows(IReadOnlyList<(string from, string to, Color color)> arrows)
+    {
+        _engineArrows.Clear();
+        if (arrows != null)
+            foreach (var a in arrows) _engineArrows.Add((a.from, a.to, a.color));
+        _annotations?.MarkDirtyRepaint();
+    }
 
     private static readonly Color AnnRed = new(0.86f, 0.20f, 0.20f, 0.80f);
     private static readonly Color AnnGreen = new(0.35f, 0.62f, 0.24f, 0.85f);
@@ -187,7 +196,7 @@ public sealed class Board2D : IBoardView
         if (rect.width <= 0) return;
         float cw = rect.width / 8f, ch = rect.height / 8f;
         var p = ctx.painter2D;
-        foreach (var (from, to, col) in _annArrows)
+        foreach (var (from, to, col) in _annArrows.Concat(_engineArrows))
         {
             var (ff, fr) = Sq(from);
             var (tf, tr) = Sq(to);
