@@ -1,6 +1,6 @@
 # Mobile plan
 
-Desktop runs Stockfish as a separate process over UCI. Mobile is different, and the engine is the only real obstacle — the rest of the app (Unity + the netstandard2.1 core) already builds for Android and iOS. Everything engine-specific is behind `IChessEngine`, so mobile support is a new implementation of that seam, not a rewrite.
+Desktop runs Stockfish as a separate process over UCI. Mobile is different, and the engine is the only real obstacle - the rest of the app (Unity + the netstandard2.1 core) already builds for Android and iOS. Everything engine-specific is behind `IChessEngine`, so mobile support is a new implementation of that seam, not a rewrite.
 
 ## The engine problem
 
@@ -23,12 +23,12 @@ The desktop layout is a three-column shell: a left navigation rail, a centered b
 Breakpoints:
 
 - Phone portrait: a single column. The board sits at the top at full width; the primary controls sit directly beneath it; the side-panel content (move list, themes, mastery, book lines) moves into a collapsible bottom sheet or a small tab strip below the controls. Navigation becomes a bottom tab bar.
-- Phone landscape and small tablets: a two-column split — board on one side, panel on the other — without the nav rail, which stays a bottom bar.
+- Phone landscape and small tablets: a two-column split - board on one side, panel on the other - without the nav rail, which stays a bottom bar.
 - Tablet and desktop: the existing three-column shell.
 
 Navigation: the left rail collapses to a bottom tab bar with the primary destinations (Home, Play, Puzzles, Learn) and a "More" entry that opens the rest (Puzzle Blitz, Openings, Endgames, Board Vision, Coordinates, Analysis, Stats, Settings). This keeps the most-used modes one tap away and matches the platform convention.
 
-Board and input: the board is always square, sized to the smaller of the available width and height so it never overflows. Touch already works — the board uses pointer events, so tap-to-move and drag both function — but tap targets (controls, list rows, the promotion picker) are enlarged to a comfortable minimum, and the promotion picker and other overlays become full-width sheets rather than small centered dialogs. Coordinate labels can be turned off to reclaim space. The flat 2D board is the default on phones; the 3D board remains available but is heavier.
+Board and input: the board is always square, sized to the smaller of the available width and height so it never overflows. Touch already works - the board uses pointer events, so tap-to-move and drag both function - but tap targets (controls, list rows, the promotion picker) are enlarged to a comfortable minimum, and the promotion picker and other overlays become full-width sheets rather than small centered dialogs. Coordinate labels can be turned off to reclaim space. The flat 2D board is the default on phones; the 3D board remains available but is heavier.
 
 Ergonomics and platform fit: respect the safe area (notches, rounded corners, the home indicator) so nothing is clipped or unreachable; support portrait as the primary orientation with landscape optional; keep text legible with the existing size-relative scaling.
 
@@ -44,4 +44,4 @@ Stockfish is GPLv3, and Kaissa is GPLv3. Distributing GPL software through the A
 - Reach the engine over the network (a server component, which would be AGPLv3), avoiding shipping GPL binaries in the app, at the cost of requiring connectivity for play/analysis, or
 - Ship engine-dependent modes only where licensing is clean; keep the offline training loop everywhere.
 
-Android (and desktop) do not have this conflict. This does not affect the core or the training loop — only the engine-dependent modes on iOS.
+Android (and desktop) do not have this conflict. This does not affect the core or the training loop - only the engine-dependent modes on iOS.

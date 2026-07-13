@@ -1,6 +1,6 @@
 # Client and UI design
 
-This is the plan for the Unity client: the 3D game the player actually touches. The headless core (learning, rules, engine, play/review) is built and tested; this document describes how the game is layered on top of it, and how to set up to build it. No client code exists yet — this is the spec to build from.
+This is the plan for the Unity client: the 3D game the player actually touches. The headless core (learning, rules, engine, play/review) is built and tested; this document describes how the game is layered on top of it, and how to set up to build it. No client code exists yet - this is the spec to build from.
 
 ## Goals
 
@@ -35,7 +35,7 @@ Unity client (MonoBehaviour / UI)
   KaissaTrainer facade  (plain DTOs: TrainingCard, AnswerResult, ProgressRow, BoardView)
         |
         v
-  Core (learning, rules, engine, play/review)  — unchanged, shared as netstandard2.1
+  Core (learning, rules, engine, play/review) - unchanged, shared as netstandard2.1
 ```
 
 - One thin adapter (`KaissaBindings`) in the Unity project holds a `KaissaTrainer` and exposes simple methods/events for the UI. Persistence uses `ExportProgress()` saved via Unity's `Application.persistentDataPath`.
@@ -43,15 +43,15 @@ Unity client (MonoBehaviour / UI)
 
 ## Screens (first version)
 
-1. **Home** — start training, play a game, view progress. Minimal, calm.
-2. **Training** — the core screen:
+1. **Home** - start training, play a game, view progress. Minimal, calm.
+2. **Training** - the core screen:
    - 3D board rendered from `TrainingCard.Board` (a `BoardView`).
    - Prompt and pattern name shown lightly (not lecture-y).
    - Player makes a move by tapping/dragging a piece; the move is turned into a UCI string and passed to `KaissaTrainer.Answer`.
-   - Feedback: correct/incorrect with subtle motion and sound; on a miss, reveal the solution. Never a "you are being graded" screen — the scheduling is invisible.
+   - Feedback: correct/incorrect with subtle motion and sound; on a miss, reveal the solution. Never a "you are being graded" screen - the scheduling is invisible.
    - Advance to `NextCard`.
-3. **Play** — a full game vs the adaptive bot (desktop first). After the game, a quiet review surfaces mistakes; they are added to practice.
-4. **Progress** — an earned, motivating map of pattern mastery from `Progress()`. Not a chore list.
+3. **Play** - a full game vs the adaptive bot (desktop first). After the game, a quiet review surfaces mistakes; they are added to practice.
+4. **Progress** - an earned, motivating map of pattern mastery from `Progress()`. Not a chore list.
 
 ## Board rendering and input
 
@@ -74,7 +74,7 @@ NextCard() -> render board + prompt
 ## Visual direction
 
 - Distinctive and intentional, not a default template. A physical, tactile board; warm, focused lighting; motion that rewards a correct find. Sound design that makes a solved pattern feel good.
-- Restraint over clutter — this should feel like a calm, high-quality game, not a busy dashboard.
+- Restraint over clutter - this should feel like a calm, high-quality game, not a busy dashboard.
 - Accessibility from the start: colour-blind-safe piece and square cues, scalable text, and a reduced-motion option.
 
 ## MVP vertical slice (the first build target)
@@ -94,8 +94,8 @@ Where to get things (all free):
 
 - 3D piece models: Sketchfab (filter CC0/CC-BY), Poly Pizza, Kenney. Drop prefabs in `Assets/Resources/Pieces` (see `PieceModelLibrary`).
 - Board/material textures (wood, marble): Poly Haven (CC0), ambientCG (CC0).
-- HDRI for lighting and glossy reflections: Poly Haven (CC0) — set as the skybox + a reflection probe.
-- UI font: Google Fonts (OFL), e.g. Inter — drop the TTF in `Assets/Resources` and point `Hud.Font` at it.
+- HDRI for lighting and glossy reflections: Poly Haven (CC0) - set as the skybox + a reflection probe.
+- UI font: Google Fonts (OFL), e.g. Inter - drop the TTF in `Assets/Resources` and point `Hud.Font` at it.
 - Sound effects: freesound (CC0 filter), Kenney audio (CC0), OpenGameArt (CC0).
 
 What is done in code (no downloads): procedural marble/obsidian piece materials, lighting rig, URP post-processing (bloom, vignette, colour grading), move animation, selection glow, generated sound cues. These carry the look until real assets are dropped in, then improve further.

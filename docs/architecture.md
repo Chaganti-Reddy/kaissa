@@ -33,16 +33,16 @@ Drives session flow as a state machine (menu, setup, play, review, schedule upda
 
 The training logic. No Unity dependencies. Components:
 
-- `SkillModel` — per-player state, one FSRS card per pattern, plus a live rating estimate.
-- `Scheduler` — FSRS wrapper; determines which patterns are due or fading and what to practice.
-- `DifficultyController` — sets opponent strength and biases content selection to keep the player in a productive difficulty range.
-- `GradeExtractor` — converts in-game behavior into a review grade, so the player is never asked to self-rate.
+- `SkillModel` - per-player state, one FSRS card per pattern, plus a live rating estimate.
+- `Scheduler` - FSRS wrapper; determines which patterns are due or fading and what to practice.
+- `DifficultyController` - sets opponent strength and biases content selection to keep the player in a productive difficulty range.
+- `GradeExtractor` - converts in-game behavior into a review grade, so the player is never asked to self-rate.
 
 ### Core services
 
-- `ChessRules` — legal move generation, board state, FEN/PGN, check/mate/draw detection. Implementation choice (existing library vs. minimal bitboard) is an open item.
-- `UciClient` — spawns and manages the Stockfish process, sends UCI commands, parses evaluations and best moves, and caps strength for adaptive opponents. Asynchronous and cancellable.
-- `Persistence` — local storage of the skill model, history, and settings, with a versioned schema. SQLite is the current preference.
+- `ChessRules` - legal move generation, board state, FEN/PGN, check/mate/draw detection. Implementation choice (existing library vs. minimal bitboard) is an open item.
+- `UciClient` - spawns and manages the Stockfish process, sends UCI commands, parses evaluations and best moves, and caps strength for adaptive opponents. Asynchronous and cancellable.
+- `Persistence` - local storage of the skill model, history, and settings, with a versioned schema. SQLite is the current preference.
 
 ### Backend (later)
 

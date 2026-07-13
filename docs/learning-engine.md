@@ -4,7 +4,7 @@ This describes how practice is chosen, delivered, and graded. It is the part of 
 
 ## Unit of learning: the pattern
 
-The system does not track "openings" or "lessons". It tracks patterns — the smallest reusable units a strong player recognizes. Examples:
+The system does not track "openings" or "lessons". It tracks patterns - the smallest reusable units a strong player recognizes. Examples:
 
 - Tactical motifs: fork, pin, skewer, discovered attack, back-rank mate, deflection.
 - Positional motifs: isolated queen pawn play, knight outposts, minority attack, bad bishops.

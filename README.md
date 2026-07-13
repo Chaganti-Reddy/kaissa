@@ -12,7 +12,7 @@ Alpha. The learning core is complete and tested, and there is a playable Unity c
 
 ## Build and run
 
-Headless core (no Unity needed) — run the training loop or drive the engine from the terminal:
+Headless core (no Unity needed) - run the training loop or drive the engine from the terminal:
 
 ```
 dotnet test Kaissa.sln                                   # run the test suite
@@ -55,12 +55,12 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Documentation
 
-- [`docs/vision.md`](docs/vision.md) — goals, audience, scope, sustainability
-- [`docs/research.md`](docs/research.md) — the research and prior art the design rests on
-- [`docs/architecture.md`](docs/architecture.md) — system structure and data flow
-- [`docs/learning-engine.md`](docs/learning-engine.md) — how the training loop works
-- [`docs/client.md`](docs/client.md) — the Unity client and UI design, and how to set up to build it
-- [`docs/features.md`](docs/features.md) — the feature set and roadmap
-- [`docs/mobile.md`](docs/mobile.md) — plan for the engine on Android/iOS
-- [`docs/release.md`](docs/release.md) — building a desktop build and cutting a release
-- [`CHANGELOG.md`](CHANGELOG.md) — release notes
+- [`docs/vision.md`](docs/vision.md) - goals, audience, scope, sustainability
+- [`docs/research.md`](docs/research.md) - the research and prior art the design rests on
+- [`docs/architecture.md`](docs/architecture.md) - system structure and data flow
+- [`docs/learning-engine.md`](docs/learning-engine.md) - how the training loop works
+- [`docs/client.md`](docs/client.md) - the Unity client and UI design, and how to set up to build it
+- [`docs/features.md`](docs/features.md) - the feature set and roadmap
+- [`docs/mobile.md`](docs/mobile.md) - plan for the engine on Android/iOS
+- [`docs/release.md`](docs/release.md) - building a desktop build and cutting a release
+- [`CHANGELOG.md`](CHANGELOG.md) - release notes

@@ -26,7 +26,7 @@ Not in scope initially:
 
 ## Audience
 
-The first audience is adult improvers, roughly 600–1600 rating, who have tried conventional study and did not stick with it. Later work may address younger players and coaches (structured curricula) and stronger players (deeper pattern libraries).
+The first audience is adult improvers, roughly 600-1600 rating, who have tried conventional study and did not stick with it. Later work may address younger players and coaches (structured curricula) and stronger players (deeper pattern libraries).
 
 ## Sustainability
 
@@ -40,4 +40,4 @@ The project is not built to be sold or to enclose its own commons.
 
 ## What success looks like
 
-A player who uses Kaissa for a short daily session should improve at a measurable rate — by puzzle rating and by real-game results — at least as fast as they would with equivalent time spent on conventional puzzle practice, and should be more likely to keep doing it. Demonstrating that is the point of the project; the design should be instrumented to test it (see [`learning-engine.md`](learning-engine.md)).
+A player who uses Kaissa for a short daily session should improve at a measurable rate - by puzzle rating and by real-game results - at least as fast as they would with equivalent time spent on conventional puzzle practice, and should be more likely to keep doing it. Demonstrating that is the point of the project; the design should be instrumented to test it (see [`learning-engine.md`](learning-engine.md)).

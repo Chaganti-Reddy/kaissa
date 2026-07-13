@@ -6,7 +6,7 @@ Background for the design decisions, with sources. This is a working document an
 
 Chase and Simon's *Perception in Chess* (1973) found that strong players reconstruct real game positions far better than weaker players, but their advantage largely disappears for random positions. The explanation is that experts store a large number of meaningful patterns ("chunks") in long-term memory and perceive positions in terms of them. Later work by Gobet and Simon extended this into template theory, which adds larger, schematic structures and connects low-level perception to planning. Estimates of the number of chunks/templates held by a master run into the tens of thousands.
 
-There is ongoing debate about the exact mechanism (for example the "experience recognition" critique of strict chunk boundaries), but the general finding — that expertise rests on a large, acquired store of recognizable patterns — is well established and is the basis for treating improvement as pattern acquisition.
+There is ongoing debate about the exact mechanism (for example the "experience recognition" critique of strict chunk boundaries), but the general finding - that expertise rests on a large, acquired store of recognizable patterns - is well established and is the basis for treating improvement as pattern acquisition.
 
 Sources:
 

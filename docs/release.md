@@ -8,8 +8,8 @@
    ./scripts/build-unity-plugins.ps1
    ```
 2. Open `client/` in Unity 6 LTS.
-3. **File → Build Profiles → Scene List** must contain, with `Menu` first: `Menu, SampleScene, Play, Rush, Stats, Endgame, Opening, Vision, Coordinate, Calibrate, Settings`.
-4. Select the **Windows** platform → **Build** → choose an output folder.
+3. **File -> Build Profiles -> Scene List** must contain, with `Menu` first: `Menu, SampleScene, Play, Rush, Stats, Endgame, Opening, Vision, Coordinate, Calibrate, Settings`.
+4. Select the **Windows** platform -> **Build** -> choose an output folder.
 5. The build bundles Stockfish (StreamingAssets), the puzzle content, and piece models, so it runs fully offline. Distribute the output folder (or zip it).
 
 macOS/Linux builds work the same from their platforms; mobile is not ready yet (see [`mobile.md`](mobile.md)).
@@ -30,7 +30,7 @@ Unity removed manual activation of free Personal licenses, so hosted CI runners 
 
 One-time setup:
 
-1. Install the runner: repo **Settings → Actions → Runners → New self-hosted runner → Windows**, then run the shown `config`/`run` commands on your PC (in any folder). Optionally install it as a service (`svc.cmd install`, `svc.cmd start`) so it is always available.
+1. Install the runner: repo **Settings -> Actions -> Runners -> New self-hosted runner -> Windows**, then run the shown `config`/`run` commands on your PC (in any folder). Optionally install it as a service (`svc.cmd install`, `svc.cmd start`) so it is always available.
 2. The runner machine needs: the Unity editor (activated), the .NET SDK, and PowerShell. Confirm the editor path in `release.yml` (`env.UNITY`) matches your installed version.
 3. Push a tag: `git tag v0.1 && git push origin v0.1`. The build runs on your PC and publishes the release.
 
