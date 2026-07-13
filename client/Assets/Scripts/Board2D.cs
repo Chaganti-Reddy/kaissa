@@ -433,6 +433,15 @@ public sealed class Board2D : IBoardView
         OnCellClicked(trow, tcol);
     }
 
+    // A single tap on one square through the real tap handler (for the coordinate/vision drills, which
+    // use SquareClickHandler rather than moves - a two-tap DebugClickMove would answer twice).
+    public void DebugTapSquare(string sq)
+    {
+        var (f, r) = Sq(sq);
+        var (row, col) = ScreenOf(f, r);
+        OnCellClicked(row, col);
+    }
+
     private void OnPointerDown(PointerDownEvent e, int row, int col)
     {
         if (e.button == 1) { _rDown = (row, col); Root.CapturePointer(e.pointerId); return; } // right = annotate

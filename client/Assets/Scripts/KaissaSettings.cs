@@ -31,6 +31,8 @@ public static class KaissaSettings
         public int rushBest5;         // Puzzle Rush best score: 5-minute mode
         public int rushBestSurvival;  // Puzzle Rush best score: survival mode
         public string lessonsDone = ""; // comma-joined ids of completed lessons
+        public int visionBest;        // best light/dark board-vision score in a 30s run
+        public int coordBest;         // best coordinate-finding score in a 30s run
     }
 
     private static Data _data;
@@ -69,6 +71,9 @@ public static class KaissaSettings
     public static int RushBest3 { get => D.rushBest3; set { D.rushBest3 = value; Save(); } }
     public static int RushBest5 { get => D.rushBest5; set { D.rushBest5 = value; Save(); } }
     public static int RushBestSurvival { get => D.rushBestSurvival; set { D.rushBestSurvival = value; Save(); } }
+
+    public static int VisionBest { get => D.visionBest; set { D.visionBest = value; Save(); } }
+    public static int CoordBest { get => D.coordBest; set { D.coordBest = value; Save(); } }
 
     public static bool IsLessonDone(string id) =>
         !string.IsNullOrEmpty(id) && ("," + D.lessonsDone + ",").Contains("," + id + ",");

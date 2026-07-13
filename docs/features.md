@@ -63,8 +63,8 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 
 ## Vision and coordinates
 
-- [x] Board-vision trainer (light/dark square drill) - `VisionSession`
-- [x] Coordinate trainer (find the named square) - `CoordinateSession`
+- [x] Board Vision: timed 30-second light/dark square drill with score, best, and L/D keys - `VisionSession`
+- [x] Coordinates: timed 30-second find-the-square drill; pick your side (orientation) and hide the labels to train recall; correct flashes green, a miss reveals the right square - `CoordinateSession`
 
 ## Progression and motivation
 
