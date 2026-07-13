@@ -27,6 +27,8 @@ public sealed class KaissaGameController : MonoBehaviour
     private string _lastMove;
     private bool _whiteBottom = true;
     private bool _playerWhite = true;
+    private bool _resignArmed;   // confirm-resign: first click arms, second resigns
+    private bool _lowTimeWarned; // low-time sound plays once per game
     private string _currentFen = ChessGame.StartFen;
     private bool _canMove;
 
@@ -37,6 +39,9 @@ public sealed class KaissaGameController : MonoBehaviour
     private IReadOnlyList<string> _reviewMoves;
     private IReadOnlyList<string> _reviewSan;
     private Dictionary<int, GameReviewItem> _reviewMistakes;
+    private Dictionary<int, string> _reviewAll;      // 0-based player ply -> move quality (all moves)
+    private IReadOnlyList<int> _reviewEval;           // player-POV cp after each player move (eval graph)
+    private VisualElement _graphHost;                 // eval-graph panel, populated during review
 
     private VisualElement _root;
     private VisualElement _movesBody;
@@ -104,6 +109,12 @@ public sealed class KaissaGameController : MonoBehaviour
             StartGame("Bot", null);
         else if (Environment.GetCommandLineArgs().Contains("-annotate3d"))
             StartGame("Bot", null); // harness: plain game, no picker/autoplay, so annotations can be verified
+        else if (RematchRoute.Active)
+        {
+            RematchRoute.Active = false;
+            _tcIndex = RematchRoute.Tc;
+            StartGame(RematchRoute.Label, RematchRoute.Elo >= 0 ? RematchRoute.Elo : (int?)null);
+        }
         else
             ShowPicker();
     }
@@ -252,6 +263,9 @@ public sealed class KaissaGameController : MonoBehaviour
         panel.Add(ctrls);
 
         rail.Add(panel);
+        _graphHost = new VisualElement();
+        _graphHost.style.marginTop = 12;
+        rail.Add(_graphHost);
         return rail;
     }
 
@@ -375,6 +389,12 @@ public sealed class KaissaGameController : MonoBehaviour
         var startFen = EndgameRoute.Fen;
         EndgameRoute.Fen = null;
         _gameStartFen = startFen ?? ChessGame.StartFen;
+        if (startFen == null) // remember the last real opponent (not endgame drills) for the Home rematch card
+        {
+            KaissaSettings.LastOpponent = label;
+            KaissaSettings.LastOpponentElo = fixedElo ?? -1;
+            KaissaSettings.LastTc = _tcIndex;
+        }
         // Resolve the chosen colour (0 White, 1 Black, 2 Random). An endgame-drill FEN forces White.
         _playerWhite = startFen != null ? true : _pickSide switch { 1 => false, 2 => UnityEngine.Random.value < 0.5f, _ => true };
         _whiteBottom = _playerWhite;
@@ -405,6 +425,7 @@ public sealed class KaissaGameController : MonoBehaviour
         var tc = TimeControls[Mathf.Clamp(_tcIndex, 0, TimeControls.Length - 1)];
         _timed = tc.secs > 0; _clockWhite = _clockBlack = tc.secs; _increment = tc.inc;
         _activeWhite = _playerWhite; _flagged = false; // after any bot opening it is the player's turn
+        _resignArmed = false; _lowTimeWarned = false;
         _botClock.style.display = _youClock.style.display = _timed ? DisplayStyle.Flex : DisplayStyle.None;
         UpdateClockLabels();
 
@@ -489,6 +510,7 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (_busy || _game == null)
             return;
+        _resignArmed = false; // making a move cancels a pending resign confirmation
         _busy = true;
 
         if (_timed && _flagged) { _busy = false; return; }
@@ -551,6 +573,13 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (_game == null || _busy || _reviewMode || _game.IsGameOver)
             return;
+        if (KaissaSettings.ConfirmResign && !_resignArmed)
+        {
+            _resignArmed = true;
+            _statusLabel.text = "Click Resign again to confirm.";
+            return;
+        }
+        _resignArmed = false;
         _busy = true;
         _audio.PlayDefeat();
         _statusLabel.text = "You resigned. Reviewing...";
@@ -664,14 +693,37 @@ public sealed class KaissaGameController : MonoBehaviour
             var wc = Cell(w, 120, UiKit.Text); int wply = i + 1;
             wc.name = "movecell";
             wc.RegisterCallback<ClickEvent>(_ => RowClicked(wply)); UiKit.Interactive(wc, 1.02f);
+            MaybeBadge(wc, i);
             var bc = Cell(b, 120, UiKit.Text);
-            if (!string.IsNullOrEmpty(b)) { int bply = i + 2; bc.name = "movecell"; bc.RegisterCallback<ClickEvent>(_ => RowClicked(bply)); UiKit.Interactive(bc, 1.02f); }
+            if (!string.IsNullOrEmpty(b)) { int bply = i + 2; bc.name = "movecell"; bc.RegisterCallback<ClickEvent>(_ => RowClicked(bply)); UiKit.Interactive(bc, 1.02f); MaybeBadge(bc, i + 1); }
             var row = UiKit.Row(Cell($"{i / 2 + 1}.", 40, UiKit.Mute), wc, bc);
             if ((i / 2) % 2 == 1) row.style.backgroundColor = UiKit.Panel3;
             UiKit.Pad(row, 6, 12, 6, 12);
             _movesBody.Add(row);
         }
     }
+
+    // A move-quality badge (coloured dot) on a player-move cell during review.
+    private void MaybeBadge(VisualElement cell, int ply0)
+    {
+        if (!_reviewMode || _reviewAll == null || !_reviewAll.TryGetValue(ply0, out var quality)) return;
+        var dot = new VisualElement { pickingMode = PickingMode.Ignore, tooltip = quality };
+        dot.style.position = Position.Absolute; dot.style.right = 4; dot.style.top = 5;
+        dot.style.width = 9; dot.style.height = 9; UiKit.Radius(dot, 5);
+        dot.style.backgroundColor = QualityColor(quality);
+        cell.Add(dot);
+    }
+
+    private static Color QualityColor(string quality) => quality switch
+    {
+        "Best" => UiKit.GreenHi,
+        "Excellent" => UiKit.Green,
+        "Good" => UiKit.GreenDeep,
+        "Inaccuracy" => UiKit.Gold,
+        "Mistake" => UiKit.Hex(0xe0, 0x82, 0x3a),
+        "Blunder" => UiKit.Danger,
+        _ => UiKit.Mute,
+    };
 
     // Click a move in the list (during the post-game review) to jump to that position.
     private void RowClicked(int ply)
@@ -698,11 +750,66 @@ public sealed class KaissaGameController : MonoBehaviour
         _reviewSan = _game.MoveHistorySan();
         _reviewMistakes = new Dictionary<int, GameReviewItem>();
         foreach (var m in review.Mistakes)
-            _reviewMistakes[(m.MoveNumber - 1) * 2] = m;
+            _reviewMistakes[(m.MoveNumber - 1) * 2 + (_playerWhite ? 0 : 1)] = m;
+        // Every player move's quality, keyed by 0-based ply, for the move-list badges.
+        _reviewAll = new Dictionary<int, string>();
+        foreach (var a in review.AllMoves)
+            _reviewAll[(a.MoveNumber - 1) * 2 + (_playerWhite ? 0 : 1)] = a.Quality;
+        _reviewEval = review.EvalSeries;
         _reviewPly = _reviewMoves.Count;
         _reviewMode = true;
         _matLabel.text = $"acc {review.Accuracy:0}%";
+        UpdateMoveList();     // rebuild with quality badges
+        BuildEvalGraph();
         RenderReviewPosition();
+    }
+
+    // A clickable advantage graph across the game (player POV): win-% area over the player's moves.
+    private void BuildEvalGraph()
+    {
+        _graphHost.Clear();
+        if (_reviewEval == null || _reviewEval.Count == 0) return;
+        var panel = new VisualElement();
+        panel.style.backgroundColor = UiKit.Panel;
+        panel.style.borderTopWidth = panel.style.borderBottomWidth = panel.style.borderLeftWidth = panel.style.borderRightWidth = 1;
+        panel.style.borderTopColor = panel.style.borderBottomColor = panel.style.borderLeftColor = panel.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(panel, 12); UiKit.Pad(panel, 12, 14, 12, 14);
+        panel.Add(UiKit.Text_("Advantage", 12, UiKit.Mute, bold: true));
+
+        var graph = new VisualElement { name = "evalgraph" };
+        graph.style.height = 90; graph.style.marginTop = 8;
+        var eval = _reviewEval;
+        graph.generateVisualContent += ctx =>
+        {
+            var r = graph.contentRect;
+            if (r.width <= 1f || eval.Count == 0) return;
+            var p = ctx.painter2D;
+            float midY = r.height / 2f;
+            // 50% (equal) baseline
+            p.strokeColor = UiKit.Line; p.lineWidth = 1f;
+            p.BeginPath(); p.MoveTo(new Vector2(0, midY)); p.LineTo(new Vector2(r.width, midY)); p.Stroke();
+            // win-% curve (player POV): 0..100 mapped bottom..top
+            p.strokeColor = UiKit.GreenHi; p.lineWidth = 2f; p.lineJoin = LineJoin.Round;
+            p.BeginPath();
+            for (int i = 0; i < eval.Count; i++)
+            {
+                float x = eval.Count == 1 ? r.width / 2f : r.width * i / (eval.Count - 1);
+                float win = (float)AccuracyModel.WinPercent(eval[i]); // 0..100, player POV
+                float y = r.height * (1f - win / 100f);
+                if (i == 0) p.MoveTo(new Vector2(x, y)); else p.LineTo(new Vector2(x, y));
+            }
+            p.Stroke();
+        };
+        // Click to jump to that player move.
+        graph.RegisterCallback<ClickEvent>(e =>
+        {
+            var r = graph.contentRect;
+            if (r.width <= 1f || eval.Count == 0) return;
+            int idx = Mathf.Clamp(Mathf.RoundToInt(e.localPosition.x / r.width * (eval.Count - 1)), 0, eval.Count - 1);
+            RowClicked((idx) * 2 + (_playerWhite ? 1 : 2)); // player move idx -> 1-based ply
+        });
+        panel.Add(graph);
+        _graphHost.Add(panel);
     }
 
     private void RenderReviewPosition()
@@ -749,8 +856,13 @@ public sealed class KaissaGameController : MonoBehaviour
         if (!_timed || _flagged || _game == null || _game.IsGameOver || _reviewMode) return;
         double dt = Time.deltaTime;
         if (_activeWhite) _clockWhite -= dt; else _clockBlack -= dt;
-        if (_clockWhite <= 0) { _clockWhite = 0; _flagged = true; OnFlag(playerLost: true); }
-        else if (_clockBlack <= 0) { _clockBlack = 0; _flagged = true; OnFlag(playerLost: false); }
+        // Warn once when the player's own clock (whichever colour) runs low on their turn.
+        double playerClock = _playerWhite ? _clockWhite : _clockBlack;
+        if (KaissaSettings.LowTimeWarning && !_lowTimeWarned && _activeWhite == _playerWhite && playerClock <= 10 && playerClock > 0)
+        { _lowTimeWarned = true; _audio.PlayLowTime(); }
+        // Flag attribution follows the chosen colour, not a fixed White-player assumption.
+        if (_clockWhite <= 0) { _clockWhite = 0; _flagged = true; OnFlag(playerLost: _playerWhite); }
+        else if (_clockBlack <= 0) { _clockBlack = 0; _flagged = true; OnFlag(playerLost: !_playerWhite); }
         UpdateClockLabels();
     }
 

@@ -71,6 +71,7 @@ public sealed class MainMenuController : MonoBehaviour
         var grid = new VisualElement();
         grid.style.flexDirection = FlexDirection.Row; grid.style.flexWrap = Wrap.Wrap; grid.style.marginTop = 6;
         grid.Add(Card("Play vs the bot", "An engine capped to your level. Your mistakes come back as puzzles.", "Play", hero: true));
+        if (!string.IsNullOrEmpty(KaissaSettings.LastOpponent)) grid.Add(RematchCard());
         grid.Add(DailyCard());
         grid.Add(Card("Puzzles", "Adaptive, spaced practice across the pattern library.", "SampleScene"));
         grid.Add(Card("Puzzle Blitz", "Solve as many as you can before three misses.", "Rush"));
@@ -174,6 +175,33 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (daily) DailyRoute.Active = true;
         SceneTransition.Go(scene);
+    }
+
+    // One-click rematch of the last opponent/time control (chess.com's "rematch last game type").
+    private VisualElement RematchCard()
+    {
+        string opp = KaissaSettings.LastOpponent;
+        var t = UiKit.Text_("Rematch", 17, UiKit.Text, bold: true);
+        var d = UiKit.Text_($"Play {opp} again at the same time control.", 13, UiKit.Dim);
+        d.style.whiteSpace = WhiteSpace.Normal; d.style.marginTop = 8;
+        var c = UiKit.Col(t, d);
+        c.style.backgroundColor = UiKit.Panel;
+        c.style.borderTopWidth = c.style.borderBottomWidth = c.style.borderLeftWidth = c.style.borderRightWidth = 1;
+        c.style.borderTopColor = c.style.borderBottomColor = c.style.borderLeftColor = c.style.borderRightColor = UiKit.Line;
+        UiKit.Pad(c, 18); UiKit.Radius(c, 12);
+        c.style.marginRight = 14; c.style.marginBottom = 14;
+        c.style.flexBasis = Length.Percent(30); c.style.minWidth = 220;
+        void Start()
+        {
+            RematchRoute.Active = true;
+            RematchRoute.Label = KaissaSettings.LastOpponent;
+            RematchRoute.Elo = KaissaSettings.LastOpponentElo;
+            RematchRoute.Tc = KaissaSettings.LastTc;
+            SceneTransition.Go("Play");
+        }
+        c.RegisterCallback<ClickEvent>(_ => Start());
+        UiKit.Interactive(c, 1.01f);
+        return c;
     }
 
     private static VisualElement Panel()
