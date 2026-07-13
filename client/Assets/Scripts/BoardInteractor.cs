@@ -37,6 +37,8 @@ public sealed class BoardInteractor : MonoBehaviour
 
     // Premove (opponent's turn): queue one move that fires when it becomes the human's turn again.
     public bool AllowPremove;
+    // When set, a left-click reports the clicked square (board editor / drills) instead of moving.
+    public Action<string> SquareClick;
     private (string from, string to)? _premove;
     private string _premoveFrom;
     private string _hoverPreviewSquare;
@@ -149,6 +151,15 @@ public sealed class BoardInteractor : MonoBehaviour
         }
         if (mouse.leftButton.wasPressedThisFrame)
             ClearAnnotations();
+
+        // Square-pick mode (board editor / coordinate-vision drills): report the clicked square and
+        // bypass all move logic + the humanCanMove gate.
+        if (SquareClick != null)
+        {
+            if (mouse.leftButton.wasPressedThisFrame && RaycastSquare(mouse) is { } picked)
+                SquareClick(picked);
+            return;
+        }
 
         if (!_humanCanMove)
         {

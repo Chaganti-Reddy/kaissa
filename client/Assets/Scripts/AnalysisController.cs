@@ -237,11 +237,6 @@ public sealed class AnalysisController : MonoBehaviour
     // square picking, so editing prompts the player to switch to the 2D board.
     private void EnterEdit()
     {
-        if (KaissaSettings.BoardView != 0)
-        {
-            _evalText.text = "Switch to the 2D board (Settings) to edit a position.";
-            return;
-        }
         _editing = true;
         _evalCts?.Cancel();
         ParseFenIntoEdit(_session.CurrentFen);
@@ -733,23 +728,21 @@ public sealed class AnalysisController : MonoBehaviour
         UiAutomation.Click(UiAutomation.FindButton(_root, "Copy PGN"));
         yield return new WaitForSeconds(0.3f);
 
-        // Board editor (2D only): open, load start, pick the white queen, stamp two squares, apply.
-        if (tag == "2d")
-        {
-            UiAutomation.Click(UiAutomation.FindButton(_root, "Edit position"));
-            yield return new WaitForSeconds(0.6f);
-            yield return Shot(dir, tag, "editor_open", 0.6f);
-            UiAutomation.Click(UiAutomation.FindButton(_root, "Start"));
-            yield return new WaitForSeconds(0.4f);
-            UiAutomation.Click(_editorHost.Q("pal_Q"));
-            yield return new WaitForSeconds(0.3f);
-            if (_board is Board2D b2) { b2.DebugTapSquare("e5"); b2.DebugTapSquare("d5"); }
-            yield return new WaitForSeconds(0.4f);
-            yield return Shot(dir, tag, "editor_stamp", 0.6f);
-            UiAutomation.Click(UiAutomation.FindButton(_root, "Apply"));
-            yield return new WaitForSeconds(1.8f);
-            yield return Shot(dir, tag, "editor_applied", 0.6f);
-        }
+        // Board editor: open, load start, pick the white queen, stamp two squares (2D board tap), apply.
+        // Works on 2D and 3D now that square-pick is wired for both; only the scripted stamp is 2D-only.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Edit position"));
+        yield return new WaitForSeconds(0.6f);
+        yield return Shot(dir, tag, "editor_open", 0.6f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Start"));
+        yield return new WaitForSeconds(0.4f);
+        UiAutomation.Click(_editorHost.Q("pal_Q"));
+        yield return new WaitForSeconds(0.3f);
+        if (_board is Board2D b2) { b2.DebugTapSquare("e5"); b2.DebugTapSquare("d5"); }
+        yield return new WaitForSeconds(0.4f);
+        yield return Shot(dir, tag, "editor_stamp", 0.6f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Apply"));
+        yield return new WaitForSeconds(1.8f);
+        yield return Shot(dir, tag, "editor_applied", 0.6f);
 
         // Flip.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
