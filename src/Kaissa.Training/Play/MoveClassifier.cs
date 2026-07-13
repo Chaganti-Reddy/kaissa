@@ -6,6 +6,7 @@ namespace Kaissa.Training.Play;
 public enum MoveQuality
 {
     Best,
+    Excellent,
     Good,
     Inaccuracy,
     Mistake,
@@ -28,7 +29,8 @@ public static class MoveClassifier
 
     public static MoveQuality Classify(int centipawnLoss) => centipawnLoss switch
     {
-        <= 20 => MoveQuality.Best,
+        <= 10 => MoveQuality.Best,
+        <= 25 => MoveQuality.Excellent,
         <= 50 => MoveQuality.Good,
         <= 100 => MoveQuality.Inaccuracy,
         <= 200 => MoveQuality.Mistake,

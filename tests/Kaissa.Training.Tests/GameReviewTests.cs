@@ -18,7 +18,8 @@ public sealed class GameReviewTests
 
     [Theory]
     [InlineData(0, MoveQuality.Best)]
-    [InlineData(20, MoveQuality.Best)]
+    [InlineData(10, MoveQuality.Best)]
+    [InlineData(20, MoveQuality.Excellent)]
     [InlineData(45, MoveQuality.Good)]
     [InlineData(90, MoveQuality.Inaccuracy)]
     [InlineData(150, MoveQuality.Mistake)]

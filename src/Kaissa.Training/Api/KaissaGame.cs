@@ -132,16 +132,19 @@ public sealed class KaissaGame : IAsyncDisposable
         var assessments = await analyzer.AnalyzeAsync(_session.StartFen, _session.MoveHistory, _playerSide, cancellationToken)
             .ConfigureAwait(false);
 
+        var allMoves = assessments
+            .Select(a => new GameReviewItem(a.Ply / 2 + 1, a.PlayedMove, a.BestMove, a.Quality.ToString(), a.CentipawnLoss))
+            .ToList();
         var mistakes = assessments
             .Where(a => a.Quality > MoveQuality.Inaccuracy)
             .Select(a => new GameReviewItem(a.Ply / 2 + 1, a.PlayedMove, a.BestMove, a.Quality.ToString(), a.CentipawnLoss))
             .ToList();
 
         double accuracy = AccuracyModel.GameAccuracy(assessments);
-        // Player-perspective evaluation after each of the player's moves - the curve for a future graph.
+        // Player-perspective evaluation after each of the player's moves - the curve for the eval graph.
         var evalSeries = assessments.Select(a => a.BestEvalCp - a.CentipawnLoss).ToList();
         var phaseAccuracy = AccuracyModel.ByPhase(assessments);
-        return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy, evalSeries, phaseAccuracy);
+        return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy, evalSeries, phaseAccuracy, allMoves);
     }
 
     public ValueTask DisposeAsync() => _ownsEngine ? _engine.DisposeAsync() : default;
