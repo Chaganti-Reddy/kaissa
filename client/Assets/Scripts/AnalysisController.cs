@@ -216,7 +216,7 @@ public sealed class AnalysisController : MonoBehaviour
     private void PlayFromHere()
     {
         EndgameRoute.Fen = _session.CurrentFen;
-        SceneManager.LoadScene("Play");
+        SceneTransition.Go("Play");
     }
 
     private void ToggleThreats()
@@ -444,7 +444,7 @@ public sealed class AnalysisController : MonoBehaviour
     {
         var kb = Keyboard.current;
         if (kb == null) return;
-        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        if (kb.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
         else if (kb.leftArrowKey.wasPressedThisFrame) { _session.StepBack(); RenderCurrent(); }
         else if (kb.rightArrowKey.wasPressedThisFrame) { _session.StepForward(); RenderCurrent(); }
         else if (kb.fKey.wasPressedThisFrame) { _whiteBottom = !_whiteBottom; RenderCurrent(); }

@@ -315,7 +315,7 @@ public sealed class LibraryController : MonoBehaviour
     {
         var kb = Keyboard.current;
         if (kb == null) return;
-        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        if (kb.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
         else if (kb.fKey.wasPressedThisFrame) Flip();
         else if (kb.rightArrowKey.wasPressedThisFrame) NextPressed();
     }

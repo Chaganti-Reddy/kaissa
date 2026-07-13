@@ -668,7 +668,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     {
         if (_session == null) return;
         AnalysisRoute.Fen = _session.Fen;
-        SceneManager.LoadScene("Analysis");
+        SceneTransition.Go("Analysis");
     }
 
     private void SetControlsSolving()
@@ -879,7 +879,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         if (kb.escapeKey.wasPressedThisFrame)
         {
             if (_answered > 0 && !_summaryShown) ShowSummary();
-            else SceneManager.LoadScene("Menu");
+            else SceneTransition.Go("Menu");
         }
         else if (kb.hKey.wasPressedThisFrame) ShowHint();
         else if (kb.nKey.wasPressedThisFrame && _concluded) LoadNext();
@@ -917,7 +917,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         s3.style.marginTop = 4; s3.style.marginBottom = 18; panel.Add(s3);
         var keep = UiKit.Primary("Keep training", () => { _root.Remove(dim); _summaryShown = false; }, 15);
         keep.style.width = 300; keep.style.marginBottom = 8; panel.Add(keep);
-        var back = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu")); back.style.width = 300; panel.Add(back);
+        var back = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu")); back.style.width = 300; panel.Add(back);
         dim.Add(panel);
         _root.Add(dim);
     }

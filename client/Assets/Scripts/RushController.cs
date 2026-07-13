@@ -342,7 +342,7 @@ public sealed class RushController : MonoBehaviour
         var again = UiKit.Primary("Play again", () => StartRun(_mode), 15);
         again.style.width = 320; again.style.marginTop = 18; again.style.marginBottom = 8; panel.Add(again);
         var change = UiKit.Ghost("Change mode", ShowStartOverlay); change.style.width = 320; change.style.marginBottom = 8; panel.Add(change);
-        var menu = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu")); menu.style.width = 320; panel.Add(menu);
+        var menu = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu")); menu.style.width = 320; panel.Add(menu);
 
         dim.Add(panel);
         _overlayHost.Add(dim);
@@ -454,7 +454,7 @@ public sealed class RushController : MonoBehaviour
 
         var kb = Keyboard.current;
         if (kb == null) return;
-        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        if (kb.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
         else if (kb.fKey.wasPressedThisFrame && _session != null && !_busy)
         {
             _whiteBottom = !_whiteBottom;

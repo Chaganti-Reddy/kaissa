@@ -266,7 +266,7 @@ public sealed class KaissaGameController : MonoBehaviour
             var b = bot;
             panel.Add(PickBtn($"{b.Name}  ({b.Elo})", () => { _root.Remove(dim); StartGame(b.Name, b.Elo); }));
         }
-        var back = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu"));
+        var back = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu"));
         back.style.marginTop = 8; back.style.width = 360;
         panel.Add(back);
 
@@ -728,7 +728,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
         if (_reviewMode)
         {
-            if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+            if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
             else if (Keyboard.current.nKey.wasPressedThisFrame) NewGame();
             else if (Keyboard.current.rKey.wasPressedThisFrame) Rematch();
             else if (Keyboard.current.leftArrowKey.wasPressedThisFrame) { _reviewPly = Mathf.Max(0, _reviewPly - 1); RenderReviewPosition(); }
@@ -737,7 +737,7 @@ public sealed class KaissaGameController : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        if (Keyboard.current.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
         else if (Keyboard.current.nKey.wasPressedThisFrame && _game != null) NewGame();
         else if (Keyboard.current.rKey.wasPressedThisFrame) Resign();
         else if (Keyboard.current.uKey.wasPressedThisFrame) Takeback();

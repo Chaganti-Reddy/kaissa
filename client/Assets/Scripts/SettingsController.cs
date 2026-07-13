@@ -305,7 +305,7 @@ public sealed class SettingsController : MonoBehaviour
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            SceneManager.LoadScene("Menu");
+            SceneTransition.Go("Menu");
     }
 
     // ---------------- self-test ----------------

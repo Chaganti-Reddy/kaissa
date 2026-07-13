@@ -177,11 +177,11 @@ public sealed class CalibrateController : MonoBehaviour
         panel.Add(UiKit.Text_(rating.ToString(), 60, UiKit.Text, bold: true));
         var tier = UiKit.Text_(Descriptor(rating), 16, UiKit.Gold, bold: true); tier.style.marginBottom = 16;
         panel.Add(tier);
-        var go = UiKit.Primary("Start training", () => SceneManager.LoadScene("SampleScene"), 15); go.style.width = 320; go.style.marginBottom = 8;
+        var go = UiKit.Primary("Start training", () => SceneTransition.Go("SampleScene"), 15); go.style.width = 320; go.style.marginBottom = 8;
         panel.Add(go);
         var again = UiKit.Ghost("Recalibrate", ShowIntro); again.style.width = 320; again.style.marginBottom = 8;
         panel.Add(again);
-        var menu = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu")); menu.style.width = 320;
+        var menu = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu")); menu.style.width = 320;
         panel.Add(menu);
         dim.Add(panel);
         _overlayHost.Add(dim);
@@ -270,7 +270,7 @@ public sealed class CalibrateController : MonoBehaviour
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            SceneManager.LoadScene("Menu");
+            SceneTransition.Go("Menu");
     }
 
     // ---------------- self-test ----------------

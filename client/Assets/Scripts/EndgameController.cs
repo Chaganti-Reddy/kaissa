@@ -368,7 +368,7 @@ public sealed class EndgameController : MonoBehaviour
     {
         var kb = Keyboard.current;
         if (kb == null) return;
-        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        if (kb.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
         else if (kb.fKey.wasPressedThisFrame) Flip();
         else if (kb.rKey.wasPressedThisFrame) LoadDrill(_index);
         else if (kb.nKey.wasPressedThisFrame) NextDrill();

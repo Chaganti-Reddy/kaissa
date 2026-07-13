@@ -165,7 +165,7 @@ public sealed class VisionController : MonoBehaviour
         if (record) { var b = UiKit.Text_("New best", 15, UiKit.Gold, bold: true); b.style.marginTop = 8; panel.Add(b); }
         var again = UiKit.Primary("Play again", StartRun, 15); again.style.width = 320; again.style.marginTop = 16; again.style.marginBottom = 8;
         panel.Add(again);
-        var menu = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu")); menu.style.width = 320;
+        var menu = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu")); menu.style.width = 320;
         panel.Add(menu);
         dim.Add(panel);
         _overlayHost.Add(dim);
@@ -215,7 +215,7 @@ public sealed class VisionController : MonoBehaviour
             }
         }
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            SceneManager.LoadScene("Menu");
+            SceneTransition.Go("Menu");
     }
 
     // ---------------- self-test ----------------

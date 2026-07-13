@@ -626,7 +626,7 @@ public sealed class OpeningController : MonoBehaviour
     {
         var kb = Keyboard.current;
         if (kb == null) return;
-        if (kb.escapeKey.wasPressedThisFrame) SceneManager.LoadScene("Menu");
+        if (kb.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
         else if (kb.fKey.wasPressedThisFrame && _book != null) Flip();
         else if (kb.leftArrowKey.wasPressedThisFrame) Back();
         else if (kb.rightArrowKey.wasPressedThisFrame && _mode == Mode.Learn) LearnNext();

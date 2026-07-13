@@ -173,7 +173,7 @@ public sealed class MainMenuController : MonoBehaviour
     private static void Go(string scene, bool daily)
     {
         if (daily) DailyRoute.Active = true;
-        SceneManager.LoadScene(scene);
+        SceneTransition.Go(scene);
     }
 
     private static VisualElement Panel()
@@ -202,7 +202,7 @@ public sealed class MainMenuController : MonoBehaviour
         msg.style.unityTextAlign = TextAnchor.MiddleCenter; msg.style.marginTop = 12; msg.style.marginBottom = 22; msg.style.whiteSpace = WhiteSpace.Normal;
         panel.Add(msg);
 
-        var find = UiKit.Primary("Find my level", () => { KaissaSettings.Onboarded = true; SceneManager.LoadScene("Calibrate"); }, 16);
+        var find = UiKit.Primary("Find my level", () => { KaissaSettings.Onboarded = true; SceneTransition.Go("Calibrate"); }, 16);
         find.style.marginBottom = 10; find.style.width = 300;
         var skip = UiKit.Ghost("Skip for now", () => { KaissaSettings.Onboarded = true; _root.Remove(dim); });
         skip.style.width = 300;

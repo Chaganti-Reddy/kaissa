@@ -257,7 +257,7 @@ public sealed class StatsController : MonoBehaviour
             {
                 ThemeRoute.PatternId = weakest.PatternId;
                 ThemeRoute.PatternName = weakest.PatternName;
-                SceneManager.LoadScene("SampleScene");
+                SceneTransition.Go("SampleScene");
             }, 15);
             btn.name = "practice";
             btn.style.marginTop = 14; btn.style.alignSelf = Align.FlexStart;
@@ -328,7 +328,7 @@ public sealed class StatsController : MonoBehaviour
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            SceneManager.LoadScene("Menu");
+            SceneTransition.Go("Menu");
     }
 
     private static void EnsureEventSystem()

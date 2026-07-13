@@ -34,7 +34,7 @@ public static class KaissaSettings
         public int visionBest;        // best light/dark board-vision score in a 30s run
         public int coordBest;         // best coordinate-finding score in a 30s run
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
-        public string soundTheme = "sfx"; // sound set (folder under Resources/Sounds); empty = procedural
+        public string soundTheme = ""; // sound set (folder under Resources/Sounds); empty = Classic procedural
     }
 
     private static Data _data;

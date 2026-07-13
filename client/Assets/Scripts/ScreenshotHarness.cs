@@ -30,6 +30,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
             && !args.Contains("-kaissa-analysistest") && !args.Contains("-kaissa-statstest")
             && !args.Contains("-kaissa-visiontest") && !args.Contains("-kaissa-coordtest")
             && !args.Contains("-kaissa-settingstest") && !args.Contains("-kaissa-calibratetest")
+            && !args.Contains("-kaissa-transition")
             && !args.Contains("-kaissa-hometest"))
             return;
         Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
@@ -155,6 +156,22 @@ public sealed class ScreenshotHarness : MonoBehaviour
         {
             SceneManager.LoadScene("Calibrate");
             yield return new WaitForSeconds(25f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-transition"))
+        {
+            // Load a scene, then burst-capture across the fade-in reveal so the transition is visible.
+            SceneManager.LoadScene("Play");
+            for (int k = 0; k < 16; k++)
+            {
+                yield return new WaitForSeconds(0.04f);
+                ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"trans_{k:00}.png"));
+            }
+            yield return new WaitForSeconds(0.5f);
+            ScreenCapture.CaptureScreenshot(Path.Combine(dir, "trans_done.png"));
+            yield return new WaitForSeconds(0.3f);
             Application.Quit();
             yield break;
         }

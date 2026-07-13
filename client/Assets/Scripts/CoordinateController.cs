@@ -217,7 +217,7 @@ public sealed class CoordinateController : MonoBehaviour
         panel.Add(again);
         var change = UiKit.Ghost("Change side", ShowStartOverlay); change.style.width = 320; change.style.marginBottom = 8;
         panel.Add(change);
-        var menu = UiKit.Ghost("Back to menu", () => SceneManager.LoadScene("Menu")); menu.style.width = 320;
+        var menu = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu")); menu.style.width = 320;
         panel.Add(menu);
         dim.Add(panel);
         _overlayHost.Add(dim);
@@ -261,7 +261,7 @@ public sealed class CoordinateController : MonoBehaviour
             if (_timeLeft <= 0f) EndRun();
         }
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            SceneManager.LoadScene("Menu");
+            SceneTransition.Go("Menu");
     }
 
     // ---------------- self-test ----------------

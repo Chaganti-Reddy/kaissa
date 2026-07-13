@@ -187,7 +187,7 @@ public static class UiKit
         item.style.backgroundColor = idle;
         item.RegisterCallback<MouseEnterEvent>(_ => { if (!active) item.style.backgroundColor = Panel2; });
         item.RegisterCallback<MouseLeaveEvent>(_ => item.style.backgroundColor = idle);
-        item.RegisterCallback<ClickEvent>(_ => UnityEngine.SceneManagement.SceneManager.LoadScene(scene));
+        item.RegisterCallback<ClickEvent>(_ => SceneTransition.Go(scene));
         Interactive(item, 1.03f);
         return item;
     }
