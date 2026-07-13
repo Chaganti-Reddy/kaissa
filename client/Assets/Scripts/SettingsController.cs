@@ -224,6 +224,10 @@ public sealed class SettingsController : MonoBehaviour
             () => { KaissaSettings.Coordinates = !KaissaSettings.Coordinates; RefreshPreview(); });
         Toggle(board, "Flip to side to move", KaissaSettings.Flip ? "On" : "Off",
             () => KaissaSettings.Flip = !KaissaSettings.Flip);
+        Toggle(board, "Highlight last move", KaissaSettings.HighlightMove ? "On" : "Off",
+            () => KaissaSettings.HighlightMove = !KaissaSettings.HighlightMove);
+        Toggle(board, "Piece animation", new[] { "Fast", "Normal", "Slow" }[Mathf.Clamp(KaissaSettings.AnimSpeed, 0, 2)],
+            () => KaissaSettings.AnimSpeed = (KaissaSettings.AnimSpeed + 1) % 3);
 
         var play = Group("Gameplay");
         Toggle(play, "Move by", KaissaSettings.DragToMove ? "Drag or click" : "Click only",
@@ -234,6 +238,10 @@ public sealed class SettingsController : MonoBehaviour
             () => KaissaSettings.AutoQueen = !KaissaSettings.AutoQueen);
         Toggle(play, "Eval bar (Play)", KaissaSettings.EvalBar ? "On" : "Off",
             () => KaissaSettings.EvalBar = !KaissaSettings.EvalBar);
+        Toggle(play, "Confirm resign", KaissaSettings.ConfirmResign ? "On" : "Off",
+            () => KaissaSettings.ConfirmResign = !KaissaSettings.ConfirmResign);
+        Toggle(play, "Low-time warning", KaissaSettings.LowTimeWarning ? "On" : "Off",
+            () => KaissaSettings.LowTimeWarning = !KaissaSettings.LowTimeWarning);
         Toggle(play, "Bot speed", speeds[Mathf.Clamp(KaissaSettings.BotSpeed, 0, 2)],
             () => KaissaSettings.BotSpeed = (KaissaSettings.BotSpeed + 1) % 3);
 
@@ -242,6 +250,8 @@ public sealed class SettingsController : MonoBehaviour
             () => KaissaSettings.Sound = !KaissaSettings.Sound);
         Toggle(disp, "Display", KaissaSettings.Fullscreen ? "Fullscreen" : "Maximized",
             () => { KaissaSettings.Fullscreen = !KaissaSettings.Fullscreen; WindowMode.Apply(); });
+        Toggle(disp, "Minimize to tray", KaissaSettings.MinimizeToTray ? "On" : "Off",
+            () => KaissaSettings.MinimizeToTray = !KaissaSettings.MinimizeToTray);
 
         var data = Group("Data");
         var resetRow = ResetRow();

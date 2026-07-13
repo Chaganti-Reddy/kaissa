@@ -296,8 +296,8 @@ public sealed class Board2D : IBoardView
             }
         }
 
-        // last-move highlight
-        if (!string.IsNullOrEmpty(lastMove) && lastMove.Length >= 4)
+        // last-move highlight (honoring the Highlight-move setting)
+        if (KaissaSettings.HighlightMove && !string.IsNullOrEmpty(lastMove) && lastMove.Length >= 4)
         {
             Highlight(Sq(lastMove.Substring(0, 2)), Sel);
             Highlight(Sq(lastMove.Substring(2, 2)), Sel);
@@ -378,7 +378,7 @@ public sealed class Board2D : IBoardView
         ghost.style.left = startP.x; ghost.style.top = startP.y;
         // Ease-out glide (linear reads mechanical); animate a 0..1 progress and lerp with easing.
         ghost.experimental.animation
-            .Start(0f, 1f, 120, (el, v) =>
+            .Start(0f, 1f, KaissaSettings.GlideMs, (el, v) =>
             {
                 float e = 1f - Mathf.Pow(1f - v, 3f); // ease-out cubic
                 el.style.left = Mathf.Lerp(startP.x, endP.x, e);

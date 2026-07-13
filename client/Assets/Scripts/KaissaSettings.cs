@@ -31,10 +31,19 @@ public static class KaissaSettings
         public int rushBest5;         // Puzzle Rush best score: 5-minute mode
         public int rushBestSurvival;  // Puzzle Rush best score: survival mode
         public string lessonsDone = ""; // comma-joined ids of completed lessons
+        public string lessonCrowns = ""; // per-lesson best crowns, "id:n,id:n" (1-3)
         public int visionBest;        // best light/dark board-vision score in a 30s run
         public int coordBest;         // best coordinate-finding score in a 30s run
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
         public string soundTheme = ""; // sound set (folder under Resources/Sounds); empty = Classic procedural
+        public bool minimizeToTray; // Windows: hide to a system-tray icon when minimized (convenience)
+        public bool highlightMove = true; // highlight the last move's from/to squares
+        public bool confirmResign;        // require a second click to resign (misclick guard)
+        public bool lowTimeWarning = true; // play a warning sound when your clock runs low
+        public int animSpeed = 1;         // piece glide speed: 0 fast, 1 normal, 2 slow
+        public string lastOpponent = "";  // last Play opponent label (for the Home rematch card)
+        public int lastOpponentElo = -1;  // its fixed Elo, or -1 for Adaptive
+        public int lastTc;                // its time-control index
     }
 
     private static Data _data;
@@ -78,6 +87,16 @@ public static class KaissaSettings
     public static int CoordBest { get => D.coordBest; set { D.coordBest = value; Save(); } }
     public static string PieceSet { get => string.IsNullOrEmpty(D.pieceSet) ? "cburnett" : D.pieceSet; set { D.pieceSet = value; Save(); } }
     public static string SoundTheme { get => D.soundTheme ?? ""; set { D.soundTheme = value; Save(); } }
+    public static bool MinimizeToTray { get => D.minimizeToTray; set { D.minimizeToTray = value; Save(); } }
+    public static bool HighlightMove { get => D.highlightMove; set { D.highlightMove = value; Save(); } }
+    public static bool ConfirmResign { get => D.confirmResign; set { D.confirmResign = value; Save(); } }
+    public static bool LowTimeWarning { get => D.lowTimeWarning; set { D.lowTimeWarning = value; Save(); } }
+    public static int AnimSpeed { get => D.animSpeed; set { D.animSpeed = value; Save(); } }
+    public static string LastOpponent { get => D.lastOpponent ?? ""; set { D.lastOpponent = value; Save(); } }
+    public static int LastOpponentElo { get => D.lastOpponentElo; set { D.lastOpponentElo = value; Save(); } }
+    public static int LastTc { get => D.lastTc; set { D.lastTc = value; Save(); } }
+    // Glide duration (ms) from the AnimSpeed preset, shared by the 2D and 3D boards.
+    public static int GlideMs => AnimSpeed switch { 0 => 70, 2 => 200, _ => 120 };
 
     public static bool IsLessonDone(string id) =>
         !string.IsNullOrEmpty(id) && ("," + D.lessonsDone + ",").Contains("," + id + ",");
@@ -86,6 +105,30 @@ public static class KaissaSettings
     {
         if (string.IsNullOrEmpty(id) || IsLessonDone(id)) return;
         D.lessonsDone = string.IsNullOrEmpty(D.lessonsDone) ? id : D.lessonsDone + "," + id;
+        Save();
+    }
+
+    // Per-lesson best crown count (0 = not earned, 1-3 like chess.com's lesson score).
+    public static int LessonCrowns(string id)
+    {
+        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(D.lessonCrowns)) return 0;
+        foreach (var e in D.lessonCrowns.Split(','))
+        {
+            var kv = e.Split(':');
+            if (kv.Length == 2 && kv[0] == id && int.TryParse(kv[1], out int n)) return n;
+        }
+        return 0;
+    }
+
+    public static void SetLessonCrowns(string id, int crowns)
+    {
+        if (string.IsNullOrEmpty(id) || crowns <= LessonCrowns(id)) return; // keep the best
+        var parts = string.IsNullOrEmpty(D.lessonCrowns)
+            ? new System.Collections.Generic.List<string>()
+            : new System.Collections.Generic.List<string>(D.lessonCrowns.Split(','));
+        parts.RemoveAll(e => e.StartsWith(id + ":"));
+        parts.Add($"{id}:{crowns}");
+        D.lessonCrowns = string.Join(",", parts);
         Save();
     }
 }

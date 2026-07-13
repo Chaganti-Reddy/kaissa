@@ -18,7 +18,7 @@ public sealed class BoardInteractor : MonoBehaviour
     private const float TileTopY = 0.075f;
     private const float LiftDrag = 0.28f;        // how high a dragged piece floats (lower = less detached)
     private const float DragThresholdPixels = 6f;
-    private const float MoveGlideSeconds = 0.11f; // slide-to-square duration (snappier reads better)
+    private static float MoveGlideSeconds => KaissaSettings.GlideMs / 1000f; // slide duration, from the anim-speed setting
     private const float CapturePopSeconds = 0.10f;
 
     private Action<string> _onMove;
@@ -302,7 +302,7 @@ public sealed class BoardInteractor : MonoBehaviour
         {
             var start = moving.position;
             var target = new Vector3(to[0] - 'a', TileTopY, to[1] - '1');
-            const float dur = MoveGlideSeconds;
+            float dur = MoveGlideSeconds;
             for (float t = 0f; t < 1f; t += Time.deltaTime / dur)
             {
                 moving.position = Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t)));
