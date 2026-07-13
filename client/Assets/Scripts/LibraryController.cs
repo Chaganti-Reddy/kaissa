@@ -22,6 +22,7 @@ public sealed class LibraryController : MonoBehaviour
 
     private Lesson _lesson;
     private LessonSession _session;
+    private int _lessonSlips;
     private LessonStep _step;
     private int _stepIndex, _retry;
     private bool _busy, _completed, _whiteBottom = true;
@@ -141,6 +142,19 @@ public sealed class LibraryController : MonoBehaviour
                 mark.style.width = 8; mark.style.height = 8; UiKit.Radius(mark, 4); mark.style.marginRight = 8; mark.style.flexShrink = 0;
                 mark.style.backgroundColor = done ? UiKit.Green : UiKit.Mute;
                 var row = UiKit.Row(mark, UiKit.Text_(lesson.Title, 14, active ? UiKit.Text : UiKit.Dim, bold: active));
+                // Earned crowns (1-3) as small gold dots on the right.
+                int crowns = KaissaSettings.LessonCrowns(lesson.Id);
+                if (crowns > 0)
+                {
+                    var sp = new VisualElement(); sp.style.flexGrow = 1; row.Add(sp);
+                    for (int ci = 0; ci < crowns; ci++)
+                    {
+                        var cd = new VisualElement();
+                        cd.style.width = 7; cd.style.height = 7; UiKit.Radius(cd, 4);
+                        cd.style.backgroundColor = UiKit.Gold; cd.style.marginLeft = 3; cd.style.flexShrink = 0;
+                        row.Add(cd);
+                    }
+                }
                 row.name = "lesson-" + lesson.Id;
                 UiKit.Pad(row, 7, 10, 7, 10); UiKit.Radius(row, 6);
                 if (active) row.style.backgroundColor = UiKit.Panel2;
@@ -170,6 +184,7 @@ public sealed class LibraryController : MonoBehaviour
         _lesson = lesson;
         _session = new LessonSession(lesson, _lib, seed: lesson.Id.GetHashCode() ^ (_retry * 7919));
         _stepIndex = 0; _completed = false; _busy = false;
+        _lessonSlips = 0; // wrong moves + hints this attempt, for the crown score
         if (_nextBtn != null) _nextBtn.text = "Next";
         PopulateList();
         ShowStep();
@@ -215,10 +230,13 @@ public sealed class LibraryController : MonoBehaviour
     {
         _completed = true; _busy = false;
         KaissaSettings.MarkLessonDone(_lesson.Id);
+        int crowns = _lessonSlips == 0 ? 3 : _lessonSlips <= 2 ? 2 : 1; // clean run = 3, like chess.com
+        KaissaSettings.SetLessonCrowns(_lesson.Id, crowns);
+        PopulateList(); // refresh the earned-crown display on the lesson rows
         _stepLabel.text = "Lesson complete";
-        _text.text = $"You have finished \"{_lesson.Title}\". Keep the pattern in mind - it will keep coming up.";
-        SetFeedback("Lesson complete", UiKit.GreenHi);
-        _audio.PlayGameEnd();
+        _text.text = $"You have finished \"{_lesson.Title}\" - {crowns}/3 crowns. Keep the pattern in mind; it will keep coming up.";
+        SetFeedback($"Lesson complete - {crowns}/3 crowns", UiKit.GreenHi);
+        _audio.PlayVictory();
         Enable(_nextBtn, true); Enable(_hintBtn, false);
         _nextBtn.text = "Next lesson";
         PopulateList();
@@ -245,6 +263,7 @@ public sealed class LibraryController : MonoBehaviour
             TintMove(uci, Bad);
             SetFeedback("Not the key move - try again.", UiKit.Danger);
             _audio.PlayWrong();
+            _lessonSlips++;
             StartCoroutine(ResetStepAfter(1.1f));
         }
     }
@@ -267,6 +286,7 @@ public sealed class LibraryController : MonoBehaviour
         if (_step is not { Interactive: true } || string.IsNullOrEmpty(_step.ExpectedMove)) return;
         _board.HighlightSquare(_step.ExpectedMove.Substring(0, 2), HintCol);
         SetFeedback("Look at the highlighted piece.", UiKit.Dim);
+        _lessonSlips++;
     }
 
     private void Flip()
