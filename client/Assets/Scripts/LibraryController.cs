@@ -128,12 +128,12 @@ public sealed class LibraryController : MonoBehaviour
     {
         if (_list == null) return;
         _list.Clear();
-        foreach (var topic in LessonLibrary.Topics)
+        foreach (var level in LessonLibrary.Levels)
         {
-            var header = UiKit.Text_(topic, 12, UiKit.Mute, bold: true);
+            var header = UiKit.Text_(level, 12, UiKit.Mute, bold: true);
             header.style.marginTop = 8; header.style.marginBottom = 2;
             _list.Add(header);
-            foreach (var l in LessonLibrary.ByTopic(topic))
+            foreach (var l in LessonLibrary.ByLevel(level))
             {
                 var lesson = l;
                 bool done = KaissaSettings.IsLessonDone(lesson.Id);
@@ -141,7 +141,8 @@ public sealed class LibraryController : MonoBehaviour
                 var mark = new VisualElement();
                 mark.style.width = 8; mark.style.height = 8; UiKit.Radius(mark, 4); mark.style.marginRight = 8; mark.style.flexShrink = 0;
                 mark.style.backgroundColor = done ? UiKit.Green : UiKit.Mute;
-                var row = UiKit.Row(mark, UiKit.Text_(lesson.Title, 14, active ? UiKit.Text : UiKit.Dim, bold: active));
+                var topic = UiKit.Text_(lesson.Topic, 11, UiKit.Mute); topic.style.marginLeft = 8;
+                var row = UiKit.Row(mark, UiKit.Text_(lesson.Title, 14, active ? UiKit.Text : UiKit.Dim, bold: active), topic);
                 // Earned crowns (1-3) as small gold dots on the right.
                 int crowns = KaissaSettings.LessonCrowns(lesson.Id);
                 if (crowns > 0)
