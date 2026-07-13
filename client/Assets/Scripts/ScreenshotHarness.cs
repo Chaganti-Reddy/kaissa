@@ -26,7 +26,8 @@ public sealed class ScreenshotHarness : MonoBehaviour
             && !args.Contains("-kaissa-record") && !args.Contains("-kaissa-playtest")
             && !args.Contains("-annotate3d") && !args.Contains("-kaissa-puzzletest")
             && !args.Contains("-kaissa-rushtest") && !args.Contains("-kaissa-openingtest")
-            && !args.Contains("-kaissa-endgametest") && !args.Contains("-kaissa-learntest"))
+            && !args.Contains("-kaissa-endgametest") && !args.Contains("-kaissa-learntest")
+            && !args.Contains("-kaissa-analysistest"))
             return;
         Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
         var go = new GameObject("ScreenshotHarness");
@@ -101,6 +102,15 @@ public sealed class ScreenshotHarness : MonoBehaviour
             // The Learn controller runs a guided lesson to completion, self-captures, and quits.
             SceneManager.LoadScene("Library");
             yield return new WaitForSeconds(35f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-analysistest"))
+        {
+            // The Analysis controller exercises eval/lines/arrows/nav/FEN, self-captures, and quits.
+            SceneManager.LoadScene("Analysis");
+            yield return new WaitForSeconds(45f);
             Application.Quit();
             yield break;
         }
