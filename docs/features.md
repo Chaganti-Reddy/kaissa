@@ -35,7 +35,8 @@ Status: `[x]` built (core + client) · `[~]` core built, client UI pending · `[
 
 - [x] Post-game review: mistakes, best reply, severity, centipawn loss, accuracy by phase — `GameAnalyzer`
 - [x] Mistakes routed automatically to spaced practice, tagged by motif — `GamePractice`
-- [x] Analysis board: step and branch any line, engine evaluation and best line — `AnalysisSession` / `KaissaAnalysis`
+- [x] Analysis board: play and branch any line with an evaluation bar, several engine lines at once (click one to play it out), a best-move arrow, an optional threat arrow, a clickable move list, the opening name, load-a-FEN and copy FEN/PGN, and play-vs-computer from the position — `AnalysisSession` / `KaissaAnalysis`
+- [ ] Drag-piece board editor (set up a position by hand; FEN paste covers this today)
 - [ ] Natural-language move explanations
 - [ ] Cross-game accuracy / insights dashboard
 
