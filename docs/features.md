@@ -12,7 +12,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Large bundled set - 52,500 positions spanning the full rating range (about 400 to 3100, i.e. beginner through grandmaster), with theme tags
 - [x] Difficulty bands from Beginner to Grandmaster; the hardest puzzles (2600+) are included, not capped
 - [x] Rated adaptive mode: Glicko-style rating with spaced repetition per pattern - the core loop
-- [x] Custom practice by theme and by difficulty band - on-page mode picker
+- [x] Custom practice by theme, by difficulty band, and a Weakness generator that builds a tailored set from your weakest patterns - on-page mode picker
 - [x] Daily puzzle - `DailyPuzzle`
 - [x] Hint, Solution (played out), Retry, Next, and analyze-this-position
 - [x] Theme chips, side-to-move indicator, puzzle and player ratings, timer, streak
@@ -36,7 +36,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Post-game review: mistakes, best reply, severity, centipawn loss, accuracy by phase - `GameAnalyzer`
 - [x] Mistakes routed automatically to spaced practice, tagged by motif - `GamePractice`
 - [x] Analysis board: play and branch any line with an evaluation bar, several engine lines at once (click one to play it out), a best-move arrow, an optional threat arrow, a clickable move list, the opening name, load-a-FEN and copy FEN/PGN, and play-vs-computer from the position - `AnalysisSession` / `KaissaAnalysis`
-- [ ] Drag-piece board editor (set up a position by hand; FEN paste covers this today)
+- [x] Drag-piece board editor (2D): piece palette, click-to-place, eraser, side-to-move and castling toggles, clear/reset, apply to load; FEN paste also works
 - [ ] Natural-language move explanations
 - [ ] Cross-game accuracy / insights dashboard
 
