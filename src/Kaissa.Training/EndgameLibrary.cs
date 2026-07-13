@@ -62,6 +62,19 @@ public static class EndgameLibrary
             "8/4P3/4k3/8/8/8/8/4K3 w - - 0 1", DrillGoal.Promote,
             "Shepherd the pawn to the eighth rank and promote."),
 
+        // ---- King and pawn: converting an extra pawn ----
+        new EndgamePosition("kp_two", "King & Pawn", "Two connected pawns",
+            "8/8/8/3k4/8/3K4/2PP4/8 w - - 0 1", DrillGoal.Win,
+            "Advance the connected pawns side by side, each guarding the other's square, and promote."),
+
+        // ---- Minor piece: an extra minor plus a pawn is winning ----
+        new EndgamePosition("mp_bishop", "Minor Piece", "Bishop and pawn",
+            "8/8/8/4k3/8/4K3/3BP3/8 w - - 0 1", DrillGoal.Win,
+            "Escort the pawn with the king and bishop; the bishop covers the promotion square."),
+        new EndgamePosition("mp_knight", "Minor Piece", "Knight and pawn",
+            "8/8/8/4k3/8/4K1N1/4P3/8 w - - 0 1", DrillGoal.Win,
+            "Shepherd the pawn with the king while the knight controls key squares, then promote."),
+
         // ---- Queen technique ----
         new EndgamePosition("q_vs_p", "Queen", "Queen vs pawn",
             "8/8/8/8/8/1k6/1p6/4K1Q1 w - - 0 1", DrillGoal.Win,

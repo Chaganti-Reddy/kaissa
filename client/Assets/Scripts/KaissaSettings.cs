@@ -44,6 +44,7 @@ public static class KaissaSettings
         public string lastOpponent = "";  // last Play opponent label (for the Home rematch card)
         public int lastOpponentElo = -1;  // its fixed Elo, or -1 for Adaptive
         public int lastTc;                // its time-control index
+        public int endgameChallengeBestMs; // best time (ms) for the 5-drill Endgame Challenge; 0 = none
     }
 
     private static Data _data;
@@ -95,6 +96,7 @@ public static class KaissaSettings
     public static string LastOpponent { get => D.lastOpponent ?? ""; set { D.lastOpponent = value; Save(); } }
     public static int LastOpponentElo { get => D.lastOpponentElo; set { D.lastOpponentElo = value; Save(); } }
     public static int LastTc { get => D.lastTc; set { D.lastTc = value; Save(); } }
+    public static int EndgameChallengeBestMs { get => D.endgameChallengeBestMs; set { D.endgameChallengeBestMs = value; Save(); } }
     // Glide duration (ms) from the AnimSpeed preset, shared by the 2D and 3D boards.
     public static int GlideMs => AnimSpeed switch { 0 => 70, 2 => 200, _ => 120 };
 

@@ -38,10 +38,18 @@ public sealed class EndgameController : MonoBehaviour
     private string _fen = ChessGame.StartFen;
     private string _enginePath;
 
+    // Challenge mode: a timed run through 5 drills back to back; fastest clean run is kept.
+    private const int ChallengeLen = 5;
+    private bool _challenge, _chRunning;
+    private System.Collections.Generic.List<int> _chQueue = new();
+    private int _chPos;
+    private float _chStart;
+    private readonly System.Random _rng = new();
+
     private VisualElement _root, _list;
     private VisualElement _sideBadge, _sideDot;
-    private Label _sideText, _title, _goalLabel, _noteLabel, _feedback;
-    private Button _hintBtn, _retryBtn, _nextBtn;
+    private Label _sideText, _title, _goalLabel, _noteLabel, _feedback, _timerLabel;
+    private Button _hintBtn, _retryBtn, _nextBtn, _practiceChip, _challengeChip;
 
     private static readonly Color Good = new(0.30f, 0.85f, 0.45f, 0.55f);
     private static readonly Color HintCol = new(0.51f, 0.72f, 0.30f, 0.60f);
@@ -89,6 +97,16 @@ public sealed class EndgameController : MonoBehaviour
         _title = UiKit.Text_("Endgames", 24, UiKit.Text, bold: true);
         _title.style.marginBottom = 8;
         center.Add(_title);
+
+        // Practice / Challenge mode row + timer.
+        var modeRow = UiKit.Row(); modeRow.style.marginBottom = 8;
+        _practiceChip = UiKit.Ghost("Practice", () => SetChallenge(false), 12);
+        _challengeChip = UiKit.Ghost("Challenge", StartChallenge, 12);
+        _practiceChip.style.marginRight = 6; _challengeChip.style.marginRight = 10;
+        _timerLabel = UiKit.Text_("", 15, UiKit.Gold, bold: true);
+        modeRow.Add(_practiceChip); modeRow.Add(_challengeChip); modeRow.Add(_timerLabel);
+        center.Add(modeRow);
+        RefreshModeChips();
 
         var sideRow = UiKit.Row();
         sideRow.style.width = 480; sideRow.style.justifyContent = Justify.SpaceBetween; sideRow.style.marginBottom = 8;
@@ -286,10 +304,88 @@ public sealed class EndgameController : MonoBehaviour
     private void Conclude(bool passed)
     {
         _over = true;
-        SetFeedback(passed ? "Solved! Goal achieved." : "Not this time - Retry.", passed ? UiKit.GreenHi : UiKit.Danger);
         if (passed) { _audio.PlayVictory(); BoardCelebrate.Burst(_boardHost); TintLastMove(Good); } else _audio.PlayWrong();
         Enable(_hintBtn, false);
+
+        if (_challenge && _chRunning)
+        {
+            if (passed)
+            {
+                _chPos++;
+                if (_chPos >= _chQueue.Count) { FinishChallenge(); return; }
+                SetFeedback($"Solved - drill {_chPos + 1} of {ChallengeLen}.", UiKit.GreenHi);
+                StartCoroutine(NextChallengeDrill());
+            }
+            else
+            {
+                // A miss costs time: retry the same drill (the clock keeps running).
+                SetFeedback("Not this time - the clock is running, try again.", UiKit.Danger);
+                StartCoroutine(RetrySameDrill());
+            }
+            return;
+        }
+
+        SetFeedback(passed ? "Solved! Goal achieved." : "Not this time - Retry.", passed ? UiKit.GreenHi : UiKit.Danger);
     }
+
+    private IEnumerator NextChallengeDrill()
+    {
+        yield return new WaitForSeconds(0.9f);
+        if (_challenge) LoadDrill(_chQueue[_chPos]);
+    }
+
+    private IEnumerator RetrySameDrill()
+    {
+        yield return new WaitForSeconds(1.1f);
+        if (_challenge) LoadDrill(_chQueue[_chPos]);
+    }
+
+    // ---------------- challenge mode ----------------
+
+    private void SetChallenge(bool on)
+    {
+        _challenge = on; _chRunning = false;
+        _timerLabel.text = "";
+        RefreshModeChips();
+        if (!on) LoadDrill(_index); // back to free practice on the current drill
+    }
+
+    private void StartChallenge()
+    {
+        // A fresh shuffled queue of ChallengeLen distinct drills.
+        var all = Enumerable.Range(0, EndgameLibrary.All.Count).ToList();
+        for (int i = all.Count - 1; i > 0; i--) { int j = _rng.Next(i + 1); (all[i], all[j]) = (all[j], all[i]); }
+        _chQueue = all.Take(Mathf.Min(ChallengeLen, all.Count)).ToList();
+        _challenge = true; _chRunning = true; _chPos = 0; _chStart = Time.time;
+        RefreshModeChips();
+        SetFeedback($"Challenge: solve {_chQueue.Count} endgames as fast as you can.", UiKit.GreenHi);
+        LoadDrill(_chQueue[0]);
+    }
+
+    private void FinishChallenge()
+    {
+        _chRunning = false; _challenge = false;
+        int ms = Mathf.RoundToInt((Time.time - _chStart) * 1000f);
+        bool best = KaissaSettings.EndgameChallengeBestMs == 0 || ms < KaissaSettings.EndgameChallengeBestMs;
+        if (best) KaissaSettings.EndgameChallengeBestMs = ms;
+        _timerLabel.text = FmtMs(ms);
+        SetFeedback($"Challenge complete in {FmtMs(ms)}{(best ? " - new best!" : "")}", UiKit.GreenHi);
+        RefreshModeChips();
+    }
+
+    private void RefreshModeChips()
+    {
+        if (_practiceChip == null) return;
+        _practiceChip.style.backgroundColor = _challenge ? UiKit.Panel2 : UiKit.Green;
+        _challengeChip.style.backgroundColor = _challenge ? UiKit.Green : UiKit.Panel2;
+        if (!_chRunning && string.IsNullOrEmpty(_timerLabel.text))
+        {
+            int b = KaissaSettings.EndgameChallengeBestMs;
+            _timerLabel.text = b > 0 ? $"Best {FmtMs(b)}" : "";
+        }
+    }
+
+    private static string FmtMs(int ms) => $"{ms / 60000}:{(ms / 1000) % 60:00}.{(ms % 1000) / 100}";
 
     // ---------------- controls ----------------
 
@@ -366,6 +462,7 @@ public sealed class EndgameController : MonoBehaviour
 
     private void Update()
     {
+        if (_chRunning) _timerLabel.text = FmtMs(Mathf.RoundToInt((Time.time - _chStart) * 1000f));
         var kb = Keyboard.current;
         if (kb == null) return;
         if (kb.escapeKey.wasPressedThisFrame) SceneTransition.Go("Menu");
@@ -417,6 +514,12 @@ public sealed class EndgameController : MonoBehaviour
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_next_flip.png"));
+        yield return new WaitForSeconds(0.5f);
+
+        // Challenge mode: start a timed 5-drill run (timer ticking, first drill loaded).
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Challenge"));
+        yield return new WaitForSeconds(2.6f);
+        ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_challenge.png"));
         yield return new WaitForSeconds(0.5f);
         Application.Quit();
     }
