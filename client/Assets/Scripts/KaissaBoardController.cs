@@ -21,7 +21,7 @@ using UnityEngine.UIElements;
 // IBoardView; the correct/incorrect badge is a board-agnostic overlay so both boards get it.
 public sealed class KaissaBoardController : MonoBehaviour
 {
-    private enum Mode { Rated, Theme, Difficulty, Daily }
+    private enum Mode { Rated, Theme, Difficulty, Daily, Weakness }
 
     private KaissaTrainer _trainer;
     private IBoardView _board;
@@ -197,6 +197,12 @@ public sealed class KaissaBoardController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_difficulty_loaded.png"));
         yield return new WaitForSeconds(0.3f);
 
+        // Weakness: one click generates a tailored set and loads it (no picker).
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Weakness"));
+        yield return new WaitForSeconds(0.9f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_weakness.png"));
+        yield return new WaitForSeconds(0.3f);
+
         // Back to the Rated feed.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Rated"));
         yield return new WaitForSeconds(0.8f);
@@ -310,6 +316,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         bar.Add(ModeChip("Rated", () => SwitchMode(Mode.Rated)));
         bar.Add(ModeChip("Themes", ToggleThemePicker));
         bar.Add(ModeChip("Difficulty", ToggleDifficultyPicker));
+        bar.Add(ModeChip("Weakness", LoadWeaknessFeed));
         _modeLabel = UiKit.Text_("", 12, UiKit.Mute);
         _modeLabel.style.marginLeft = 8;
         bar.Add(_modeLabel);
@@ -451,6 +458,30 @@ public sealed class KaissaBoardController : MonoBehaviour
     {
         _mode = Mode.Difficulty; _patternName = label;
         var list = _trainer.Library.ByRatingRange(lo, hi).ToList();
+        Shuffle(list);
+        _feed = list; _feedAt = 0;
+        _summaryShown = false;
+        LoadNext();
+    }
+
+    // Auto-generated practice tailored to the player: a mixed set drawn from the patterns their skill
+    // model marks weakest (least stable memory / most lapses). Falls back to a band around their rating
+    // when nothing has been seen yet (a brand-new player has no weaknesses to target).
+    private void LoadWeaknessFeed()
+    {
+        if (_pickerHost != null) HidePicker();
+        var saved = KaissaProgress.Load();
+        var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();
+        var list = WeaknessReport.BuildPracticeSet(model, _trainer.Library, patternCount: 4, perPattern: 4).ToList();
+        if (list.Count == 0)
+        {
+            int r = (int)_trainer.PlayerRating;
+            list = _trainer.Library.ByRatingRange(r - 150, r + 150).Take(16).ToList();
+            _patternName = "Tailored to your level";
+        }
+        else _patternName = "Your weak spots";
+
+        _mode = Mode.Weakness;
         Shuffle(list);
         _feed = list; _feedAt = 0;
         _summaryShown = false;
