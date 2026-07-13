@@ -30,7 +30,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
             && !args.Contains("-kaissa-analysistest") && !args.Contains("-kaissa-statstest")
             && !args.Contains("-kaissa-visiontest") && !args.Contains("-kaissa-coordtest")
             && !args.Contains("-kaissa-settingstest") && !args.Contains("-kaissa-calibratetest")
-            && !args.Contains("-kaissa-transition")
+            && !args.Contains("-kaissa-transition") && !args.Contains("-kaissa-startup")
             && !args.Contains("-kaissa-hometest"))
             return;
         Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
@@ -156,6 +156,18 @@ public sealed class ScreenshotHarness : MonoBehaviour
         {
             SceneManager.LoadScene("Calibrate");
             yield return new WaitForSeconds(25f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-startup"))
+        {
+            // The boot animation plays over the initial Menu scene; burst frames across it.
+            for (int k = 0; k < 40; k++)
+            {
+                yield return new WaitForSeconds(0.05f);
+                ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"startup_{k:00}.png"));
+            }
             Application.Quit();
             yield break;
         }

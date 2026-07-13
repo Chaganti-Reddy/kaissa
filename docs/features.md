@@ -83,7 +83,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Board feel: capture pop, ease-out glide, piece lift on grab, and a solve/win celebration flourish; sampled sound with selectable themes (Sfx, Piano, NES, Futuristic, Classic)
 - [x] Right-click annotations (arrows and square highlights) on both boards
 - [x] Home dashboard: a snapshot (rating, tier, day streak, patterns due) and cards that launch every mode, with a first-run calibration prompt
-- [x] Consistent nav-rail / board / panel layout; springy hover and press feedback on clickable elements; fade transitions between screens
+- [x] Consistent nav-rail / board / panel layout; springy hover and press feedback on clickable elements; fade transitions between screens; a branded startup animation
 - [x] Fast content load: opening and puzzle indexes are precomputed offline, parsed once per run, and warmed on a background thread at launch, so pages open near-instantly
 - [ ] Cloud sync; mobile (embedded engine for iOS)
 

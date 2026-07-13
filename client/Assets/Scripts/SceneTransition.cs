@@ -14,6 +14,9 @@ public sealed class SceneTransition : MonoBehaviour
     private const int RevealMs = 200; // cover fades out to reveal the page
     private const int CoverMs = 160;  // cover fades in before leaving
 
+    // Set by StartupAnimation so the boot animation owns the intro to the first scene (no double cover).
+    public static bool SkipInitialReveal;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
     {
@@ -22,7 +25,8 @@ public sealed class SceneTransition : MonoBehaviour
         DontDestroyOnLoad(go);
         _inst = go.AddComponent<SceneTransition>();
         SceneManager.sceneLoaded += (_, __) => _inst.StartCoroutine(_inst.RevealWhenReady());
-        _inst.StartCoroutine(_inst.RevealWhenReady()); // the first (already-loaded) scene
+        if (!SkipInitialReveal)
+            _inst.StartCoroutine(_inst.RevealWhenReady()); // the first (already-loaded) scene
     }
 
     // Navigate to a scene with a fade-out; falls back to a direct load if the transitioner is absent.
@@ -69,7 +73,7 @@ public sealed class SceneTransition : MonoBehaviour
     }
 
     // The active scene's UI root - the UIDocument with the most children (the controller's, not a stray).
-    private static VisualElement FindRoot()
+    internal static VisualElement FindRoot()
     {
         var docs = Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
         UIDocument best = null;
