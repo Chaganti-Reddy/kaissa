@@ -21,6 +21,8 @@ public sealed class CoordinateController : MonoBehaviour
     private Board2D _board;
     private string _target = "";
     private bool _running, _busy, _whiteBottom = true, _showLabels;
+    private bool _movesMode; // show a move like "Nf3" and click its destination square
+    private readonly System.Random _rng = new();
     private float _timeLeft;
 
     private Label _prompt, _timerLabel, _scoreLabel, _bestLabel, _feedback;
@@ -121,8 +123,13 @@ public sealed class CoordinateController : MonoBehaviour
 
         Button labelsBtn = null;
         labelsBtn = OptBtn(LabelText(), () => { _showLabels = !_showLabels; labelsBtn.text = LabelText(); });
-        labelsBtn.style.marginBottom = 16;
+        labelsBtn.style.marginBottom = 10;
         panel.Add(labelsBtn);
+
+        Button modeBtn = null;
+        modeBtn = OptBtn(ModeText(), () => { _movesMode = !_movesMode; modeBtn.text = ModeText(); });
+        modeBtn.style.marginBottom = 16;
+        panel.Add(modeBtn);
 
         var start = UiKit.Primary("Start", StartRun, 16); start.style.width = 320;
         panel.Add(start);
@@ -131,6 +138,7 @@ public sealed class CoordinateController : MonoBehaviour
     }
 
     private string LabelText() => _showLabels ? "Coordinates: shown" : "Coordinates: hidden";
+    private string ModeText() => _movesMode ? "Mode: read moves (Nf3)" : "Mode: name squares";
 
     private static void Mark(Button a, Button b, bool first)
     {
@@ -191,7 +199,8 @@ public sealed class CoordinateController : MonoBehaviour
     private void Next()
     {
         _target = _session.NextTarget();
-        _prompt.text = _target;
+        // In Moves mode, show a move like "Nf3" (piece + destination); the answer is still the square.
+        _prompt.text = _movesMode ? "KQRBN"[_rng.Next(5)] + _target : _target;
         RenderBoard();
     }
 
