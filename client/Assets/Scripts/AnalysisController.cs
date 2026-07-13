@@ -41,6 +41,15 @@ public sealed class AnalysisController : MonoBehaviour
     private TextField _fenField;
     private Button _threatsBtn;
 
+    // ---- board editor (2D) state ----
+    private VisualElement _editorHost, _paletteRow;
+    private Label _editStatus;
+    private bool _editing;
+    private readonly char[,] _edit = new char[8, 8]; // [file, rank]; '\0' = empty
+    private char _paletteChar = 'P';                 // currently selected stamp; '\0' = eraser
+    private bool _editWhiteToMove = true;
+    private bool _cWK, _cWQ, _cBK, _cBQ;             // castling availability
+
     private static readonly Color BestArrow = new(0.36f, 0.62f, 0.86f, 0.85f);
     private static readonly Color ThreatArrow = new(0.86f, 0.30f, 0.28f, 0.85f);
 
@@ -67,6 +76,7 @@ public sealed class AnalysisController : MonoBehaviour
         _root.Add(UiKit.NavRail("Analysis"));
         _root.Add(BuildCenter());
         _root.Add(BuildRightRail());
+        _root.Add(_editorHost);
 
         _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnMove(uci), _audio);
         if (!string.IsNullOrEmpty(AnalysisRoute.Fen))
@@ -156,7 +166,14 @@ public sealed class AnalysisController : MonoBehaviour
         row2.Add(_threatsBtn);
         row2.Add(Tool("Play from here", PlayFromHere));
         toolsP.Add(row2);
+        var row3 = UiKit.Row(); row3.style.marginTop = 6;
+        row3.Add(Tool("Edit position", EnterEdit));
+        toolsP.Add(row3);
         rail.Add(toolsP);
+        _editorHost = new VisualElement();
+        _editorHost.style.position = Position.Absolute;
+        _editorHost.style.left = 0; _editorHost.style.top = 0; _editorHost.style.right = 0; _editorHost.style.bottom = 0;
+        _editorHost.pickingMode = PickingMode.Ignore;
         return rail;
     }
 
@@ -213,6 +230,197 @@ public sealed class AnalysisController : MonoBehaviour
 
     private void CopyPgn() => GUIUtility.systemCopyBuffer = BuildPgn();
 
+    // ---------------- board editor (2D) ----------------
+    // Set up a position by hand: pick a piece from the palette and click squares to stamp it, or pick
+    // the eraser to clear. Toggle side-to-move and castling rights, clear or reset the board, then Apply
+    // to validate and load the FEN. Uses the 2D board's square-click reporting; the 3D board has no
+    // square picking, so editing prompts the player to switch to the 2D board.
+    private void EnterEdit()
+    {
+        if (KaissaSettings.BoardView != 0)
+        {
+            _evalText.text = "Switch to the 2D board (Settings) to edit a position.";
+            return;
+        }
+        _editing = true;
+        _evalCts?.Cancel();
+        ParseFenIntoEdit(_session.CurrentFen);
+        _board.SetEngineArrows(null);
+        _board.SquareClickHandler = OnEditSquare;
+        BuildEditorPanel();
+        RenderEditBoard();
+    }
+
+    private void ExitEdit(bool apply)
+    {
+        if (apply)
+        {
+            string fen = BuildEditFen();
+            try { _ = ChessGame.FromFen(fen); }
+            catch { if (_editStatus != null) _editStatus.text = "Illegal position - need both kings and no pawns on the back ranks."; return; }
+            _session.LoadFen(fen);
+            _lastMove = null;
+            if (_fenField != null) _fenField.value = fen;
+        }
+        _editing = false;
+        _board.SquareClickHandler = null;
+        _editorHost.Clear();
+        RenderCurrent();
+    }
+
+    private void OnEditSquare(string sq)
+    {
+        if (!_editing || string.IsNullOrEmpty(sq) || sq.Length < 2) return;
+        int f = sq[0] - 'a', r = sq[1] - '1';
+        if (f < 0 || f > 7 || r < 0 || r > 7) return;
+        _edit[f, r] = _paletteChar; // '\0' from the eraser clears the square
+        RenderEditBoard();
+    }
+
+    private void RenderEditBoard()
+    {
+        _board.Render(BuildEditFen(placeholderLegal: true), canMove: false, lastMove: null, whiteBottom: _whiteBottom);
+    }
+
+    private void ParseFenIntoEdit(string fen)
+    {
+        for (int f = 0; f < 8; f++) for (int r = 0; r < 8; r++) _edit[f, r] = '\0';
+        var parts = fen.Split(' ');
+        var rows = parts[0].Split('/');
+        for (int i = 0; i < rows.Length && i < 8; i++)
+        {
+            int rank = 7 - i, file = 0;
+            foreach (char c in rows[i])
+            {
+                if (char.IsDigit(c)) file += c - '0';
+                else if (file < 8) _edit[file++, rank] = c;
+            }
+        }
+        _editWhiteToMove = parts.Length < 2 || parts[1] != "b";
+        string cr = parts.Length > 2 ? parts[2] : "KQkq";
+        _cWK = cr.Contains('K'); _cWQ = cr.Contains('Q'); _cBK = cr.Contains('k'); _cBQ = cr.Contains('q');
+    }
+
+    // Builds a FEN from the editor state. When placeholderLegal is set (for rendering the in-progress
+    // board), castling is dropped to "-" so Board2D never trips on rights without the matching rook/king.
+    private string BuildEditFen(bool placeholderLegal = false)
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int rank = 7; rank >= 0; rank--)
+        {
+            int empty = 0;
+            for (int file = 0; file < 8; file++)
+            {
+                char c = _edit[file, rank];
+                if (c == '\0') { empty++; continue; }
+                if (empty > 0) { sb.Append(empty); empty = 0; }
+                sb.Append(c);
+            }
+            if (empty > 0) sb.Append(empty);
+            if (rank > 0) sb.Append('/');
+        }
+        string castle = placeholderLegal ? "-" : Castle();
+        return $"{sb} {(_editWhiteToMove ? "w" : "b")} {castle} - 0 1";
+    }
+
+    private string Castle()
+    {
+        string c = (_cWK ? "K" : "") + (_cWQ ? "Q" : "") + (_cBK ? "k" : "") + (_cBQ ? "q" : "");
+        return c.Length == 0 ? "-" : c;
+    }
+
+    private void BuildEditorPanel()
+    {
+        _editorHost.Clear();
+        var panel = Panel();
+        panel.style.position = Position.Absolute;
+        panel.style.right = 22; panel.style.top = 84; panel.style.width = 320;
+        UiKit.Pad(panel, 16);
+        panel.Add(UiKit.Text_("Edit position", 14, UiKit.Text, bold: true));
+        var hint = UiKit.Text_("Pick a piece, click squares to place. Eraser clears.", 12, UiKit.Dim);
+        hint.style.whiteSpace = WhiteSpace.Normal; hint.style.marginTop = 4; hint.style.marginBottom = 8;
+        panel.Add(hint);
+
+        var white = UiKit.Row(); white.style.flexWrap = Wrap.Wrap;
+        foreach (char c in "KQRBNP") white.Add(PieceButton(c));
+        white.Add(EraserButton());
+        panel.Add(white);
+        var black = UiKit.Row(); black.style.flexWrap = Wrap.Wrap; black.style.marginTop = 6;
+        foreach (char c in "kqrbnp") black.Add(PieceButton(c));
+        panel.Add(black);
+
+        var sideRow = UiKit.Row(); sideRow.style.marginTop = 12;
+        sideRow.Add(UiKit.Text_("To move", 12, UiKit.Mute, bold: true));
+        var wPill = TogglePill("White", _editWhiteToMove, () => { _editWhiteToMove = true; BuildEditorPanel(); });
+        var bPill = TogglePill("Black", !_editWhiteToMove, () => { _editWhiteToMove = false; BuildEditorPanel(); });
+        wPill.style.marginLeft = 8; sideRow.Add(wPill); sideRow.Add(bPill);
+        panel.Add(sideRow);
+
+        var castRow = UiKit.Row(); castRow.style.marginTop = 8; castRow.style.flexWrap = Wrap.Wrap;
+        castRow.Add(UiKit.Text_("Castling", 12, UiKit.Mute, bold: true));
+        var wk = TogglePill("W O-O", _cWK, () => { _cWK = !_cWK; BuildEditorPanel(); }); wk.style.marginLeft = 8; castRow.Add(wk);
+        castRow.Add(TogglePill("W O-O-O", _cWQ, () => { _cWQ = !_cWQ; BuildEditorPanel(); }));
+        castRow.Add(TogglePill("B O-O", _cBK, () => { _cBK = !_cBK; BuildEditorPanel(); }));
+        castRow.Add(TogglePill("B O-O-O", _cBQ, () => { _cBQ = !_cBQ; BuildEditorPanel(); }));
+        panel.Add(castRow);
+
+        var actions = UiKit.Row(); actions.style.marginTop = 12; actions.style.flexWrap = Wrap.Wrap;
+        actions.Add(Tool("Clear", () => { for (int f = 0; f < 8; f++) for (int r = 0; r < 8; r++) _edit[f, r] = '\0'; RenderEditBoard(); }));
+        actions.Add(Tool("Start", () => { ParseFenIntoEdit(ChessGame.StartFen); RenderEditBoard(); }));
+        panel.Add(actions);
+
+        _editStatus = UiKit.Text_("", 12, UiKit.Danger, bold: true);
+        _editStatus.style.whiteSpace = WhiteSpace.Normal; _editStatus.style.marginTop = 8;
+        panel.Add(_editStatus);
+
+        var confirm = UiKit.Row(); confirm.style.marginTop = 8;
+        var apply = UiKit.Primary("Apply", () => ExitEdit(apply: true), 13); apply.style.marginRight = 8;
+        confirm.Add(apply);
+        confirm.Add(UiKit.Ghost("Cancel", () => ExitEdit(apply: false), 13));
+        panel.Add(confirm);
+
+        _editorHost.Add(panel);
+    }
+
+    private VisualElement PieceButton(char c)
+    {
+        var b = new VisualElement { name = "pal_" + c };
+        b.style.width = 40; b.style.height = 40; b.style.marginRight = 5; b.style.marginBottom = 5;
+        b.style.backgroundColor = UiKit.Hex(0xb5, 0x88, 0x63);
+        UiKit.Radius(b, 6);
+        b.style.borderTopWidth = b.style.borderBottomWidth = b.style.borderLeftWidth = b.style.borderRightWidth = 2;
+        var edge = _paletteChar == c ? UiKit.Gold : UiKit.Line;
+        b.style.borderTopColor = b.style.borderBottomColor = b.style.borderLeftColor = b.style.borderRightColor = edge;
+        var tex = PieceArt.Get(c);
+        if (tex != null)
+        {
+            var img = new VisualElement { pickingMode = PickingMode.Ignore };
+            img.style.position = Position.Absolute; img.style.left = 3; img.style.top = 3; img.style.right = 3; img.style.bottom = 3;
+            img.style.backgroundImage = new StyleBackground(tex);
+            img.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            b.Add(img);
+        }
+        b.RegisterCallback<ClickEvent>(_ => { _paletteChar = c; BuildEditorPanel(); });
+        UiKit.Interactive(b, 1.06f);
+        return b;
+    }
+
+    private VisualElement EraserButton()
+    {
+        var b = UiKit.Ghost("Erase", () => { _paletteChar = '\0'; BuildEditorPanel(); }, 12);
+        b.style.height = 40; b.style.marginRight = 5; b.style.marginBottom = 5;
+        b.style.backgroundColor = _paletteChar == '\0' ? UiKit.Green : UiKit.Panel2;
+        return b;
+    }
+
+    private Button TogglePill(string label, bool on, Action onClick)
+    {
+        var b = UiKit.Ghost(label, onClick, 12);
+        b.style.marginRight = 6; b.style.marginBottom = 4; UiKit.Pad(b, 6, 10, 6, 10);
+        b.style.backgroundColor = on ? UiKit.Green : UiKit.Panel2;
+        return b;
+    }
+
     private void PlayFromHere()
     {
         EndgameRoute.Fen = _session.CurrentFen;
@@ -238,6 +446,7 @@ public sealed class AnalysisController : MonoBehaviour
 
     private void RenderCurrent()
     {
+        if (_editing) return; // the editor drives the board directly while open
         _board.Render(_session.CurrentFen, canMove: true, lastMove: _lastMove, whiteBottom: _whiteBottom);
         UpdateOpening();
         RebuildMoves();
@@ -272,7 +481,7 @@ public sealed class AnalysisController : MonoBehaviour
     {
         var l = Cell(san, 90, ply == _session.Ply ? UiKit.Gold : UiKit.Text);
         l.name = "movecell";
-        l.RegisterCallback<ClickEvent>(_ => { _session.GoToPly(ply); _lastMove = null; RenderCurrent(); });
+        l.RegisterCallback<ClickEvent>(_ => { if (_editing) return; _session.GoToPly(ply); _lastMove = null; RenderCurrent(); });
         UiKit.Interactive(l, 1.05f);
         return l;
     }
@@ -523,6 +732,24 @@ public sealed class AnalysisController : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         UiAutomation.Click(UiAutomation.FindButton(_root, "Copy PGN"));
         yield return new WaitForSeconds(0.3f);
+
+        // Board editor (2D only): open, load start, pick the white queen, stamp two squares, apply.
+        if (tag == "2d")
+        {
+            UiAutomation.Click(UiAutomation.FindButton(_root, "Edit position"));
+            yield return new WaitForSeconds(0.6f);
+            yield return Shot(dir, tag, "editor_open", 0.6f);
+            UiAutomation.Click(UiAutomation.FindButton(_root, "Start"));
+            yield return new WaitForSeconds(0.4f);
+            UiAutomation.Click(_editorHost.Q("pal_Q"));
+            yield return new WaitForSeconds(0.3f);
+            if (_board is Board2D b2) { b2.DebugTapSquare("e5"); b2.DebugTapSquare("d5"); }
+            yield return new WaitForSeconds(0.4f);
+            yield return Shot(dir, tag, "editor_stamp", 0.6f);
+            UiAutomation.Click(UiAutomation.FindButton(_root, "Apply"));
+            yield return new WaitForSeconds(1.8f);
+            yield return Shot(dir, tag, "editor_applied", 0.6f);
+        }
 
         // Flip.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
