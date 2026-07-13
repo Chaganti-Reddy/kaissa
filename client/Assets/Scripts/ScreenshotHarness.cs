@@ -293,11 +293,12 @@ public sealed class ScreenshotHarness : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
 
         int frame = 0;
-        foreach (var move in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "f8c5" })
+        // Include a capture (f3e5 = Nxe5) so the capture-pop effect is recorded too.
+        foreach (var move in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "f8c5", "f3e5" })
         {
             game.TryMakeMove(move);
-            board.Render(game.Fen, true, move, true); // triggers the glide of `move`
-            for (int k = 0; k < 5; k++) // ~5 frames across the 110ms animation
+            board.Render(game.Fen, true, move, true); // triggers the glide (and capture pop) of `move`
+            for (int k = 0; k < 6; k++) // frames across the glide + pop
             {
                 yield return new WaitForSeconds(0.035f);
                 ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"rec_{frame:000}.png"));
@@ -305,6 +306,15 @@ public sealed class ScreenshotHarness : MonoBehaviour
             }
             yield return new WaitForSeconds(0.25f);
         }
+
+        // Solve/win celebration flourish over the board.
+        BoardCelebrate.Burst(board.Root);
+        for (int k = 0; k < 12; k++)
+        {
+            yield return new WaitForSeconds(0.05f);
+            ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"celebrate_{k:00}.png"));
+        }
+        yield return new WaitForSeconds(0.3f);
         Debug.Log("ScreenshotHarness: record done");
     }
 

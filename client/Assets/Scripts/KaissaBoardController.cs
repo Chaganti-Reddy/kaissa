@@ -532,16 +532,16 @@ public sealed class KaissaBoardController : MonoBehaviour
         }
 
         // correct
-        _audio.PlayCorrect();
         TintMove(result.PlayerMove, Good);
 
         if (result.Outcome == PuzzleOutcome.Continue)
         {
+            _audio.PlayCorrect();
             _busy = true;
             SetFeedback("Best move - keep going.", UiKit.GreenHi);
             StartCoroutine(PlayReply(result));
         }
-        else // Solved
+        else // Solved (final correct move: the Victory cue + flourish stand in for the move cue)
         {
             _board.Render(result.FenAfterReply, canMove: false, lastMove: result.ReplyMove, whiteBottom: _whiteBottom);
             OnSolved();
@@ -558,6 +558,8 @@ public sealed class KaissaBoardController : MonoBehaviour
 
     private void OnSolved()
     {
+        _audio.PlayVictory();
+        BoardCelebrate.Burst(_boardHost);
         _timing = false; _concluded = true;
         _answered++; _correct++;
         _solveStreak++;

@@ -15,8 +15,9 @@ public sealed class SettingsController : MonoBehaviour
 {
     private const string PreviewFen = "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQ1RK1 w kq - 0 1";
 
-    private VisualElement _root, _groups, _swatches, _pieceSets, _boardHost;
+    private VisualElement _root, _groups, _swatches, _pieceSets, _soundThemes, _boardHost;
     private Board2D _preview;
+    private PieceAudio _audio;
     private bool _confirmReset;
 
     private void Start()
@@ -25,6 +26,9 @@ public sealed class SettingsController : MonoBehaviour
         var cam = Camera.main;
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
         _preview = new Board2D(null);
+        _audio = PieceAudio.Attach(gameObject);
+        if (UnityEngine.Object.FindAnyObjectByType<AudioListener>() == null && cam != null)
+            cam.gameObject.AddComponent<AudioListener>();
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
         StartCoroutine(Build(doc));
@@ -44,8 +48,12 @@ public sealed class SettingsController : MonoBehaviour
 
         var cols = UiKit.Row(); cols.style.marginTop = 16; cols.style.flexGrow = 1; cols.style.alignItems = Align.FlexStart;
 
-        // left: live preview + theme swatches
-        var left = new VisualElement(); left.style.width = 320; left.style.marginRight = 24; left.style.flexShrink = 0;
+        // left: live preview + theme / piece / sound pickers. Scrollable so every card is reachable
+        // even at short window heights (the pickers used to fall below the fold).
+        var left = new ScrollView(ScrollViewMode.Vertical);
+        left.style.width = 320; left.style.marginRight = 24; left.style.flexShrink = 0;
+        left.style.alignSelf = Align.Stretch;
+        left.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
         var prevCard = Panel(); UiKit.Pad(prevCard, 14);
         prevCard.Add(UiKit.Text_("PREVIEW", 11, UiKit.Mute, bold: true));
         _boardHost = new VisualElement();
@@ -68,6 +76,13 @@ public sealed class SettingsController : MonoBehaviour
         _pieceSets.style.flexDirection = FlexDirection.Row; _pieceSets.style.flexWrap = Wrap.Wrap; _pieceSets.style.marginTop = 8;
         pieceCard.Add(_pieceSets);
         left.Add(pieceCard);
+
+        var soundCard = Panel(); soundCard.style.marginTop = 14; UiKit.Pad(soundCard, 12, 14, 12, 14);
+        soundCard.Add(UiKit.Text_("Sound theme", 12, UiKit.Mute, bold: true));
+        _soundThemes = new VisualElement();
+        _soundThemes.style.flexDirection = FlexDirection.Row; _soundThemes.style.flexWrap = Wrap.Wrap; _soundThemes.style.marginTop = 8;
+        soundCard.Add(_soundThemes);
+        left.Add(soundCard);
         cols.Add(left);
 
         // right: grouped settings
@@ -81,6 +96,7 @@ public sealed class SettingsController : MonoBehaviour
         RefreshPreview();
         RefreshSwatches();
         RefreshPieceSets();
+        RefreshSoundThemes();
         RefreshGroups();
 
         if (Environment.GetCommandLineArgs().Contains("-kaissa-settingstest"))
@@ -165,6 +181,24 @@ public sealed class SettingsController : MonoBehaviour
         var lbl = UiKit.Text_(active, 13, UiKit.Text, bold: true);
         lbl.style.width = Length.Percent(100); lbl.style.marginTop = 2;
         _pieceSets.Add(lbl);
+    }
+
+    private void RefreshSoundThemes()
+    {
+        _soundThemes.Clear();
+        foreach (var (name, folder) in PieceAudio.Themes)
+        {
+            bool selected = KaissaSettings.SoundTheme == folder;
+            var pill = UiKit.Ghost(name, () =>
+            {
+                KaissaSettings.SoundTheme = folder;
+                RefreshSoundThemes();
+                _audio.PlayMove(); // hear the pick immediately
+            }, 12);
+            pill.style.marginRight = 6; pill.style.marginBottom = 6;
+            pill.style.backgroundColor = selected ? UiKit.Green : UiKit.Panel2;
+            _soundThemes.Add(pill);
+        }
     }
 
     private static void AddCell(VisualElement parent, Color c)
@@ -298,6 +332,12 @@ public sealed class SettingsController : MonoBehaviour
         UiAutomation.Click(ps);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_pieceset.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Pick a sound theme (plays a preview cue).
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Piano"));
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_sound.png"));
         yield return new WaitForSeconds(0.4f);
 
         // Toggle coordinates off (preview updates), and a couple of gameplay toggles.

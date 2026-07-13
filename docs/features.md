@@ -80,6 +80,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Onboarding and rating calibration: an intro screen, a short adaptive run with a progress bar, side-to-move badge and per-answer feedback, and a rating reveal with a level descriptor that seeds your starting rating - `CalibrationSession`
 - [x] Settings: a live board preview, clickable board-theme swatches, and a picker for 14 flat-board piece sets, with grouped toggles for sound, move input, move hints, auto-queen, bot speed, board flip, board style (2D/3D), piece style, coordinates, evaluation bar, display mode, and a confirm-guarded progress reset
 - [x] Shared board on every screen: drag or click, legal-move dots, highlights, sounds, premove, glide, promotion picker; a 2D or 3D board (toggle)
+- [x] Board feel: capture pop, ease-out glide, piece lift on grab, and a solve/win celebration flourish; sampled sound with selectable themes (Sfx, Piano, NES, Futuristic, Classic)
 - [x] Right-click annotations (arrows and square highlights) on both boards
 - [x] Home dashboard: a snapshot (rating, tier, day streak, patterns due) and cards that launch every mode, with a first-run calibration prompt
 - [x] Consistent nav-rail / board / panel layout; springy hover and press feedback on clickable elements

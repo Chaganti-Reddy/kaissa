@@ -38,3 +38,7 @@ The flat-board piece art (`client/Assets/Resources/Pieces2D/<set>/*.png`) is ras
 - **kiwen-suwi** by neverRare — CC BY 4.0. https://github.com/neverRare
 - **mpchess** by Maxime Chupin — GPLv3+. https://github.com/chupinmaxime
 - **mono** by Thibault Duplessis and Colin M.L. Burnett — GPLv2+. Distributed as six single-colour glyphs; recoloured into light and dark variants before rasterizing.
+
+### Sound sets
+
+The board sound sets (`client/Assets/Resources/Sounds/<set>/*.ogg`) are from Lichess (`public/sound/`), by Enigmahack — AGPLv3+. https://github.com/Enigmahack Bundled sets: sfx, piano, nes, futuristic. Only the license-clean sets are included; Lichess's other sound sets (standard, robot, woodland, lisp, etc.) are not redistributable here and are excluded. A few events in each set (Checkmate, Confirmation) are symlinks to another clip within the free sets and were materialized on import; the Error event linked to a non-free set and was dropped in favour of the built-in procedural cue.

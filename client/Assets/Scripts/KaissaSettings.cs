@@ -34,6 +34,7 @@ public static class KaissaSettings
         public int visionBest;        // best light/dark board-vision score in a 30s run
         public int coordBest;         // best coordinate-finding score in a 30s run
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
+        public string soundTheme = "sfx"; // sound set (folder under Resources/Sounds); empty = procedural
     }
 
     private static Data _data;
@@ -76,6 +77,7 @@ public static class KaissaSettings
     public static int VisionBest { get => D.visionBest; set { D.visionBest = value; Save(); } }
     public static int CoordBest { get => D.coordBest; set { D.coordBest = value; Save(); } }
     public static string PieceSet { get => string.IsNullOrEmpty(D.pieceSet) ? "cburnett" : D.pieceSet; set { D.pieceSet = value; Save(); } }
+    public static string SoundTheme { get => D.soundTheme ?? ""; set { D.soundTheme = value; Save(); } }
 
     public static bool IsLessonDone(string id) =>
         !string.IsNullOrEmpty(id) && ("," + D.lessonsDone + ",").Contains("," + id + ",");

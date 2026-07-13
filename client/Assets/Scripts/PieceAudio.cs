@@ -1,13 +1,48 @@
 using UnityEngine;
 
-// Distinct, procedurally generated board sounds (no audio assets needed). Each event has its own
-// recognizable cue, the way chess.com distinguishes move/capture/check/etc. Percussive "tocks" are a
-// sine thump mixed with a short noise burst and an exponential decay, which reads as a wood click.
+// Board sounds. Prefers real sampled sets (Resources/Sounds/<theme>/, from Lichess - see
+// THIRD-PARTY-NOTICES) chosen by KaissaSettings.SoundTheme, and falls back to a built-in procedural
+// cue for any event the theme lacks (select/illegal/wrong have no sampled clip by design). Each event
+// has its own recognizable cue, the way chess.com distinguishes move/capture/check/etc. The procedural
+// "tocks" are a sine thump mixed with a short noise burst and an exponential decay (reads as a wood
+// click); they remain the fallback so the game is never silent even with no theme installed.
 [RequireComponent(typeof(AudioSource))]
 public sealed class PieceAudio : MonoBehaviour
 {
     private AudioSource _source;
     private AudioClip _select, _move, _capture, _castle, _check, _promote, _illegal, _gameEnd, _correct, _wrong;
+
+    // Sampled clips for the active theme (null when the theme lacks that event -> procedural fallback).
+    private AudioClip _sMove, _sCapture, _sCheck, _sGameEnd, _sCorrect, _sVictory, _sDefeat, _sDraw, _sLowTime;
+    private string _loadedTheme = "\0"; // sentinel so the first LoadTheme always runs
+
+    private void LoadTheme()
+    {
+        string t = KaissaSettings.SoundTheme;
+        if (t == _loadedTheme) return;
+        _loadedTheme = t;
+        if (string.IsNullOrEmpty(t))
+        {
+            _sMove = _sCapture = _sCheck = _sGameEnd = _sCorrect = _sVictory = _sDefeat = _sDraw = _sLowTime = null;
+            return;
+        }
+        _sMove = L(t, "Move"); _sCapture = L(t, "Capture"); _sCheck = L(t, "Check");
+        _sGameEnd = L(t, "Checkmate"); _sCorrect = L(t, "Confirmation");
+        _sVictory = L(t, "Victory"); _sDefeat = L(t, "Defeat"); _sDraw = L(t, "Draw"); _sLowTime = L(t, "LowTime");
+    }
+
+    private static AudioClip L(string theme, string name) => Resources.Load<AudioClip>($"Sounds/{theme}/{name}");
+
+    // Bundled sound sets (license-clean, AGPLv3+, from Lichess - see THIRD-PARTY-NOTICES). Display name,
+    // folder under Resources/Sounds. Empty folder = the built-in procedural cues. Order = picker order.
+    public static readonly (string name, string folder)[] Themes =
+    {
+        ("Sfx", "sfx"),
+        ("Piano", "piano"),
+        ("NES", "nes"),
+        ("Futuristic", "futuristic"),
+        ("Classic", ""),
+    };
 
     public static PieceAudio Attach(GameObject host)
     {
@@ -34,19 +69,27 @@ public sealed class PieceAudio : MonoBehaviour
         _wrong   = Sequence(new[] { (220f, 0f), (150f, 0.11f) }, 0.17f, 0.20f, 0.45f);
     }
 
+    // Sampled clip preferred, procedural fallback. Castle/promote reuse the theme's move sound when a
+    // theme is active (Lichess has no separate castle/promote cue) but keep their distinct procedural
+    // cue when no theme is installed. Select/illegal/wrong are procedural-only by design.
     public void PlaySelect()  => Play(_select);
-    public void PlayMove()    => Play(_move);
-    public void PlayCapture() => Play(_capture);
-    public void PlayCastle()  => Play(_castle);
-    public void PlayCheck()   => Play(_check);
-    public void PlayPromote() => Play(_promote);
+    public void PlayMove()    => Play(_sMove ?? _move);
+    public void PlayCapture() => Play(_sCapture ?? _capture);
+    public void PlayCastle()  => Play(_sMove ?? _castle);
+    public void PlayCheck()   => Play(_sCheck ?? _check);
+    public void PlayPromote() => Play(_sMove ?? _promote);
     public void PlayIllegal() => Play(_illegal);
-    public void PlayGameEnd() => Play(_gameEnd);
-    public void PlayCorrect() => Play(_correct);
+    public void PlayGameEnd() => Play(_sGameEnd ?? _gameEnd);
+    public void PlayCorrect() => Play(_sCorrect ?? _correct);
     public void PlayWrong()   => Play(_wrong);
+    public void PlayVictory() => Play(_sVictory ?? _sGameEnd ?? _gameEnd);
+    public void PlayDefeat()  => Play(_sDefeat ?? _wrong);
+    public void PlayDraw()    => Play(_sDraw ?? _gameEnd);
+    public void PlayLowTime() => Play(_sLowTime ?? _check);
 
     private void Play(AudioClip clip)
     {
+        LoadTheme(); // cheap; picks up a live Sound-theme change from Settings
         if (KaissaSettings.Sound && clip != null)
             _source.PlayOneShot(clip);
     }

@@ -244,6 +244,7 @@ public sealed class Board2D : IBoardView
 
     public void Render(string fen, bool canMove, string lastMove, bool whiteBottom)
     {
+        _prevFenForAnim = _fen; // position before this render, used to pop a captured piece on a new move
         _fen = fen;
         _canMove = canMove;
         _lastMove = lastMove;
@@ -337,6 +338,7 @@ public sealed class Board2D : IBoardView
     }
 
     private string _lastAnimated;
+    private string _prevFenForAnim;
 
     private void AnimateGlide(string uci)
     {
@@ -347,6 +349,16 @@ public sealed class Board2D : IBoardView
         var (tf, tr) = Sq(uci.Substring(2, 2));
         var (frow, fcol) = ScreenOf(ff, fr);
         var (trow, tcol) = ScreenOf(tf, tr);
+
+        // Pop the piece that was captured on this move (if the target held an enemy piece before it).
+        if (!string.IsNullOrEmpty(_prevFenForAnim))
+        {
+            char victim = new AttackBoardLite(_prevFenForAnim).At(tf, tr);
+            char mover = new AttackBoardLite(_prevFenForAnim).At(ff, fr);
+            if (victim != '\0' && mover != '\0' && char.IsUpper(victim) != char.IsUpper(mover))
+                PopPiece(trow, tcol, victim, sq);
+        }
+
         var ghost = MakeFloating(trow, tcol);
         if (ghost == null) return;
         ghost.style.position = Position.Absolute;
@@ -357,8 +369,14 @@ public sealed class Board2D : IBoardView
         var startP = new Vector2(fcol * sq, frow * sq);
         var endP = new Vector2(tcol * sq, trow * sq);
         ghost.style.left = startP.x; ghost.style.top = startP.y;
+        // Ease-out glide (linear reads mechanical); animate a 0..1 progress and lerp with easing.
         ghost.experimental.animation
-            .Start(startP, endP, 110, (el, v) => { el.style.left = v.x; el.style.top = v.y; })
+            .Start(0f, 1f, 120, (el, v) =>
+            {
+                float e = 1f - Mathf.Pow(1f - v, 3f); // ease-out cubic
+                el.style.left = Mathf.Lerp(startP.x, endP.x, e);
+                el.style.top = Mathf.Lerp(startP.y, endP.y, e);
+            })
             .OnCompleted(() => { SetPieceVisible(trow, tcol, true); if (ghost.parent != null) Root.Remove(ghost); });
     }
 
@@ -607,6 +625,47 @@ public sealed class Board2D : IBoardView
         return g;
     }
 
+    // A standalone piece visual (art if the active set has it, else the glyph) for effects like the
+    // capture pop, independent of any board cell.
+    private VisualElement MakePieceElement(char piece)
+    {
+        var tex = PieceArt.Get(piece);
+        if (tex != null)
+        {
+            var e = new VisualElement { pickingMode = PickingMode.Ignore };
+            e.style.backgroundImage = new StyleBackground(tex);
+            e.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            return e;
+        }
+        bool white = char.IsUpper(piece);
+        var g = new Label(Pieces[char.ToUpperInvariant(piece)]) { pickingMode = PickingMode.Ignore };
+        g.style.unityTextAlign = TextAnchor.MiddleCenter;
+        g.style.color = white ? UiKit.Hex(0xf7, 0xf7, 0xf2) : UiKit.Hex(0x2b, 0x2b, 0x2b);
+        g.style.unityTextOutlineWidth = 1.4f;
+        g.style.unityTextOutlineColor = white ? UiKit.Hex(0x33, 0x33, 0x33) : UiKit.Hex(0xe8, 0xe8, 0xe8);
+        g.style.fontSize = Mathf.RoundToInt(Root.resolvedStyle.width / 8f * 0.78f);
+        return g;
+    }
+
+    // Shrink-and-fade the captured piece at a screen cell (chess.com-style capture feedback).
+    private void PopPiece(int row, int col, char piece, float sq)
+    {
+        var el = MakePieceElement(piece);
+        el.style.position = Position.Absolute;
+        el.style.width = sq; el.style.height = sq;
+        el.style.left = col * sq; el.style.top = row * sq;
+        el.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50));
+        Root.Add(el);
+        el.experimental.animation
+            .Start(1f, 0f, 170, (e, v) =>
+            {
+                float s = 0.25f + 0.75f * v;
+                e.style.scale = new Scale(new Vector3(s, s, 1f));
+                e.style.opacity = v;
+            })
+            .OnCompleted(() => { if (el.parent != null) Root.Remove(el); });
+    }
+
     private (int row, int col) ScreenOf(int f, int r) => _whiteBottom ? (7 - r, f) : (r, 7 - f);
 
     private (int row, int col)? CellUnder(Vector2 pos)
@@ -627,6 +686,9 @@ public sealed class Board2D : IBoardView
         _ghost.style.position = Position.Absolute;
         float sq = Root.worldBound.width / 8f;
         _ghost.style.width = sq; _ghost.style.height = sq;
+        // Lift the grabbed piece: a slight scale-up so it reads as picked up off the board.
+        _ghost.style.transformOrigin = new TransformOrigin(Length.Percent(50), Length.Percent(50));
+        _ghost.style.scale = new Scale(new Vector3(1.12f, 1.12f, 1f));
         Root.Add(_ghost);
         SetPieceVisible(_ghostSrc.row, _ghostSrc.col, false);
     }
