@@ -13,7 +13,11 @@ public static class KaissaGameLog
     {
         public List<double> accuracies = new();
         public List<int> results = new(); // parallel to accuracies: 0 loss, 1 draw, 2 win
+        public List<int> quality = new(); // cumulative move-quality counts: best,excellent,good,inaccuracy,mistake,blunder
+        public List<double> phaseOpen = new(), phaseMid = new(), phaseEnd = new(); // per-game phase accuracies
     }
+
+    public static readonly string[] QualityNames = { "Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder" };
 
     private const int MaxEntries = 100;
     private static Data _data;
@@ -48,4 +52,27 @@ public static class KaissaGameLog
         if (D.results.Count > MaxEntries) D.results.RemoveRange(0, D.results.Count - MaxEntries);
         File.WriteAllText(Path, JsonUtility.ToJson(D));
     }
+
+    // Cumulative move-quality mix + per-phase accuracy from a game review (the deeper insights).
+    public static void RecordReview(IEnumerable<string> moveQualities, double? open, double? mid, double? end)
+    {
+        while (D.quality.Count < 6) D.quality.Add(0);
+        foreach (var q in moveQualities)
+        {
+            int i = Array.IndexOf(QualityNames, q);
+            if (i >= 0) D.quality[i]++;
+        }
+        if (open is { } o) D.phaseOpen.Add(o);
+        if (mid is { } m) D.phaseMid.Add(m);
+        if (end is { } e) D.phaseEnd.Add(e);
+        Cap(D.phaseOpen); Cap(D.phaseMid); Cap(D.phaseEnd);
+        File.WriteAllText(Path, JsonUtility.ToJson(D));
+    }
+
+    private static void Cap(List<double> l) { if (l.Count > MaxEntries) l.RemoveRange(0, l.Count - MaxEntries); }
+
+    public static IReadOnlyList<int> QualityMix => D.quality.Count >= 6 ? D.quality : new List<int> { 0, 0, 0, 0, 0, 0 };
+    public static double? PhaseOpen => D.phaseOpen.Count > 0 ? D.phaseOpen.Average() : (double?)null;
+    public static double? PhaseMid => D.phaseMid.Count > 0 ? D.phaseMid.Average() : (double?)null;
+    public static double? PhaseEnd => D.phaseEnd.Count > 0 ? D.phaseEnd.Average() : (double?)null;
 }

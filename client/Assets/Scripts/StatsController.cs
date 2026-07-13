@@ -56,6 +56,7 @@ public sealed class StatsController : MonoBehaviour
         BuildProgression(main, standing);
         BuildSummaryRow(main, stats);
         BuildRecentGames(main);
+        BuildInsights(main);
         BuildMastery(main, trainer, stats);
 
         root.Add(scroll);
@@ -258,6 +259,42 @@ public sealed class StatsController : MonoBehaviour
         body.Add(chart);
         body.Add(UiKit.Text_($"last {recent.Count} games - avg {KaissaGameLog.Average:0}% accuracy", 11, UiKit.Mute));
         main.Add(card);
+    }
+
+    // Deeper insights from finished games: your move-quality mix and accuracy by game phase.
+    private void BuildInsights(VisualElement main)
+    {
+        var mix = KaissaGameLog.QualityMix;
+        int total = mix.Sum();
+        if (total == 0) return;
+
+        var (card, body) = Card("Move quality");
+        var colors = new[] { UiKit.GreenHi, UiKit.Green, UiKit.GreenDeep, UiKit.Gold, UiKit.Hex(0xe0, 0x82, 0x3a), UiKit.Danger };
+        for (int i = 0; i < 6; i++)
+        {
+            var r = UiKit.Row(); r.style.alignItems = Align.Center; r.style.marginBottom = 5;
+            var name = UiKit.Text_(KaissaGameLog.QualityNames[i], 13, UiKit.Dim); name.style.width = 90;
+            r.Add(name);
+            var track = new VisualElement(); track.style.flexGrow = 1; track.style.height = 10; track.style.marginRight = 8;
+            track.style.backgroundColor = UiKit.Panel3; UiKit.Radius(track, 5);
+            var fill = new VisualElement(); fill.style.height = 10; UiKit.Radius(fill, 5);
+            fill.style.width = new Length(100f * mix[i] / total, LengthUnit.Percent);
+            fill.style.backgroundColor = colors[i];
+            track.Add(fill); r.Add(track);
+            r.Add(UiKit.Text_($"{mix[i]}", 13, UiKit.Text, bold: true));
+            body.Add(r);
+        }
+        main.Add(card);
+
+        double? o = KaissaGameLog.PhaseOpen, m = KaissaGameLog.PhaseMid, e = KaissaGameLog.PhaseEnd;
+        if (o.HasValue || m.HasValue || e.HasValue)
+        {
+            var (pc, pb) = Card("Accuracy by phase");
+            StatLine(pb, "Opening", o.HasValue ? $"{o:0}%" : "-");
+            StatLine(pb, "Middlegame", m.HasValue ? $"{m:0}%" : "-");
+            StatLine(pb, "Endgame", e.HasValue ? $"{e:0}%" : "-");
+            main.Add(pc);
+        }
     }
 
     private static VisualElement Pill(string text, Color color)

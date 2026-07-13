@@ -754,6 +754,9 @@ public sealed class KaissaGameController : MonoBehaviour
         if (review.Practice.Count > 0) KaissaPractice.Add(review.Practice);
         SaveRating();
         KaissaGameLog.Record(review.Accuracy, result);
+        KaissaGameLog.RecordReview(
+            System.Linq.Enumerable.Select(review.AllMoves, m => m.Quality),
+            review.PhaseAccuracy.Opening, review.PhaseAccuracy.Middlegame, review.PhaseAccuracy.Endgame);
 
         _reviewMoves = _game.MoveHistory;
         _reviewSan = _game.MoveHistorySan();
