@@ -21,7 +21,7 @@ using UnityEngine.UIElements;
 // IBoardView; the correct/incorrect badge is a board-agnostic overlay so both boards get it.
 public sealed class KaissaBoardController : MonoBehaviour
 {
-    private enum Mode { Rated, Theme, Difficulty, Daily, Weakness }
+    private enum Mode { Rated, Theme, Difficulty, Daily, Weakness, Misses }
 
     private KaissaTrainer _trainer;
     private IBoardView _board;
@@ -317,6 +317,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         bar.Add(ModeChip("Themes", ToggleThemePicker));
         bar.Add(ModeChip("Difficulty", ToggleDifficultyPicker));
         bar.Add(ModeChip("Weakness", LoadWeaknessFeed));
+        bar.Add(ModeChip("Review misses", LoadMissesFeed));
         _modeLabel = UiKit.Text_("", 12, UiKit.Mute);
         _modeLabel.style.marginLeft = 8;
         bar.Add(_modeLabel);
@@ -488,6 +489,34 @@ public sealed class KaissaBoardController : MonoBehaviour
         LoadNext();
     }
 
+    // Replay the puzzles the player got wrong or gave up on (persisted in KaissaMisses).
+    private void LoadMissesFeed()
+    {
+        if (_pickerHost != null) HidePicker();
+        var list = KaissaMisses.AsScenarios();
+        if (list.Count == 0)
+        {
+            SetFeedback("No missed puzzles yet - they collect here when you slip up.", UiKit.Dim);
+            return;
+        }
+        _mode = Mode.Misses; _patternName = "Your misses";
+        _feed = list; _feedAt = 0;
+        _summaryShown = false;
+        LoadNext();
+    }
+
+    // Persist the current puzzle as a miss (wrong move or gave up), for the Review-misses feed.
+    private void RecordMiss()
+    {
+        if (_mode == Mode.Misses) return; // don't re-record while reviewing misses
+        string fen = _session?.StartFen;
+        var line = _card?.Line ?? _scenario?.SolverLine;
+        string setup = _card?.Setup ?? _scenario?.Setup;
+        var themes = _card?.Themes ?? _scenario?.ThemeTags;
+        string pattern = _card?.PatternName ?? _scenario?.Pattern.Value;
+        if (fen != null && line != null) KaissaMisses.Record(fen, line, setup, _puzzleRating, themes, pattern);
+    }
+
     private void Shuffle(List<Scenario> list)
     {
         for (int i = list.Count - 1; i > 0; i--)
@@ -554,6 +583,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         if (result.Outcome == PuzzleOutcome.Wrong)
         {
             _wrongThisPuzzle = true;
+            RecordMiss();
             _board.Render(_session.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom); // snap back
             TintMove(uci, Bad);
             _audio.PlayWrong();
@@ -656,6 +686,7 @@ public sealed class KaissaBoardController : MonoBehaviour
     {
         if (_session == null || _concluded) { if (_concluded) LoadNext(); return; }
         _solutionShown = true;
+        RecordMiss();
         _timing = false;
         if (_mode == Mode.Rated && !_graded) GradeRated(correct: false, playedMove: _session.ExpectedMove ?? "0000");
         StartCoroutine(PlayOutSolution());
