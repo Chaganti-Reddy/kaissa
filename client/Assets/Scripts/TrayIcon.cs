@@ -2,19 +2,20 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-// Optional Windows minimize/close-to-tray. Convenience only (allowed by the free-forever rule). When
-// KaissaSettings.MinimizeToTray is on, minimizing the window hides it to a system-tray icon; clicking
-// the icon (or its Restore/Quit menu) brings the app back or exits. Implemented with Shell_NotifyIcon
-// and a subclassed window procedure, the same native-interop style as WindowChrome. Entirely gated
-// behind the setting and wrapped in try/catch, so a normal launch never runs any of this native code
-// and any interop failure falls back silently to ordinary window behaviour. Windows standalone only.
+// Optional Windows close-to-tray. Convenience only (allowed by the free-forever rule). When
+// KaissaSettings.CloseToTray is on, clicking the window's close button hides it to a system-tray icon
+// instead of quitting (minimize stays a normal minimize - deliberate); clicking the icon (or its
+// Restore/Quit menu) brings the app back or really exits. Implemented with Shell_NotifyIcon and a
+// subclassed window procedure, the same native-interop style as WindowChrome. Entirely gated behind
+// the setting and wrapped in try/catch, so a normal launch never runs any of this native code and any
+// interop failure falls back silently to ordinary window behaviour. Windows standalone only.
 public sealed class TrayIcon : MonoBehaviour
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
     {
         if (Application.platform != RuntimePlatform.WindowsPlayer) return;
-        if (!KaissaSettings.MinimizeToTray) return; // opt-in only
+        if (!KaissaSettings.CloseToTray) return; // opt-in only
         var go = new GameObject("TrayIcon");
         DontDestroyOnLoad(go);
         go.AddComponent<TrayIcon>();
@@ -24,8 +25,9 @@ public sealed class TrayIcon : MonoBehaviour
     private const int GWLP_WNDPROC = -4;
     private const int WM_USER = 0x0400;
     private const int WM_TRAYICON = WM_USER + 1;
+    private const int WM_CLOSE = 0x0010;
     private const int WM_SYSCOMMAND = 0x0112;
-    private const int SC_MINIMIZE = 0xF020;
+    private const int SC_CLOSE = 0xF060;
     private const int WM_LBUTTONUP = 0x0202;
     private const int WM_LBUTTONDBLCLK = 0x0203;
     private const int WM_RBUTTONUP = 0x0205;
@@ -71,7 +73,7 @@ public sealed class TrayIcon : MonoBehaviour
     private static WndProcDelegate _proc; // kept alive so the GC never collects the installed proc
     private IntPtr _hwnd, _prevProc;
     private NOTIFYICONDATA _nid;
-    private bool _installed, _hidden;
+    private bool _installed, _hidden, _quitting;
 
     private void Start()
     {
@@ -105,10 +107,13 @@ public sealed class TrayIcon : MonoBehaviour
     {
         try
         {
-            if (msg == WM_SYSCOMMAND && (wParam.ToInt64() & 0xFFF0) == SC_MINIMIZE)
+            // Closing (X button or SC_CLOSE) hides to tray instead of quitting - unless we are really
+            // quitting (from the tray Quit menu), in which case the close passes through normally.
+            bool isClose = msg == WM_CLOSE || (msg == WM_SYSCOMMAND && (wParam.ToInt64() & 0xFFF0) == SC_CLOSE);
+            if (isClose && !_quitting)
             {
                 HideToTray();
-                return IntPtr.Zero; // swallow the minimize; we hid to tray instead
+                return IntPtr.Zero;
             }
             if (msg == WM_TRAYICON)
             {
@@ -120,7 +125,7 @@ public sealed class TrayIcon : MonoBehaviour
             {
                 int id = wParam.ToInt32() & 0xFFFF;
                 if (id == IDM_RESTORE) RestoreFromTray();
-                else if (id == IDM_QUIT) { RemoveTray(); Application.Quit(); }
+                else if (id == IDM_QUIT) { _quitting = true; RemoveTray(); Application.Quit(); }
             }
         }
         catch (Exception e) { Debug.LogWarning($"TrayIcon proc: {e.Message}"); }

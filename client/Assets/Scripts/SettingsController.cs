@@ -250,8 +250,8 @@ public sealed class SettingsController : MonoBehaviour
             () => KaissaSettings.Sound = !KaissaSettings.Sound);
         Toggle(disp, "Display", KaissaSettings.Fullscreen ? "Fullscreen" : "Maximized",
             () => { KaissaSettings.Fullscreen = !KaissaSettings.Fullscreen; WindowMode.Apply(); });
-        Toggle(disp, "Minimize to tray", KaissaSettings.MinimizeToTray ? "On" : "Off",
-            () => KaissaSettings.MinimizeToTray = !KaissaSettings.MinimizeToTray);
+        Toggle(disp, "Close to tray", KaissaSettings.CloseToTray ? "On" : "Off",
+            () => KaissaSettings.CloseToTray = !KaissaSettings.CloseToTray);
 
         var data = Group("Data");
         var resetRow = ResetRow();

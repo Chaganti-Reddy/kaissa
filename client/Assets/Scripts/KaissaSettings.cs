@@ -35,8 +35,8 @@ public static class KaissaSettings
         public int visionBest;        // best light/dark board-vision score in a 30s run
         public int coordBest;         // best coordinate-finding score in a 30s run
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
-        public string soundTheme = ""; // sound set (folder under Resources/Sounds); empty = Classic procedural
-        public bool minimizeToTray; // Windows: hide to a system-tray icon when minimized (convenience)
+        public string soundTheme = "sfx"; // sound set (folder under Resources/Sounds); empty = Classic procedural
+        public bool closeToTray; // Windows: closing the window hides to a system-tray icon instead of quitting
         public bool highlightMove = true; // highlight the last move's from/to squares
         public bool confirmResign;        // require a second click to resign (misclick guard)
         public bool lowTimeWarning = true; // play a warning sound when your clock runs low
@@ -88,7 +88,7 @@ public static class KaissaSettings
     public static int CoordBest { get => D.coordBest; set { D.coordBest = value; Save(); } }
     public static string PieceSet { get => string.IsNullOrEmpty(D.pieceSet) ? "cburnett" : D.pieceSet; set { D.pieceSet = value; Save(); } }
     public static string SoundTheme { get => D.soundTheme ?? ""; set { D.soundTheme = value; Save(); } }
-    public static bool MinimizeToTray { get => D.minimizeToTray; set { D.minimizeToTray = value; Save(); } }
+    public static bool CloseToTray { get => D.closeToTray; set { D.closeToTray = value; Save(); } }
     public static bool HighlightMove { get => D.highlightMove; set { D.highlightMove = value; Save(); } }
     public static bool ConfirmResign { get => D.confirmResign; set { D.confirmResign = value; Save(); } }
     public static bool LowTimeWarning { get => D.lowTimeWarning; set { D.lowTimeWarning = value; Save(); } }
