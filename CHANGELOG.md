@@ -33,7 +33,7 @@ A page-by-page rebuild and expansion of the training and study screens, each don
 - Learn: lessons are grouped by skill level (Beginner, Intermediate, Advanced), with the motif shown alongside.
 - Stats: deeper insights - your move-quality mix across games and your accuracy by game phase (opening, middlegame, endgame).
 - Window: the desktop window is now freely resizable with working maximize and restore, and the interface scales to fit whatever size you choose.
-- Close to tray: an optional setting (Windows) hides the app to a system-tray icon when you close the window instead of quitting; minimizing still just minimizes. Click the tray icon to restore, or right-click for Restore and Quit.
+- Close to tray: an optional setting (Windows) keeps a system-tray icon while running; closing the window hides it to the tray instead of quitting (minimizing still just minimizes). Click the tray icon to toggle the window in and out of view - it comes back at the same size and position - and right-click for Restore and Quit.
 - Analysis board editor now works on the 3D board too (click a square to place the selected piece), not only the flat board.
 - Sound: the default sound theme is now the Sfx set (still switchable, including back to the original Classic cues).
 - Board Vision and Coordinates: rebuilt into timed 30-second drills with a score, a per-run best, and start/game-over screens. Board Vision asks light-or-dark (L/D keys); Coordinates shows a square to click, lets you pick your side and hide the labels to train recall, flashes green on a hit and reveals the right square on a miss.
