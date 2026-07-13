@@ -15,7 +15,8 @@ public sealed class TrayIcon : MonoBehaviour
     private static void Boot()
     {
         if (Application.platform != RuntimePlatform.WindowsPlayer) return;
-        if (!KaissaSettings.CloseToTray) return; // opt-in only
+        // Always install the window hook on Windows; it only diverts the close to the tray when the
+        // CloseToTray setting is on (checked at close time), so toggling it works without a restart.
         var go = new GameObject("TrayIcon");
         DontDestroyOnLoad(go);
         go.AddComponent<TrayIcon>();
@@ -56,6 +57,7 @@ public sealed class TrayIcon : MonoBehaviour
     [StructLayout(LayoutKind.Sequential)] private struct POINT { public int X, Y; }
 
     [DllImport("user32.dll")] private static extern IntPtr GetActiveWindow();
+    [DllImport("user32.dll", EntryPoint = "FindWindowW", CharSet = CharSet.Unicode)] private static extern IntPtr FindWindow(string className, string windowName);
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)] private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int idx, WndProcDelegate newProc);
     [DllImport("user32.dll", EntryPoint = "CallWindowProcW")] private static extern IntPtr CallWindowProc(IntPtr prev, IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")] private static extern IntPtr SetWindowLongPtr_Native(IntPtr hWnd, int idx, IntPtr newProc);
@@ -79,7 +81,11 @@ public sealed class TrayIcon : MonoBehaviour
     {
         try
         {
-            _hwnd = GetActiveWindow();
+            Application.runInBackground = true; // keep pumping window messages while hidden so the tray can restore
+            // The Unity standalone main window (class "UnityWndClass"); fall back to title, then active.
+            _hwnd = FindWindow("UnityWndClass", null);
+            if (_hwnd == IntPtr.Zero) _hwnd = FindWindow(null, Application.productName);
+            if (_hwnd == IntPtr.Zero) _hwnd = GetActiveWindow();
             if (_hwnd == IntPtr.Zero) return;
 
             IntPtr icon = GetClassLongPtr(_hwnd, -14 /*GCLP_HICON*/);
@@ -110,7 +116,7 @@ public sealed class TrayIcon : MonoBehaviour
             // Closing (X button or SC_CLOSE) hides to tray instead of quitting - unless we are really
             // quitting (from the tray Quit menu), in which case the close passes through normally.
             bool isClose = msg == WM_CLOSE || (msg == WM_SYSCOMMAND && (wParam.ToInt64() & 0xFFF0) == SC_CLOSE);
-            if (isClose && !_quitting)
+            if (isClose && !_quitting && KaissaSettings.CloseToTray)
             {
                 HideToTray();
                 return IntPtr.Zero;
