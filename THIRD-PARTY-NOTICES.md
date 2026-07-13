@@ -21,3 +21,20 @@ Kaissa is GPLv3. It uses the following third-party components. Their licenses ar
 - **Poly Haven HDRI** (`client/Assets/Resources/env.hdr`) — CC0 1.0. https://polyhaven.com Environment lighting and reflections.
 - **Inter** by Rasmus Andersson (`client/Assets/Resources/Inter-Regular.ttf`) — SIL Open Font License 1.1. https://rsms.me/inter/ User-interface font.
 - **Staunton chess piece models** by clarkerubber (`client/Assets/Resources/Pieces/*.obj`) — MIT. https://github.com/clarkerubber/Staunton-Pieces Converted from the source STL to OBJ (rotated, scaled, seated) by `tools/StlToObj`.
+
+### 2D piece sets
+
+The flat-board piece art (`client/Assets/Resources/Pieces2D/<set>/*.png`) is rasterized from the SVG sets distributed with Lichess (https://github.com/lichess-org/lila, `public/piece/`). Only sets under licenses compatible with GPLv3 are bundled; Lichess's non-free and non-commercial (CC BY-NC-SA) sets are deliberately excluded. Each set's author and license, as listed in Lichess's `COPYING.md`:
+
+- **cburnett** by Colin M.L. Burnett — GPLv2+.
+- **merida** by Armando Hernandez Marroquin — GPLv2+.
+- **chessnut** by Alexis Luengas — Apache 2.0. https://github.com/LexLuengas/chessnut-pieces
+- **fantasy**, **spatial**, **celtic** by Maurizio Monge — MIT. https://github.com/maurimo/chess-art
+- **pixel** by therealqtpi — AGPLv3+.
+- **rhosgfx** by RhosGFX — CC0 1.0. https://rhosgfx.itch.io/
+- **pirouetti** by pirouetti — AGPLv3+.
+- **shapes** by flugsio — CC BY-SA 4.0. https://github.com/flugsio/chess_shapes
+- **letter** by usolando — AGPLv3+.
+- **kiwen-suwi** by neverRare — CC BY 4.0. https://github.com/neverRare
+- **mpchess** by Maxime Chupin — GPLv3+. https://github.com/chupinmaxime
+- **mono** by Thibault Duplessis and Colin M.L. Burnett — GPLv2+. Distributed as six single-colour glyphs; recoloured into light and dark variants before rasterizing.

@@ -15,7 +15,7 @@ public sealed class SettingsController : MonoBehaviour
 {
     private const string PreviewFen = "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQ1RK1 w kq - 0 1";
 
-    private VisualElement _root, _groups, _swatches, _boardHost;
+    private VisualElement _root, _groups, _swatches, _pieceSets, _boardHost;
     private Board2D _preview;
     private bool _confirmReset;
 
@@ -61,6 +61,13 @@ public sealed class SettingsController : MonoBehaviour
         _swatches.style.flexDirection = FlexDirection.Row; _swatches.style.flexWrap = Wrap.Wrap; _swatches.style.marginTop = 8;
         themeCard.Add(_swatches);
         left.Add(themeCard);
+
+        var pieceCard = Panel(); pieceCard.style.marginTop = 14; UiKit.Pad(pieceCard, 12, 14, 12, 14);
+        pieceCard.Add(UiKit.Text_("Piece set", 12, UiKit.Mute, bold: true));
+        _pieceSets = new VisualElement();
+        _pieceSets.style.flexDirection = FlexDirection.Row; _pieceSets.style.flexWrap = Wrap.Wrap; _pieceSets.style.marginTop = 8;
+        pieceCard.Add(_pieceSets);
+        left.Add(pieceCard);
         cols.Add(left);
 
         // right: grouped settings
@@ -73,6 +80,7 @@ public sealed class SettingsController : MonoBehaviour
 
         RefreshPreview();
         RefreshSwatches();
+        RefreshPieceSets();
         RefreshGroups();
 
         if (Environment.GetCommandLineArgs().Contains("-kaissa-settingstest"))
@@ -117,6 +125,46 @@ public sealed class SettingsController : MonoBehaviour
         var name = UiKit.Text_(Board3D.Themes[Mathf.Clamp(KaissaSettings.BoardTheme, 0, Board3D.Themes.Length - 1)].Name, 13, UiKit.Text, bold: true);
         name.style.width = Length.Percent(100); name.style.marginTop = 2;
         _swatches.Add(name);
+    }
+
+    private void RefreshPieceSets()
+    {
+        _pieceSets.Clear();
+        var square = UiKit.Hex(0xb5, 0x88, 0x63); // a neutral dark square behind the sample piece
+        foreach (var (name, folder) in PieceArt.Sets)
+        {
+            var tex = PieceArt.Get(folder, "wK");
+            if (tex == null) continue;
+            bool selected = KaissaSettings.PieceSet == folder;
+
+            var sw = new VisualElement();
+            sw.style.width = 46; sw.style.height = 46; sw.style.marginRight = 8; sw.style.marginBottom = 8;
+            sw.style.backgroundColor = square;
+            UiKit.Radius(sw, 8);
+            sw.style.borderTopWidth = sw.style.borderBottomWidth = sw.style.borderLeftWidth = sw.style.borderRightWidth = 2;
+            var edge = selected ? UiKit.Gold : UiKit.Line;
+            sw.style.borderTopColor = sw.style.borderBottomColor = sw.style.borderLeftColor = sw.style.borderRightColor = edge;
+
+            var img = new VisualElement { pickingMode = PickingMode.Ignore };
+            img.style.position = Position.Absolute;
+            img.style.left = 3; img.style.top = 3; img.style.right = 3; img.style.bottom = 3;
+            img.style.backgroundImage = new StyleBackground(tex);
+            img.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            sw.Add(img);
+
+            sw.tooltip = name;
+            sw.RegisterCallback<ClickEvent>(_ =>
+            {
+                KaissaSettings.PieceSet = folder;
+                RefreshPreview(); RefreshPieceSets();
+            });
+            UiKit.Interactive(sw, 1.06f);
+            _pieceSets.Add(sw);
+        }
+        var active = PieceArt.Sets.FirstOrDefault(s => s.folder == KaissaSettings.PieceSet).name ?? "Cburnett";
+        var lbl = UiKit.Text_(active, 13, UiKit.Text, bold: true);
+        lbl.style.width = Length.Percent(100); lbl.style.marginTop = 2;
+        _pieceSets.Add(lbl);
     }
 
     private static void AddCell(VisualElement parent, Color c)
@@ -243,6 +291,13 @@ public sealed class SettingsController : MonoBehaviour
         UiAutomation.Click(sw);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_theme.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Click a piece set (preview repaints with the new art).
+        var ps = _pieceSets.Children().ElementAtOrDefault(3);
+        UiAutomation.Click(ps);
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_pieceset.png"));
         yield return new WaitForSeconds(0.4f);
 
         // Toggle coordinates off (preview updates), and a couple of gameplay toggles.

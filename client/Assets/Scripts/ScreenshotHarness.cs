@@ -234,6 +234,19 @@ public sealed class ScreenshotHarness : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, "i-start.png")); yield return new WaitForSeconds(0.4f);
 
+        // Sweep several 2D piece-art sets so each renders on the board can be verified.
+        foreach (var folder in new[] { "cburnett", "merida", "chessnut", "fantasy", "pixel", "shapes", "letter", "mono" })
+        {
+            KaissaSettings.PieceSet = folder;
+            board.Render(start, true, null, true);
+            yield return new WaitForSeconds(0.35f);
+            ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"i-set-{folder}.png"));
+            yield return new WaitForSeconds(0.35f);
+        }
+        KaissaSettings.PieceSet = "cburnett";
+        board.Render(start, true, null, true);
+        yield return new WaitForSeconds(0.4f);
+
         board.DebugSelect("e2"); // selection + legal-move dots
         yield return new WaitForSeconds(0.3f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, "i-select.png")); yield return new WaitForSeconds(0.4f);

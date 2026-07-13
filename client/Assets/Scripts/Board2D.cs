@@ -38,7 +38,7 @@ public sealed class Board2D : IBoardView
     private Vector2 _downPos;
     private string _dragFrom;
     private bool _dragging;
-    private Label _ghost;
+    private VisualElement _ghost;
     private (int row, int col) _ghostSrc;
 
     private static readonly Color Sel = new(0.96f, 0.96f, 0.41f, 0.55f);   // yellow select/last-move
@@ -111,15 +111,25 @@ public sealed class Board2D : IBoardView
                 ov.style.alignItems = Align.Center;
                 ov.style.justifyContent = Justify.Center;
 
+                // Art layer (PNG piece image); when a set is loaded this shows and the glyph label is
+                // left empty. Absolute-fills the cell with the image scaled to fit.
+                var art = new VisualElement { pickingMode = PickingMode.Ignore };
+                art.style.position = Position.Absolute;
+                art.style.left = Length.Percent(6); art.style.top = Length.Percent(6);
+                art.style.right = Length.Percent(6); art.style.bottom = Length.Percent(6);
+                art.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+
                 var pc = new Label();
                 pc.pickingMode = PickingMode.Ignore;
                 pc.style.unityTextAlign = TextAnchor.MiddleCenter;
 
                 cell.Add(ov);
+                cell.Add(art);
                 cell.Add(pc);
                 rowEl.Add(cell);
                 _rowCells[row, col] = cell;
                 _rowOverlays[row, col] = ov;
+                _rowArt[row, col] = art;
                 _rowPieces[row, col] = pc;
             }
             Root.Add(rowEl);
@@ -225,6 +235,7 @@ public sealed class Board2D : IBoardView
     // Row/col grid as laid out on screen (before mapping to file/rank via orientation).
     private readonly VisualElement[,] _rowCells = new VisualElement[8, 8];
     private readonly VisualElement[,] _rowOverlays = new VisualElement[8, 8];
+    private readonly VisualElement[,] _rowArt = new VisualElement[8, 8];
     private readonly Label[,] _rowPieces = new Label[8, 8];
 
     // Map a screen (row,col) to board (file,rank) honoring orientation.
@@ -254,14 +265,21 @@ public sealed class Board2D : IBoardView
 
             char p = board.At(f, r);
             var pc = _rowPieces[row, col];
-            if (p == '\0') { pc.text = ""; }
+            var art = _rowArt[row, col];
+            if (p == '\0') { pc.text = ""; SetArt(art, null); }
             else
             {
                 bool white = char.IsUpper(p);
-                pc.text = Pieces[char.ToUpperInvariant(p)];
-                pc.style.color = white ? UiKit.Hex(0xf7, 0xf7, 0xf2) : UiKit.Hex(0x2b, 0x2b, 0x2b);
-                pc.style.unityTextOutlineWidth = 1.4f;
-                pc.style.unityTextOutlineColor = white ? UiKit.Hex(0x33, 0x33, 0x33) : UiKit.Hex(0xe8, 0xe8, 0xe8);
+                var tex = PieceArt.Get(p);
+                if (tex != null) { pc.text = ""; SetArt(art, tex); }
+                else
+                {
+                    SetArt(art, null);
+                    pc.text = Pieces[char.ToUpperInvariant(p)];
+                    pc.style.color = white ? UiKit.Hex(0xf7, 0xf7, 0xf2) : UiKit.Hex(0x2b, 0x2b, 0x2b);
+                    pc.style.unityTextOutlineWidth = 1.4f;
+                    pc.style.unityTextOutlineColor = white ? UiKit.Hex(0x33, 0x33, 0x33) : UiKit.Hex(0xe8, 0xe8, 0xe8);
+                }
                 if (char.ToUpperInvariant(p) == 'K') { if (white) { wkF = f; wkR = r; } else { bkF = f; bkR = r; } }
             }
 
@@ -329,26 +347,19 @@ public sealed class Board2D : IBoardView
         var (tf, tr) = Sq(uci.Substring(2, 2));
         var (frow, fcol) = ScreenOf(ff, fr);
         var (trow, tcol) = ScreenOf(tf, tr);
-        var tgt = _rowPieces[trow, tcol];
-        if (string.IsNullOrEmpty(tgt.text)) return;
-
-        var ghost = new Label(tgt.text) { pickingMode = PickingMode.Ignore };
+        var ghost = MakeFloating(trow, tcol);
+        if (ghost == null) return;
         ghost.style.position = Position.Absolute;
         ghost.style.width = sq; ghost.style.height = sq;
-        ghost.style.unityTextAlign = TextAnchor.MiddleCenter;
-        ghost.style.color = tgt.resolvedStyle.color;
-        ghost.style.fontSize = tgt.resolvedStyle.fontSize;
-        ghost.style.unityTextOutlineWidth = 1.4f;
-        ghost.style.unityTextOutlineColor = tgt.resolvedStyle.unityTextOutlineColor;
         Root.Add(ghost);
-        tgt.style.visibility = Visibility.Hidden;
+        SetPieceVisible(trow, tcol, false);
 
         var startP = new Vector2(fcol * sq, frow * sq);
         var endP = new Vector2(tcol * sq, trow * sq);
         ghost.style.left = startP.x; ghost.style.top = startP.y;
         ghost.experimental.animation
             .Start(startP, endP, 110, (el, v) => { el.style.left = v.x; el.style.top = v.y; })
-            .OnCompleted(() => { tgt.style.visibility = Visibility.Visible; if (ghost.parent != null) Root.Remove(ghost); });
+            .OnCompleted(() => { SetPieceVisible(trow, tcol, true); if (ghost.parent != null) Root.Remove(ghost); });
     }
 
     private static Label Coord(string s, Color c, TextAnchor anchor)
@@ -557,6 +568,45 @@ public sealed class Board2D : IBoardView
         Root.Add(dim);
     }
 
+    private static void SetArt(VisualElement e, Texture2D tex)
+    {
+        if (tex == null) e.style.backgroundImage = StyleKeyword.None;
+        else e.style.backgroundImage = new StyleBackground(tex);
+    }
+
+    // Toggle both the art layer and the glyph label for a cell (used while a floating clone glides/drags).
+    private void SetPieceVisible(int row, int col, bool v)
+    {
+        var vis = v ? Visibility.Visible : Visibility.Hidden;
+        _rowArt[row, col].style.visibility = vis;
+        _rowPieces[row, col].style.visibility = vis;
+    }
+
+    // Build a floating clone of the piece in a screen cell - an image if the cell shows art, else a
+    // glyph label - so drag and glide look identical to the set on the board. Returns null if empty.
+    private VisualElement MakeFloating(int row, int col)
+    {
+        var srcArt = _rowArt[row, col];
+        var bg = srcArt.resolvedStyle.backgroundImage;
+        bool hasArt = bg.texture != null || bg.sprite != null || bg.renderTexture != null;
+        if (hasArt)
+        {
+            var e = new VisualElement { pickingMode = PickingMode.Ignore };
+            e.style.backgroundImage = new StyleBackground(bg.texture);
+            e.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            return e;
+        }
+        var lbl = _rowPieces[row, col];
+        if (string.IsNullOrEmpty(lbl.text)) return null;
+        var g = new Label(lbl.text) { pickingMode = PickingMode.Ignore };
+        g.style.unityTextAlign = TextAnchor.MiddleCenter;
+        g.style.color = lbl.resolvedStyle.color;
+        g.style.fontSize = lbl.resolvedStyle.fontSize;
+        g.style.unityTextOutlineWidth = 1.4f;
+        g.style.unityTextOutlineColor = lbl.resolvedStyle.unityTextOutlineColor;
+        return g;
+    }
+
     private (int row, int col) ScreenOf(int f, int r) => _whiteBottom ? (7 - r, f) : (r, 7 - f);
 
     private (int row, int col)? CellUnder(Vector2 pos)
@@ -572,15 +622,13 @@ public sealed class Board2D : IBoardView
     {
         var (f, r) = Sq(fromUci);
         _ghostSrc = ScreenOf(f, r);
-        var src = _rowPieces[_ghostSrc.row, _ghostSrc.col];
-        _ghost = new Label(src.text) { pickingMode = PickingMode.Ignore };
+        _ghost = MakeFloating(_ghostSrc.row, _ghostSrc.col);
+        if (_ghost == null) return;
         _ghost.style.position = Position.Absolute;
-        _ghost.style.color = src.resolvedStyle.color;
-        _ghost.style.fontSize = src.resolvedStyle.fontSize;
-        _ghost.style.unityTextOutlineWidth = 1.4f;
-        _ghost.style.unityTextOutlineColor = src.resolvedStyle.unityTextOutlineColor;
+        float sq = Root.worldBound.width / 8f;
+        _ghost.style.width = sq; _ghost.style.height = sq;
         Root.Add(_ghost);
-        src.style.visibility = Visibility.Hidden;
+        SetPieceVisible(_ghostSrc.row, _ghostSrc.col, false);
     }
 
     private void MoveGhost(Vector2 panelPos)
@@ -595,7 +643,7 @@ public sealed class Board2D : IBoardView
     private void EndGhost()
     {
         if (_ghost != null) { Root.Remove(_ghost); _ghost = null; }
-        _rowPieces[_ghostSrc.row, _ghostSrc.col].style.visibility = Visibility.Visible;
+        SetPieceVisible(_ghostSrc.row, _ghostSrc.col, true);
     }
 
     private void OnCellClicked(int row, int col, bool alt = false)
