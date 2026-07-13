@@ -21,7 +21,12 @@ public static class UiKit
     public static readonly Color GreenHi = Hex(0x95, 0xc1, 0x5c);
     public static readonly Color GreenDeep = Hex(0x45, 0x75, 0x3c);
     public static readonly Color Gold = Hex(0xf0, 0xc3, 0x3c);
+    public static readonly Color Blue = Hex(0x5b, 0x8f, 0xd6);
     public static readonly Color Danger = Hex(0xc9, 0x4b, 0x3b);
+
+    // A slightly lighter shade of a colour, for hover states that keep the base hue.
+    public static Color Lighten(Color c, float amt = 0.10f) =>
+        new(Mathf.Min(1f, c.r + amt), Mathf.Min(1f, c.g + amt), Mathf.Min(1f, c.b + amt), c.a);
     public static readonly Color Line = new(1f, 1f, 1f, 0.08f);
 
     public static Color Hex(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f);

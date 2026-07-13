@@ -271,10 +271,22 @@ public sealed class SettingsController : MonoBehaviour
     private void Toggle(VisualElement group, string label, string value, Action onToggle)
     {
         var l = UiKit.Text_(label, 15, UiKit.Text, bold: true); l.style.flexGrow = 1;
-        var pill = UiKit.Ghost(value, () => { onToggle(); RefreshGroups(); }, 13);
-        pill.style.minWidth = 150;
-        bool on = value is "On" or "3D" or "Modeled" or "Drag or click" or "Fullscreen" || value.StartsWith("On");
-        pill.style.backgroundColor = on ? UiKit.Green : UiKit.Panel2;
+
+        // Colour by state: a plain "On" is green, "Off" is grey, and any other value is a specific
+        // choice (2D/3D, Normal/Fast/Slow, ...) shown in a blue accent. Hover lightens the same colour
+        // so the state colour is never lost on hover (the old Ghost hover reset it).
+        Color baseCol = value == "On" ? UiKit.Green : value.StartsWith("Off") ? UiKit.Panel2 : UiKit.Blue;
+        var pill = new Button(() => { onToggle(); RefreshGroups(); }) { text = value };
+        UiKit.NoBorder(pill);
+        pill.style.color = UiKit.Text; pill.style.fontSize = 13; pill.style.unityFontStyleAndWeight = FontStyle.Bold;
+        UiKit.Pad(pill, 8, 14, 8, 14); UiKit.Radius(pill, 8);
+        pill.style.marginTop = 0; pill.style.marginBottom = 0; pill.style.marginLeft = 0; pill.style.marginRight = 0;
+        pill.style.minWidth = 150; pill.style.unityTextAlign = TextAnchor.MiddleCenter;
+        pill.style.backgroundColor = baseCol;
+        pill.RegisterCallback<MouseEnterEvent>(_ => pill.style.backgroundColor = UiKit.Lighten(baseCol));
+        pill.RegisterCallback<MouseLeaveEvent>(_ => pill.style.backgroundColor = baseCol);
+        UiKit.Interactive(pill);
+
         var row = UiKit.Row(l, pill);
         row.style.justifyContent = Justify.SpaceBetween; UiKit.Pad(row, 7, 4, 7, 4);
         row.style.borderBottomWidth = 1; row.style.borderBottomColor = UiKit.Line;
