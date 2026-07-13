@@ -55,6 +55,14 @@ public sealed class TrayIcon : MonoBehaviour
     }
 
     [StructLayout(LayoutKind.Sequential)] private struct POINT { public int X, Y; }
+    [StructLayout(LayoutKind.Sequential)] private struct RECT { public int left, top, right, bottom; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WINDOWPLACEMENT
+    {
+        public int length, flags, showCmd;
+        public POINT ptMinPosition, ptMaxPosition;
+        public RECT rcNormalPosition;
+    }
 
     [DllImport("user32.dll")] private static extern IntPtr GetActiveWindow();
     [DllImport("user32.dll", EntryPoint = "FindWindowW", CharSet = CharSet.Unicode)] private static extern IntPtr FindWindow(string className, string windowName);
@@ -63,6 +71,9 @@ public sealed class TrayIcon : MonoBehaviour
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")] private static extern IntPtr SetWindowLongPtr_Native(IntPtr hWnd, int idx, IntPtr newProc);
     [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr hWnd, int cmd);
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr hWnd);
+    [DllImport("user32.dll")] private static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT wp);
+    [DllImport("user32.dll")] private static extern bool SetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT wp);
     [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")] private static extern IntPtr GetClassLongPtr(IntPtr hWnd, int idx);
     [DllImport("user32.dll")] private static extern IntPtr LoadIcon(IntPtr hInstance, IntPtr iconName);
     [DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")] private static extern bool Shell_NotifyIcon(uint msg, ref NOTIFYICONDATA data);
@@ -75,7 +86,8 @@ public sealed class TrayIcon : MonoBehaviour
     private static WndProcDelegate _proc; // kept alive so the GC never collects the installed proc
     private IntPtr _hwnd, _prevProc;
     private NOTIFYICONDATA _nid;
-    private bool _installed, _hidden, _quitting;
+    private bool _installed, _quitting, _iconShown, _havePlacement;
+    private WINDOWPLACEMENT _placement;
 
     private void Start()
     {
@@ -118,46 +130,62 @@ public sealed class TrayIcon : MonoBehaviour
             bool isClose = msg == WM_CLOSE || (msg == WM_SYSCOMMAND && (wParam.ToInt64() & 0xFFF0) == SC_CLOSE);
             if (isClose && !_quitting && KaissaSettings.CloseToTray)
             {
-                HideToTray();
+                HideWindow();
                 return IntPtr.Zero;
             }
             if (msg == WM_TRAYICON)
             {
                 int ev = lParam.ToInt32();
-                if (ev == WM_LBUTTONUP || ev == WM_LBUTTONDBLCLK) RestoreFromTray();
+                if (ev == WM_LBUTTONUP || ev == WM_LBUTTONDBLCLK) ToggleWindow();
                 else if (ev == WM_RBUTTONUP) ShowMenu();
             }
             else if (msg == WM_COMMAND)
             {
                 int id = wParam.ToInt32() & 0xFFFF;
-                if (id == IDM_RESTORE) RestoreFromTray();
-                else if (id == IDM_QUIT) { _quitting = true; RemoveTray(); Application.Quit(); }
+                if (id == IDM_RESTORE) ShowWindowRestore();
+                else if (id == IDM_QUIT) { _quitting = true; RemoveIcon(); Application.Quit(); }
             }
         }
         catch (Exception e) { Debug.LogWarning($"TrayIcon proc: {e.Message}"); }
         return CallWindowProc(_prevProc, hWnd, msg, wParam, lParam);
     }
 
-    private void HideToTray()
+    // The tray icon is shown persistently while Close-to-tray is on (added/removed here, not tied to
+    // whether the window is hidden), so it is always available to toggle the window.
+    private void Update()
     {
-        if (_hidden) return;
-        Shell_NotifyIcon(NIM_ADD, ref _nid);
-        ShowWindow(_hwnd, SW_HIDE);
-        _hidden = true;
+        if (!_installed) return;
+        bool want = KaissaSettings.CloseToTray;
+        if (want && !_iconShown) { Shell_NotifyIcon(NIM_ADD, ref _nid); _iconShown = true; }
+        else if (!want && _iconShown)
+        {
+            Shell_NotifyIcon(NIM_DELETE, ref _nid); _iconShown = false;
+            if (!IsWindowVisible(_hwnd)) ShowWindowRestore(); // never strand a hidden window
+        }
     }
 
-    private void RestoreFromTray()
+    private void ToggleWindow()
     {
-        RemoveTray();
-        ShowWindow(_hwnd, SW_RESTORE);
+        if (IsWindowVisible(_hwnd)) HideWindow(); else ShowWindowRestore();
+    }
+
+    private void HideWindow()
+    {
+        _placement.length = Marshal.SizeOf(typeof(WINDOWPLACEMENT));
+        _havePlacement = GetWindowPlacement(_hwnd, ref _placement); // remember size + maximized state
+        ShowWindow(_hwnd, SW_HIDE);
+    }
+
+    private void ShowWindowRestore()
+    {
+        if (_havePlacement) SetWindowPlacement(_hwnd, ref _placement); // restore exact size/state
         ShowWindow(_hwnd, SW_SHOW);
         SetForegroundWindow(_hwnd);
-        _hidden = false;
     }
 
-    private void RemoveTray()
+    private void RemoveIcon()
     {
-        if (_hidden) Shell_NotifyIcon(NIM_DELETE, ref _nid);
+        if (_iconShown) { Shell_NotifyIcon(NIM_DELETE, ref _nid); _iconShown = false; }
     }
 
     private void ShowMenu()
@@ -175,7 +203,7 @@ public sealed class TrayIcon : MonoBehaviour
     {
         try
         {
-            RemoveTray();
+            RemoveIcon();
             if (_installed && _prevProc != IntPtr.Zero)
                 SetWindowLongPtr_Native(_hwnd, GWLP_WNDPROC, _prevProc); // restore the original proc
         }
