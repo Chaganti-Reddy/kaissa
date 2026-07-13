@@ -21,6 +21,11 @@ A page-by-page rebuild and expansion of the training and study screens, each don
 - Practice generator: the Puzzles page gained a Weakness mode that builds a tailored set on demand from the patterns your history marks weakest (falling back to a band around your rating for new players), alongside the existing rating-band and theme feeds.
 - Analysis board editor: set up any position by hand on the 2D board - a piece palette to stamp squares, an eraser, side-to-move and castling toggles, clear and reset, then apply to load and analyze it (FEN paste still works too).
 - Play page: the name plates now show each side's rating and a captured-piece tray drawn with the real piece art plus a running material-advantage number, and you can choose to play White, Black, or a random colour before the game.
+- Game Review: the post-game review now marks each of your moves with a colour-coded quality badge (best, excellent, good, inaccuracy, mistake, blunder) and draws a clickable advantage graph across the game; click a point to jump to that move.
+- Puzzles: a "Review misses" mode replays the puzzles you got wrong or gave up on.
+- Home: a Rematch card offers your last opponent again at the same time control, one click.
+- Settings: new options - highlight last move, piece-animation speed, confirm resign, low-time warning, and (Windows) minimize to a system-tray icon.
+- Learn: lessons are now scored 1-3 crowns based on a clean run, shown on each lesson.
 - Board Vision and Coordinates: rebuilt into timed 30-second drills with a score, a per-run best, and start/game-over screens. Board Vision asks light-or-dark (L/D keys); Coordinates shows a square to click, lets you pick your side and hide the labels to train recall, flashes green on a hit and reveals the right square on a miss.
 - Stats: rebuilt into an Insights dashboard - headline stat tiles, a rating-over-time chart, tier and XP progression, puzzle / Puzzle Blitz / play summaries, and the per-pattern mastery map, with a one-tap drill of your weakest motif.
 - Analysis: rebuilt into a full analysis board - an evaluation bar, several engine lines at once (click one to play it), a best-move arrow and an optional threat arrow, a clickable move list, the opening name, load-a-FEN and copy FEN/PGN, and play-vs-computer from the current position. Works on the 2D or 3D board.
