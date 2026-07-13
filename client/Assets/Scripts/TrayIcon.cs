@@ -137,13 +137,7 @@ public sealed class TrayIcon : MonoBehaviour
             {
                 int ev = lParam.ToInt32();
                 if (ev == WM_LBUTTONUP || ev == WM_LBUTTONDBLCLK) ToggleWindow();
-                else if (ev == WM_RBUTTONUP) ShowMenu();
-            }
-            else if (msg == WM_COMMAND)
-            {
-                int id = wParam.ToInt32() & 0xFFFF;
-                if (id == IDM_RESTORE) ShowWindowRestore();
-                else if (id == IDM_QUIT) { _quitting = true; RemoveIcon(); Application.Quit(); }
+                else if (ev == WM_RBUTTONUP) ShowMenu(); // ShowMenu acts on the chosen item directly
             }
         }
         catch (Exception e) { Debug.LogWarning($"TrayIcon proc: {e.Message}"); }
@@ -194,9 +188,12 @@ public sealed class TrayIcon : MonoBehaviour
         AppendMenu(menu, MF_STRING, IDM_RESTORE, "Restore");
         AppendMenu(menu, MF_STRING, IDM_QUIT, "Quit");
         GetCursorPos(out var p);
-        SetForegroundWindow(_hwnd);
-        TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, p.X, p.Y, 0, _hwnd, IntPtr.Zero);
+        SetForegroundWindow(_hwnd); // so the menu dismisses correctly and TrackPopupMenu returns the pick
+        // TPM_RETURNCMD makes TrackPopupMenu RETURN the chosen id (it does not post WM_COMMAND), so act on it here.
+        int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, p.X, p.Y, 0, _hwnd, IntPtr.Zero);
         DestroyMenu(menu);
+        if (cmd == IDM_RESTORE) ShowWindowRestore();
+        else if (cmd == IDM_QUIT) { _quitting = true; RemoveIcon(); Application.Quit(); }
     }
 
     private void OnApplicationQuit()
