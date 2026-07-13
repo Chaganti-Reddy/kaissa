@@ -542,7 +542,7 @@ public sealed class KaissaGameController : MonoBehaviour
                 var review = await _game.ReviewAsync();
                 _statusLabel.text = $"Game over: {outcome.Result}. {review.Accuracy:0.0}% accuracy, " +
                                     $"{review.Mistakes.Count} mistake(s); {review.Practice.Count} to practice.  N: new game";
-                EnterReview(review);
+                EnterReview(review, ResultForPlayer(outcome.Result));
             }
             else
             {
@@ -588,7 +588,7 @@ public sealed class KaissaGameController : MonoBehaviour
             var review = await _game.ReviewAsync();
             _statusLabel.text = $"You resigned. {review.Accuracy:0.0}% accuracy, {review.Mistakes.Count} mistake(s); " +
                                 $"{review.Practice.Count} to practice.  N: new game";
-            EnterReview(review);
+            EnterReview(review, 0); // resigning is a loss
         }
         catch (Exception e)
         {
@@ -740,11 +740,20 @@ public sealed class KaissaGameController : MonoBehaviour
         return l;
     }
 
-    private void EnterReview(GameReviewResult review)
+    // Player-perspective result of a finished game: 2 win, 1 draw, 0 loss.
+    private int ResultForPlayer(string result) => result switch
+    {
+        "WhiteWins" => _playerWhite ? 2 : 0,
+        "BlackWins" => _playerWhite ? 0 : 2,
+        "Draw" => 1,
+        _ => 1,
+    };
+
+    private void EnterReview(GameReviewResult review, int result = 1)
     {
         if (review.Practice.Count > 0) KaissaPractice.Add(review.Practice);
         SaveRating();
-        KaissaGameLog.Record(review.Accuracy);
+        KaissaGameLog.Record(review.Accuracy, result);
 
         _reviewMoves = _game.MoveHistory;
         _reviewSan = _game.MoveHistorySan();

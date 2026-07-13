@@ -12,6 +12,7 @@ public static class KaissaGameLog
     private sealed class Data
     {
         public List<double> accuracies = new();
+        public List<int> results = new(); // parallel to accuracies: 0 loss, 1 draw, 2 win
     }
 
     private const int MaxEntries = 100;
@@ -31,11 +32,20 @@ public static class KaissaGameLog
     public static int Count => D.accuracies.Count;
     public static double Average => D.accuracies.Count == 0 ? 0 : D.accuracies.Average();
 
-    public static void Record(double accuracy)
+    // The most recent up-to-n game accuracies, oldest-first.
+    public static IReadOnlyList<double> Recent(int n) =>
+        D.accuracies.Skip(Math.Max(0, D.accuracies.Count - n)).ToList();
+
+    public static int Wins => D.results.Count(r => r == 2);
+    public static int Draws => D.results.Count(r => r == 1);
+    public static int Losses => D.results.Count(r => r == 0);
+
+    public static void Record(double accuracy, int result = 1)
     {
         D.accuracies.Add(accuracy);
-        if (D.accuracies.Count > MaxEntries)
-            D.accuracies.RemoveRange(0, D.accuracies.Count - MaxEntries);
+        D.results.Add(result);
+        if (D.accuracies.Count > MaxEntries) D.accuracies.RemoveRange(0, D.accuracies.Count - MaxEntries);
+        if (D.results.Count > MaxEntries) D.results.RemoveRange(0, D.results.Count - MaxEntries);
         File.WriteAllText(Path, JsonUtility.ToJson(D));
     }
 }

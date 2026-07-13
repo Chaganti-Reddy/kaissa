@@ -55,6 +55,7 @@ public sealed class StatsController : MonoBehaviour
         BuildRatingTrend(main, stats);
         BuildProgression(main, standing);
         BuildSummaryRow(main, stats);
+        BuildRecentGames(main);
         BuildMastery(main, trainer, stats);
 
         root.Add(scroll);
@@ -227,6 +228,43 @@ public sealed class StatsController : MonoBehaviour
         row.Add(play);
 
         main.Add(row);
+    }
+
+    // Recent games insights: win/loss/draw split + a bar chart of the last dozen game accuracies.
+    private void BuildRecentGames(VisualElement main)
+    {
+        if (KaissaGameLog.Count == 0) return;
+        var (card, body) = Card("Recent games");
+
+        int w = KaissaGameLog.Wins, d = KaissaGameLog.Draws, l = KaissaGameLog.Losses;
+        var wld = UiKit.Row(); wld.style.marginBottom = 8;
+        wld.Add(Pill($"{w}W", UiKit.GreenHi));
+        wld.Add(Pill($"{d}D", UiKit.Dim));
+        wld.Add(Pill($"{l}L", UiKit.Danger));
+        body.Add(wld);
+
+        var recent = KaissaGameLog.Recent(12);
+        var chart = new VisualElement { name = "recentchart" };
+        chart.style.height = 70; chart.style.flexDirection = FlexDirection.Row; chart.style.alignItems = Align.FlexEnd;
+        foreach (var acc in recent)
+        {
+            var col = new VisualElement();
+            col.style.flexGrow = 1; col.style.marginRight = 3;
+            col.style.height = new Length((float)Math.Max(4, acc) , LengthUnit.Percent);
+            col.style.backgroundColor = acc >= 80 ? UiKit.GreenHi : acc >= 60 ? UiKit.Green : acc >= 40 ? UiKit.Gold : UiKit.Danger;
+            UiKit.Radius(col, 3);
+            chart.Add(col);
+        }
+        body.Add(chart);
+        body.Add(UiKit.Text_($"last {recent.Count} games - avg {KaissaGameLog.Average:0}% accuracy", 11, UiKit.Mute));
+        main.Add(card);
+    }
+
+    private static VisualElement Pill(string text, Color color)
+    {
+        var p = UiKit.Text_(text, 13, UiKit.Text, bold: true);
+        p.style.backgroundColor = color; UiKit.Pad(p, 4, 10, 4, 10); UiKit.Radius(p, 12); p.style.marginRight = 8;
+        return p;
     }
 
     private static void StatLine(VisualElement body, string label, string value)
