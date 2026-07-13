@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -7,18 +8,23 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Settings, redesigned in UI Toolkit: a list of setting rows, each a label + a value button that
-// cycles the option and rebuilds. Esc returns to the menu.
+// Settings, rebuilt: a live 2D board preview + theme swatches on the left, and grouped setting rows on
+// the right (board & pieces, gameplay, sound & display, data). Toggles read as on/off pills; the theme
+// and coordinate changes update the preview instantly. Reset asks for confirmation before wiping.
 public sealed class SettingsController : MonoBehaviour
 {
-    private VisualElement _list;
-    private string _resetLabel = "Reset progress";
+    private const string PreviewFen = "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQ1RK1 w kq - 0 1";
+
+    private VisualElement _root, _groups, _swatches, _boardHost;
+    private Board2D _preview;
+    private bool _confirmReset;
 
     private void Start()
     {
         EnsureEventSystem();
         var cam = Camera.main;
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
+        _preview = new Board2D(null);
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
         StartCoroutine(Build(doc));
@@ -27,59 +33,242 @@ public sealed class SettingsController : MonoBehaviour
     private IEnumerator Build(UIDocument doc)
     {
         yield return null;
-        var root = doc.rootVisualElement;
-        root.Clear();
-        root.style.flexDirection = FlexDirection.Row; root.style.flexGrow = 1; root.style.backgroundColor = UiKit.Bg;
-        root.Add(UiKit.NavRail("Settings"));
+        _root = doc.rootVisualElement;
+        _root.Clear();
+        _root.style.flexDirection = FlexDirection.Row; _root.style.flexGrow = 1; _root.style.backgroundColor = UiKit.Bg;
+        _root.Add(UiKit.NavRail("Settings"));
 
         var main = new VisualElement();
-        main.style.flexGrow = 1; UiKit.Pad(main, 26, 34, 34, 34);
+        main.style.flexGrow = 1; UiKit.Pad(main, 26, 34, 20, 34);
         main.Add(UiKit.Text_("Settings", 26, UiKit.Text, bold: true));
 
-        _list = new VisualElement();
-        _list.style.marginTop = 16; _list.style.maxWidth = 560;
-        main.Add(_list);
-        root.Add(main);
-        Refresh();
+        var cols = UiKit.Row(); cols.style.marginTop = 16; cols.style.flexGrow = 1; cols.style.alignItems = Align.FlexStart;
+
+        // left: live preview + theme swatches
+        var left = new VisualElement(); left.style.width = 320; left.style.marginRight = 24; left.style.flexShrink = 0;
+        var prevCard = Panel(); UiKit.Pad(prevCard, 14);
+        prevCard.Add(UiKit.Text_("PREVIEW", 11, UiKit.Mute, bold: true));
+        _boardHost = new VisualElement();
+        _boardHost.style.width = 280; _boardHost.style.height = 280; _boardHost.style.marginTop = 8;
+        _boardHost.Add(_preview.Root);
+        _preview.Root.style.width = 280; _preview.Root.style.height = 280;
+        prevCard.Add(_boardHost);
+        left.Add(prevCard);
+
+        var themeCard = Panel(); themeCard.style.marginTop = 14; UiKit.Pad(themeCard, 12, 14, 12, 14);
+        themeCard.Add(UiKit.Text_("Board theme", 12, UiKit.Mute, bold: true));
+        _swatches = new VisualElement();
+        _swatches.style.flexDirection = FlexDirection.Row; _swatches.style.flexWrap = Wrap.Wrap; _swatches.style.marginTop = 8;
+        themeCard.Add(_swatches);
+        left.Add(themeCard);
+        cols.Add(left);
+
+        // right: grouped settings
+        var scroll = new ScrollView(); scroll.style.flexGrow = 1; scroll.style.maxWidth = 620;
+        _groups = scroll.contentContainer;
+        cols.Add(scroll);
+
+        main.Add(cols);
+        _root.Add(main);
+
+        RefreshPreview();
+        RefreshSwatches();
+        RefreshGroups();
+
+        if (Environment.GetCommandLineArgs().Contains("-kaissa-settingstest"))
+            StartCoroutine(AutoDemo());
     }
 
-    private void Refresh()
+    // ---------------- preview + swatches ----------------
+
+    private void RefreshPreview()
     {
-        _list.Clear();
+        _preview.ShowCoordinates = KaissaSettings.Coordinates;
+        _preview.Render(PreviewFen, canMove: false, lastMove: null, whiteBottom: true);
+    }
+
+    private void RefreshSwatches()
+    {
+        _swatches.Clear();
+        for (int i = 0; i < Board3D.Themes.Length; i++)
+        {
+            int idx = i;
+            var th = Board3D.Themes[i];
+            bool selected = KaissaSettings.BoardTheme == i;
+
+            var sw = new VisualElement();
+            sw.style.width = 46; sw.style.height = 46; sw.style.marginRight = 8; sw.style.marginBottom = 8;
+            sw.style.flexDirection = FlexDirection.Row; sw.style.flexWrap = Wrap.Wrap; sw.style.overflow = Overflow.Hidden;
+            UiKit.Radius(sw, 8);
+            sw.style.borderTopWidth = sw.style.borderBottomWidth = sw.style.borderLeftWidth = sw.style.borderRightWidth = 2;
+            var edge = selected ? UiKit.Gold : UiKit.Line;
+            sw.style.borderTopColor = sw.style.borderBottomColor = sw.style.borderLeftColor = sw.style.borderRightColor = edge;
+            // 2x2 mini checker
+            AddCell(sw, th.Light); AddCell(sw, th.Dark); AddCell(sw, th.Dark); AddCell(sw, th.Light);
+            sw.tooltip = th.Name;
+            sw.RegisterCallback<ClickEvent>(_ =>
+            {
+                KaissaSettings.BoardTheme = idx;
+                RefreshPreview(); RefreshSwatches();
+            });
+            UiKit.Interactive(sw, 1.06f);
+            _swatches.Add(sw);
+        }
+        var name = UiKit.Text_(Board3D.Themes[Mathf.Clamp(KaissaSettings.BoardTheme, 0, Board3D.Themes.Length - 1)].Name, 13, UiKit.Text, bold: true);
+        name.style.width = Length.Percent(100); name.style.marginTop = 2;
+        _swatches.Add(name);
+    }
+
+    private static void AddCell(VisualElement parent, Color c)
+    {
+        var cell = new VisualElement();
+        cell.style.width = 21; cell.style.height = 21; cell.style.backgroundColor = c;
+        parent.Add(cell);
+    }
+
+    // ---------------- grouped settings ----------------
+
+    private void RefreshGroups()
+    {
+        _groups.Clear();
         var speeds = new[] { "Fast", "Normal", "Slow" };
-        Row("Sound", KaissaSettings.Sound ? "On" : "Off", () => KaissaSettings.Sound = !KaissaSettings.Sound);
-        Row("Move by", KaissaSettings.DragToMove ? "Drag or click" : "Click only", () => KaissaSettings.DragToMove = !KaissaSettings.DragToMove);
-        Row("Move hints", KaissaSettings.MoveHints ? "On" : "Off (train recall)", () => KaissaSettings.MoveHints = !KaissaSettings.MoveHints);
-        Row("Auto-queen", KaissaSettings.AutoQueen ? "On" : "Off", () => KaissaSettings.AutoQueen = !KaissaSettings.AutoQueen);
-        Row("Bot speed", speeds[Mathf.Clamp(KaissaSettings.BotSpeed, 0, 2)], () => KaissaSettings.BotSpeed = (KaissaSettings.BotSpeed + 1) % 3);
-        Row("Display", KaissaSettings.Fullscreen ? "Fullscreen" : "Maximized", () => { KaissaSettings.Fullscreen = !KaissaSettings.Fullscreen; WindowMode.Apply(); });
-        Row("Board", KaissaSettings.BoardView == 1 ? "3D" : "2D", () => KaissaSettings.BoardView = KaissaSettings.BoardView == 1 ? 0 : 1);
-        Row("Eval bar (Play)", KaissaSettings.EvalBar ? "On" : "Off", () => KaissaSettings.EvalBar = !KaissaSettings.EvalBar);
-        Row("Flip board", KaissaSettings.Flip ? "On" : "Off", () => KaissaSettings.Flip = !KaissaSettings.Flip);
-        Row("Board theme", Board3D.Themes[Mathf.Clamp(KaissaSettings.BoardTheme, 0, Board3D.Themes.Length - 1)].Name,
-            () => KaissaSettings.BoardTheme = (KaissaSettings.BoardTheme + 1) % Board3D.Themes.Length);
-        Row("Pieces", KaissaSettings.UseModels ? "Modeled" : "Simple", () => KaissaSettings.UseModels = !KaissaSettings.UseModels);
-        Row("Coordinates", KaissaSettings.Coordinates ? "On" : "Off", () => KaissaSettings.Coordinates = !KaissaSettings.Coordinates);
-        Row(_resetLabel, "Reset", () => { KaissaProgress.Clear(); _resetLabel = "Progress reset"; });
+
+        var board = Group("Board & pieces");
+        Toggle(board, "Board style", KaissaSettings.BoardView == 1 ? "3D" : "2D",
+            () => { KaissaSettings.BoardView = KaissaSettings.BoardView == 1 ? 0 : 1; });
+        Toggle(board, "3D pieces", KaissaSettings.UseModels ? "Modeled" : "Simple",
+            () => KaissaSettings.UseModels = !KaissaSettings.UseModels);
+        Toggle(board, "Coordinates", KaissaSettings.Coordinates ? "On" : "Off",
+            () => { KaissaSettings.Coordinates = !KaissaSettings.Coordinates; RefreshPreview(); });
+        Toggle(board, "Flip to side to move", KaissaSettings.Flip ? "On" : "Off",
+            () => KaissaSettings.Flip = !KaissaSettings.Flip);
+
+        var play = Group("Gameplay");
+        Toggle(play, "Move by", KaissaSettings.DragToMove ? "Drag or click" : "Click only",
+            () => KaissaSettings.DragToMove = !KaissaSettings.DragToMove);
+        Toggle(play, "Move hints", KaissaSettings.MoveHints ? "On" : "Off (train recall)",
+            () => KaissaSettings.MoveHints = !KaissaSettings.MoveHints);
+        Toggle(play, "Auto-queen", KaissaSettings.AutoQueen ? "On" : "Off",
+            () => KaissaSettings.AutoQueen = !KaissaSettings.AutoQueen);
+        Toggle(play, "Eval bar (Play)", KaissaSettings.EvalBar ? "On" : "Off",
+            () => KaissaSettings.EvalBar = !KaissaSettings.EvalBar);
+        Toggle(play, "Bot speed", speeds[Mathf.Clamp(KaissaSettings.BotSpeed, 0, 2)],
+            () => KaissaSettings.BotSpeed = (KaissaSettings.BotSpeed + 1) % 3);
+
+        var disp = Group("Sound & display");
+        Toggle(disp, "Sound", KaissaSettings.Sound ? "On" : "Off",
+            () => KaissaSettings.Sound = !KaissaSettings.Sound);
+        Toggle(disp, "Display", KaissaSettings.Fullscreen ? "Fullscreen" : "Maximized",
+            () => { KaissaSettings.Fullscreen = !KaissaSettings.Fullscreen; WindowMode.Apply(); });
+
+        var data = Group("Data");
+        var resetRow = ResetRow();
+        data.Add(resetRow);
     }
 
-    private void Row(string label, string value, Action onToggle)
+    private VisualElement Group(string title)
     {
-        var l = UiKit.Text_(label, 15, UiKit.Text, bold: true);
-        l.style.flexGrow = 1;
-        var btn = UiKit.Ghost(value, () => { onToggle(); Refresh(); }, 13);
-        btn.style.minWidth = 160;
-        var row = UiKit.Row(l, btn);
-        row.style.justifyContent = Justify.SpaceBetween;
-        UiKit.Pad(row, 8, 8, 8, 8);
+        var card = Panel(); card.style.marginBottom = 14; UiKit.Pad(card, 6, 16, 12, 16);
+        var h = UiKit.Text_(title, 12, UiKit.Mute, bold: true); h.style.marginTop = 10; h.style.marginBottom = 4;
+        card.Add(h);
+        _groups.Add(card);
+        return card;
+    }
+
+    // A setting row: label on the left, a pill button on the right whose colour reflects the value.
+    private void Toggle(VisualElement group, string label, string value, Action onToggle)
+    {
+        var l = UiKit.Text_(label, 15, UiKit.Text, bold: true); l.style.flexGrow = 1;
+        var pill = UiKit.Ghost(value, () => { onToggle(); RefreshGroups(); }, 13);
+        pill.style.minWidth = 150;
+        bool on = value is "On" or "3D" or "Modeled" or "Drag or click" or "Fullscreen" || value.StartsWith("On");
+        pill.style.backgroundColor = on ? UiKit.Green : UiKit.Panel2;
+        var row = UiKit.Row(l, pill);
+        row.style.justifyContent = Justify.SpaceBetween; UiKit.Pad(row, 7, 4, 7, 4);
         row.style.borderBottomWidth = 1; row.style.borderBottomColor = UiKit.Line;
-        _list.Add(row);
+        group.Add(row);
+    }
+
+    private VisualElement ResetRow()
+    {
+        var l = UiKit.Text_("Reset progress", 15, UiKit.Text, bold: true); l.style.flexGrow = 1;
+        var btn = UiKit.Ghost(_confirmReset ? "Tap again to confirm" : "Reset", null, 13);
+        btn.style.minWidth = 170;
+        btn.style.backgroundColor = _confirmReset ? UiKit.Danger : UiKit.Panel2;
+        btn.clicked += () =>
+        {
+            if (!_confirmReset) { _confirmReset = true; RefreshGroups(); return; }
+            KaissaProgress.Clear();
+            _confirmReset = false;
+            RefreshGroups();
+            var done = UiKit.Text_("Progress reset.", 13, UiKit.GreenHi, bold: true);
+            done.style.marginTop = 6;
+            btn.parent.parent.Add(done);
+        };
+        var row = UiKit.Row(l, btn);
+        row.style.justifyContent = Justify.SpaceBetween; UiKit.Pad(row, 7, 4, 7, 4);
+        return row;
+    }
+
+    private static VisualElement Panel()
+    {
+        var p = new VisualElement();
+        p.style.backgroundColor = UiKit.Panel;
+        p.style.borderTopWidth = p.style.borderBottomWidth = p.style.borderLeftWidth = p.style.borderRightWidth = 1;
+        p.style.borderTopColor = p.style.borderBottomColor = p.style.borderLeftColor = p.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(p, 12);
+        return p;
     }
 
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             SceneManager.LoadScene("Menu");
+    }
+
+    // ---------------- self-test ----------------
+
+    private IEnumerator AutoDemo()
+    {
+        string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
+        System.IO.Directory.CreateDirectory(dir);
+
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_warmup.png"));
+        yield return new WaitForSeconds(1.0f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_top.png"));
+        yield return new WaitForSeconds(0.5f);
+
+        // Click a theme swatch (preview updates).
+        var sw = _swatches.Children().ElementAtOrDefault(3);
+        UiAutomation.Click(sw);
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_theme.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Toggle coordinates off (preview updates), and a couple of gameplay toggles.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "On"));   // first "On" pill
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_toggled.png"));
+        yield return new WaitForSeconds(0.4f);
+
+        // Reset progress -> confirm step -> confirm.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Reset"));
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_reset_confirm.png"));
+        yield return new WaitForSeconds(0.4f);
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Tap again to confirm"));
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_reset_done.png"));
+        yield return new WaitForSeconds(0.4f);
+        Application.Quit();
+    }
+
+    private static string ArgValue(string key)
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == key) return args[i + 1];
+        return null;
     }
 
     private static void EnsureEventSystem()

@@ -28,7 +28,8 @@ public sealed class ScreenshotHarness : MonoBehaviour
             && !args.Contains("-kaissa-rushtest") && !args.Contains("-kaissa-openingtest")
             && !args.Contains("-kaissa-endgametest") && !args.Contains("-kaissa-learntest")
             && !args.Contains("-kaissa-analysistest") && !args.Contains("-kaissa-statstest")
-            && !args.Contains("-kaissa-visiontest") && !args.Contains("-kaissa-coordtest"))
+            && !args.Contains("-kaissa-visiontest") && !args.Contains("-kaissa-coordtest")
+            && !args.Contains("-kaissa-settingstest"))
             return;
         Application.runInBackground = true; // harness must keep ticking even when the window is unfocused
         var go = new GameObject("ScreenshotHarness");
@@ -137,6 +138,14 @@ public sealed class ScreenshotHarness : MonoBehaviour
         {
             SceneManager.LoadScene("Coordinate");
             yield return new WaitForSeconds(20f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-settingstest"))
+        {
+            SceneManager.LoadScene("Settings");
+            yield return new WaitForSeconds(15f);
             Application.Quit();
             yield break;
         }

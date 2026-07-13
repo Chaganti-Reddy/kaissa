@@ -78,7 +78,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 ## Platform and UX
 
 - [x] Onboarding and rating calibration - `CalibrationSession`
-- [x] Settings: sound, move input, move hints, auto-queen, bot speed, board flip, board theme, piece style, coordinates, evaluation bar, reset
+- [x] Settings: a live board preview and theme swatches, with grouped toggles for sound, move input, move hints, auto-queen, bot speed, board flip, board style (2D/3D), piece style, coordinates, evaluation bar, display mode, and a confirm-guarded progress reset
 - [x] Shared board on every screen: drag or click, legal-move dots, highlights, sounds, premove, glide, promotion picker; a 2D or 3D board (toggle)
 - [x] Right-click annotations (arrows and square highlights) on both boards
 - [x] Consistent nav-rail / board / panel layout; springy hover and press feedback on clickable elements
