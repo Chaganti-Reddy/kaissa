@@ -37,8 +37,9 @@ public sealed class KaissaGameController : MonoBehaviour
     private IReadOnlyList<string> _reviewMoves;
     private IReadOnlyList<string> _reviewSan;
     private Dictionary<int, GameReviewItem> _reviewMistakes;
-    private Dictionary<int, string> _reviewAll;      // 0-based player ply -> move quality (all moves)
-    private IReadOnlyList<int> _reviewEval;           // player-POV cp after each player move (eval graph)
+    private Dictionary<int, GameReviewItem> _reviewAll;  // 0-based ply -> assessed move (both sides)
+    private IReadOnlyList<int> _reviewEval;               // player-POV cp after each ply (eval graph)
+    private GameReviewResult _review;
     private VisualElement _graphHost;
 
     private VisualElement _root;
@@ -704,20 +705,24 @@ public sealed class KaissaGameController : MonoBehaviour
     // A move-quality badge (coloured dot) on a player-move cell during review.
     private void MaybeBadge(VisualElement cell, int ply0)
     {
-        if (!_reviewMode || _reviewAll == null || !_reviewAll.TryGetValue(ply0, out var quality)) return;
-        var dot = new VisualElement { pickingMode = PickingMode.Ignore, tooltip = quality };
+        if (!_reviewMode || _reviewAll == null || !_reviewAll.TryGetValue(ply0, out var item)) return;
+        var dot = new VisualElement { pickingMode = PickingMode.Ignore, tooltip = $"{item.Quality}: {item.Commentary}" };
         dot.style.position = Position.Absolute; dot.style.right = 4; dot.style.top = 5;
         dot.style.width = 9; dot.style.height = 9; UiKit.Radius(dot, 5);
-        dot.style.backgroundColor = QualityColor(quality);
+        dot.style.backgroundColor = QualityColor(item.Quality);
         cell.Add(dot);
     }
 
     private static Color QualityColor(string quality) => quality switch
     {
+        "Brilliant" => UiKit.Hex(0x1a, 0xba, 0xa6),  // teal
+        "Great" => UiKit.Hex(0x5b, 0x8f, 0xd6),      // blue
         "Best" => UiKit.GreenHi,
+        "Book" => UiKit.Hex(0xa1, 0x88, 0x6a),       // tan
         "Excellent" => UiKit.Green,
         "Good" => UiKit.GreenDeep,
         "Inaccuracy" => UiKit.Gold,
+        "Miss" => UiKit.Hex(0xd9, 0x6b, 0x2b),       // amber-red
         "Mistake" => UiKit.Hex(0xe0, 0x82, 0x3a),
         "Blunder" => UiKit.Danger,
         _ => UiKit.Mute,
@@ -752,32 +757,94 @@ public sealed class KaissaGameController : MonoBehaviour
         if (review.Practice.Count > 0) KaissaPractice.Add(review.Practice);
         SaveRating();
         KaissaGameLog.Record(review.Accuracy, result);
+        string playerSideName = _playerWhite ? "White" : "Black";
         KaissaGameLog.RecordReview(
-            System.Linq.Enumerable.Select(review.AllMoves, m => m.Quality),
+            review.AllMoves.Where(m => m.Side == playerSideName).Select(m => m.Quality),
             review.PhaseAccuracy.Opening, review.PhaseAccuracy.Middlegame, review.PhaseAccuracy.Endgame);
 
+        _review = review;
         _reviewMoves = _game.MoveHistory;
         _reviewSan = _game.MoveHistorySan();
         _reviewMistakes = new Dictionary<int, GameReviewItem>();
         foreach (var m in review.Mistakes)
             _reviewMistakes[(m.MoveNumber - 1) * 2 + (_playerWhite ? 0 : 1)] = m;
-        // Every player move's quality, keyed by 0-based ply, for the move-list badges.
-        _reviewAll = new Dictionary<int, string>();
+        // Every move (both sides), keyed by 0-based ply, for the badges and per-move commentary.
+        _reviewAll = new Dictionary<int, GameReviewItem>();
         foreach (var a in review.AllMoves)
-            _reviewAll[(a.MoveNumber - 1) * 2 + (_playerWhite ? 0 : 1)] = a.Quality;
+            _reviewAll[(a.MoveNumber - 1) * 2 + (a.Side == "White" ? 0 : 1)] = a;
         _reviewEval = review.EvalSeries;
         _reviewPly = _reviewMoves.Count;
         _reviewMode = true;
-        _matLabel.text = $"acc {review.Accuracy:0}%";
+        _matLabel.text = $"You {review.Accuracy:0}%   Bot {review.OpponentAccuracy:0}%";
         UpdateMoveList();
+        _graphHost.Clear();
+        BuildReviewStats();
         BuildEvalGraph();
+        BuildKeyMoments();
         RenderReviewPosition();
+    }
+
+    // A compact review summary: both players' accuracy, the single-game performance estimate, and the
+    // opening played with how far it stayed in book.
+    private void BuildReviewStats()
+    {
+        if (_review == null) return;
+        var panel = ReviewPanel("Summary");
+        panel.Add(ReviewLine($"Your accuracy", $"{_review.Accuracy:0}%", UiKit.GreenHi));
+        panel.Add(ReviewLine($"Bot accuracy", $"{_review.OpponentAccuracy:0}%", UiKit.Text));
+        panel.Add(ReviewLine("Performance", $"~{_review.PerformanceRating}", UiKit.Gold));
+        if (!string.IsNullOrEmpty(_review.OpeningName))
+        {
+            string eco = string.IsNullOrEmpty(_review.OpeningEco) ? "" : _review.OpeningEco + "  ";
+            panel.Add(ReviewLine("Opening", $"{eco}{_review.OpeningName}", UiKit.Dim));
+            if (_review.BookUntilMove > 0)
+                panel.Add(ReviewLine("In book until", $"move {_review.BookUntilMove}", UiKit.Dim));
+        }
+        _graphHost.Add(panel);
+    }
+
+    // The turning points: click one to jump the board there.
+    private void BuildKeyMoments()
+    {
+        if (_review == null || _review.KeyMoments.Count == 0) return;
+        var panel = ReviewPanel("Key moments");
+        foreach (var k in _review.KeyMoments)
+        {
+            int ply = (k.MoveNumber - 1) * 2 + (k.Side == "White" ? 0 : 1);
+            var row = UiKit.Row();
+            row.style.justifyContent = Justify.SpaceBetween; row.style.marginTop = 4;
+            row.Add(UiKit.Text_($"{k.MoveNumber}{(k.Side == "White" ? "." : "...")} {k.PlayedMoveSan}", 13, UiKit.Text));
+            row.Add(UiKit.Text_(k.Quality, 12, QualityColor(k.Quality), bold: true));
+            UiKit.Interactive(row, 1.02f);
+            row.RegisterCallback<ClickEvent>(_ => RowClicked(ply + 1));
+            panel.Add(row);
+        }
+        _graphHost.Add(panel);
+    }
+
+    private static VisualElement ReviewPanel(string title)
+    {
+        var p = new VisualElement();
+        p.style.backgroundColor = UiKit.Panel; p.style.marginTop = 12;
+        p.style.borderTopWidth = p.style.borderBottomWidth = p.style.borderLeftWidth = p.style.borderRightWidth = 1;
+        p.style.borderTopColor = p.style.borderBottomColor = p.style.borderLeftColor = p.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(p, 12); UiKit.Pad(p, 12, 14, 12, 14);
+        p.Add(UiKit.Text_(title, 12, UiKit.Mute, bold: true));
+        return p;
+    }
+
+    private static VisualElement ReviewLine(string label, string value, Color valueColor)
+    {
+        var row = UiKit.Row();
+        row.style.justifyContent = Justify.SpaceBetween; row.style.marginTop = 4;
+        row.Add(UiKit.Text_(label, 13, UiKit.Dim));
+        row.Add(UiKit.Text_(value, 13, valueColor, bold: true));
+        return row;
     }
 
     // A clickable advantage graph across the game (player POV): win-% area over the player's moves.
     private void BuildEvalGraph()
     {
-        _graphHost.Clear();
         if (_reviewEval == null || _reviewEval.Count == 0) return;
         var panel = new VisualElement();
         panel.style.backgroundColor = UiKit.Panel;
@@ -815,7 +882,7 @@ public sealed class KaissaGameController : MonoBehaviour
             var r = graph.contentRect;
             if (r.width <= 1f || eval.Count == 0) return;
             int idx = Mathf.Clamp(Mathf.RoundToInt(e.localPosition.x / r.width * (eval.Count - 1)), 0, eval.Count - 1);
-            RowClicked((idx) * 2 + (_playerWhite ? 1 : 2)); // player move idx -> 1-based ply
+            RowClicked(idx + 1); // eval is per ply: index i is the position after ply i+1
         });
         panel.Add(graph);
         _graphHost.Add(panel);
@@ -827,8 +894,8 @@ public sealed class KaissaGameController : MonoBehaviour
         RenderBoard(PositionAfter(_reviewPly), canMove: false);
         string move = _reviewPly > 0 && _reviewPly - 1 < _reviewSan.Count ? _reviewSan[_reviewPly - 1] : "start";
         string note = "";
-        if (_reviewPly > 0 && _reviewMistakes.TryGetValue(_reviewPly - 1, out var m))
-            note = $"   -   Mistake: best {m.BestMove} ({m.Quality})";
+        if (_reviewPly > 0 && _reviewAll != null && _reviewAll.TryGetValue(_reviewPly - 1, out var it))
+            note = $"   -   {it.Quality}. {it.Commentary}";
         _statusLabel.text = $"Review {_reviewPly}/{_reviewMoves.Count}: {move}   (<-/-> - N new){note}";
     }
 
