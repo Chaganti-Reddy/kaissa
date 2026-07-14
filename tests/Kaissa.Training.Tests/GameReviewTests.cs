@@ -56,7 +56,9 @@ public sealed class GameReviewTests
         var assessments = await analyzer.AnalyzeAsync(fen, moves, Side.White, cts.Token);
 
         var assessment = Assert.Single(assessments);
-        Assert.Equal(MoveQuality.Blunder, assessment.Quality);
+        // Best was mate (Ra8#) and White stayed winning after the quiet move: a missed chance, not a
+        // position-worsening blunder.
+        Assert.Equal(MoveQuality.Miss, assessment.Quality);
         Assert.Equal("a1a8", assessment.BestMove);
 
         // The blunder is turned into a practice scenario whose solution is the move that was missed.

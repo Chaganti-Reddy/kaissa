@@ -108,7 +108,7 @@ public sealed class MotifTests
     [InlineData("7k/Q7/5K2/8/8/8/8/8 w - - 0 1", "a7g7", "tactic.from_your_games")]
     public void A_missed_move_routes_to_the_pattern_for_its_motif(string fen, string best, string expectedPattern)
     {
-        var assessment = new MoveAssessment(0, fen, "0000", best, 900, MoveQuality.Blunder, 0);
+        var assessment = new MoveAssessment(0, Kaissa.Chess.Rules.Side.White, fen, "0000", "0000", best, best, 900, MoveQuality.Blunder, 0, -900);
         var scenario = Assert.Single(GamePractice.FromAssessments(new[] { assessment }));
         Assert.Equal(new PatternId(expectedPattern), scenario.Pattern);
         Assert.Equal(new[] { best }, scenario.Solutions);

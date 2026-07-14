@@ -1,3 +1,4 @@
+using Kaissa.Chess.Rules;
 using Kaissa.Training.Play;
 using Xunit;
 
@@ -6,7 +7,7 @@ namespace Kaissa.Training.Tests;
 public class AccuracyTests
 {
     private static MoveAssessment Move(int loss, int bestEvalCp = 0) =>
-        new(0, "8/8/8/8/8/8/8/8 w - - 0 1", "e2e4", "e2e4", loss, MoveQuality.Best, bestEvalCp);
+        new(0, Side.White, "8/8/8/8/8/8/8/8 w - - 0 1", "e2e4", "e4", "e2e4", "e4", loss, MoveQuality.Best, bestEvalCp, bestEvalCp - loss);
 
     [Fact]
     public void Perfect_play_is_100_percent()
@@ -45,7 +46,7 @@ public class AccuracyTests
     private const string KingAndPawn = "8/8/8/4k3/8/8/4P3/4K3 w - - 0 1";
 
     private static MoveAssessment MoveAt(string fen, int ply, int loss = 0) =>
-        new(ply, fen, "e2e4", "e2e4", loss, MoveQuality.Best, 0);
+        new(ply, Side.White, fen, "e2e4", "e4", "e2e4", "e4", loss, MoveQuality.Best, 0, -loss);
 
     [Fact]
     public void Phases_are_classified_by_material_and_move_number()

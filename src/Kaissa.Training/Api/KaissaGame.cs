@@ -125,26 +125,78 @@ public sealed class KaissaGame : IAsyncDisposable
         return new MoveOutcome(true, move, botMove, Board, _session.IsGameOver, Result);
     }
 
-    /// <summary>Reviews the game so far: the player's mistakes and the practice they generate.</summary>
+    /// <summary>
+    /// Reviews the whole game: per-move quality for both sides, each player's accuracy, the opening and
+    /// how long it stayed in book, the turning points, a performance estimate, and practice from the
+    /// player's mistakes.
+    /// </summary>
     public async Task<GameReviewResult> ReviewAsync(CancellationToken cancellationToken = default)
     {
-        var analyzer = new GameAnalyzer(_engine);
+        var book = Kaissa.Training.OpeningBook.LoadDefault();
+        var analyzer = new GameAnalyzer(_engine, book: book);
         var assessments = await analyzer.AnalyzeAsync(_session.StartFen, _session.MoveHistory, _playerSide, cancellationToken)
             .ConfigureAwait(false);
 
-        var allMoves = assessments
-            .Select(a => new GameReviewItem(a.Ply / 2 + 1, a.PlayedMove, a.BestMove, a.Quality.ToString(), a.CentipawnLoss))
-            .ToList();
-        var mistakes = assessments
-            .Where(a => a.Quality > MoveQuality.Inaccuracy)
-            .Select(a => new GameReviewItem(a.Ply / 2 + 1, a.PlayedMove, a.BestMove, a.Quality.ToString(), a.CentipawnLoss))
+        var (openingName, openingEco, bookUntil) = DetectOpening(book, _session.StartFen, _session.MoveHistory);
+
+        GameReviewItem ToItem(MoveAssessment a)
+        {
+            var motif = MoveClassifier.IsMistake(a.Quality)
+                ? MotifClassifier.Classify(a.Fen, a.BestMove)
+                : Motif.Unclassified;
+            string commentary = MoveCommentary.Describe(a, motif, a.Quality == MoveQuality.Book ? openingName : null);
+            return new GameReviewItem(a.Ply / 2 + 1, a.Side.ToString(), a.PlayedMove, a.PlayedMoveSan,
+                a.BestMove, a.BestMoveSan, a.Quality.ToString(), a.CentipawnLoss, commentary);
+        }
+
+        var allMoves = assessments.Select(ToItem).ToList();
+        var playerMoves = assessments.Where(a => a.Side == _playerSide).ToList();
+        var opponentMoves = assessments.Where(a => a.Side != _playerSide).ToList();
+
+        var mistakes = playerMoves.Where(a => MoveClassifier.IsMistake(a.Quality)).Select(ToItem).ToList();
+
+        double accuracy = AccuracyModel.GameAccuracy(playerMoves);
+        double opponentAccuracy = AccuracyModel.GameAccuracy(opponentMoves);
+
+        // Player-perspective evaluation after every ply - the curve for the advantage graph.
+        var evalSeries = assessments.Select(a => a.Side == _playerSide ? a.PlayedEvalCp : -a.PlayedEvalCp).ToList();
+        var phaseAccuracy = AccuracyModel.ByPhase(playerMoves);
+
+        // Turning points: brilliancies and the biggest errors, in game order.
+        var keyMoments = assessments
+            .Where(a => MoveClassifier.IsMistake(a.Quality) || a.Quality is MoveQuality.Brilliant or MoveQuality.Great)
+            .OrderByDescending(a => a.Quality is MoveQuality.Brilliant or MoveQuality.Great ? 1_000_000 : a.CentipawnLoss)
+            .Take(4)
+            .OrderBy(a => a.Ply)
+            .Select(ToItem)
             .ToList();
 
-        double accuracy = AccuracyModel.GameAccuracy(assessments);
-        // Player-perspective evaluation after each of the player's moves - the curve for the eval graph.
-        var evalSeries = assessments.Select(a => a.BestEvalCp - a.CentipawnLoss).ToList();
-        var phaseAccuracy = AccuracyModel.ByPhase(assessments);
-        return new GameReviewResult(mistakes, GamePractice.FromAssessments(assessments), accuracy, evalSeries, phaseAccuracy, allMoves);
+        int performance = PerformanceRating.Estimate(accuracy, _session.OpponentElo);
+        var practice = GamePractice.FromAssessments(playerMoves);
+
+        return new GameReviewResult(mistakes, practice, accuracy, opponentAccuracy, evalSeries, phaseAccuracy,
+            allMoves, keyMoments, openingName, openingEco, bookUntil, performance);
+    }
+
+    // Walks the game against the opening book: the opening is the deepest named position reached while
+    // every move so far was still a book continuation; bookUntil is that last full-move number.
+    private static (string Name, string Eco, int BookUntil) DetectOpening(
+        Kaissa.Training.OpeningBook book, string startFen, IReadOnlyList<string> moves)
+    {
+        var game = ChessGame.FromFen(startFen);
+        string name = "", eco = "";
+        int bookUntil = 0, ply = 0;
+        foreach (var move in moves)
+        {
+            bool inBook = book.Continuations(game.Fen)
+                .Any(c => string.Equals(c.Uci, move, StringComparison.OrdinalIgnoreCase));
+            if (!game.TryMakeMove(move)) break;
+            ply++;
+            if (!inBook) break;
+            bookUntil = (ply - 1) / 2 + 1;
+            if (book.Name(game.Fen) is { } e) { name = e.Name; eco = e.Eco; }
+        }
+        return (name, eco, bookUntil);
     }
 
     public ValueTask DisposeAsync() => _ownsEngine ? _engine.DisposeAsync() : default;
