@@ -31,7 +31,6 @@ public static class UiKit
 
     public static Color Hex(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f);
 
-    // ---- clickable interaction feedback ----
     // A springy, glassy feel on anything clickable: a smooth scale "pop" on hover with a slight
     // overshoot (EaseOutBack) and a quick press-in on mouse-down. Applied via inline style transitions
     // so no stylesheet asset is needed. Call Interactive(e) on buttons, nav items, and rows.

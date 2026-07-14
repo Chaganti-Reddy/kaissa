@@ -53,7 +53,6 @@ public sealed class MainMenuController : MonoBehaviour
             StartCoroutine(AutoDemo());
     }
 
-    // ---- main content ----
     private VisualElement BuildMain()
     {
         var scroll = new ScrollView(); scroll.style.flexGrow = 1;
@@ -214,7 +213,6 @@ public sealed class MainMenuController : MonoBehaviour
         return p;
     }
 
-    // ---- first-run welcome overlay ----
     private VisualElement BuildWelcome()
     {
         var dim = new VisualElement();
@@ -254,7 +252,6 @@ public sealed class MainMenuController : MonoBehaviour
 #endif
     }
 
-    // ---- self-test ----
     private IEnumerator AutoDemo()
     {
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");

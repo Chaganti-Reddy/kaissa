@@ -404,8 +404,6 @@ public sealed class BoardInteractor : MonoBehaviour
         BoardFx.ClearPremove(_root);
     }
 
-    // ----- right-click annotations (3D) -----
-
     private static Color AnnColor()
     {
         var kb = Keyboard.current;
@@ -510,8 +508,6 @@ public sealed class BoardInteractor : MonoBehaviour
         AddArrow("g1", "f3", AnnGreen);
         AddArrow("e2", "e4", AnnRed);
     }
-
-    // ----- geometry / lookup helpers -----
 
     private bool Raycast(Mouse mouse, out string square, out bool isPiece, out char pieceChar)
     {

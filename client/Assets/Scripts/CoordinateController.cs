@@ -100,8 +100,6 @@ public sealed class CoordinateController : MonoBehaviour
             ShowStartOverlay();
     }
 
-    // ---------------- run lifecycle ----------------
-
     private void ShowStartOverlay()
     {
         _running = false;
@@ -232,8 +230,6 @@ public sealed class CoordinateController : MonoBehaviour
         _overlayHost.Add(dim);
     }
 
-    // ---------------- helpers ----------------
-
     private VisualElement Overlay()
     {
         _overlayHost.Clear();
@@ -272,8 +268,6 @@ public sealed class CoordinateController : MonoBehaviour
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             SceneTransition.Go("Menu");
     }
-
-    // ---------------- self-test ----------------
 
     private IEnumerator AutoDemo()
     {

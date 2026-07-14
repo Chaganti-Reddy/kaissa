@@ -5,7 +5,6 @@ using UnityEngine;
 // head). Fully procedural - our IP, no assets. A single capsule collider on the root handles clicks.
 public static class PieceFactory
 {
-    // Marble ivory vs polished obsidian.
     private static readonly Color White = new(0.94f, 0.91f, 0.84f);
     private static readonly Color Black = new(0.07f, 0.07f, 0.10f);
 

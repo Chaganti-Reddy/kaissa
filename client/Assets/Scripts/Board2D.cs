@@ -430,9 +430,7 @@ public sealed class Board2D : IBoardView
             }
     }
 
-    // A press records the square; a drag past a threshold picks the piece up; release either drops it
-    // (drag) or, if it barely moved, is treated as a click/tap (select then move).
-    // --- hooks for the automated interaction harness (drive states, then screenshot) ---
+    // Hooks for the automated interaction harness (drive states, then screenshot).
     public void DebugSelect(string sq)
     {
         var game = SafeGame(_fen);

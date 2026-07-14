@@ -37,7 +37,6 @@ public static class EndgameLibrary
 {
     public static IReadOnlyList<EndgamePosition> All { get; } = new[]
     {
-        // ---- Checkmates: drive the lone king to the edge and mate ----
         new EndgamePosition("mate_kq", "Checkmates", "Queen mate",
             "8/8/8/4k3/8/8/2Q5/4K3 w - - 0 1", DrillGoal.Win,
             "Box the king in with the queen a knight's move away, bring your king up, then mate."),
@@ -51,7 +50,6 @@ public static class EndgameLibrary
             "4k3/8/8/8/8/8/8/2B1KB2 w - - 0 1", DrillGoal.Win,
             "The bishops build a wall; drive the king into a corner with the king's help."),
 
-        // ---- King and pawn: the foundations ----
         new EndgamePosition("kp_opposition", "King & Pawn", "The opposition",
             "8/8/8/4k3/8/4K3/4P3/8 w - - 0 1", DrillGoal.Win,
             "Take the opposition to force the enemy king aside and escort the pawn home."),
@@ -62,12 +60,10 @@ public static class EndgameLibrary
             "8/4P3/4k3/8/8/8/8/4K3 w - - 0 1", DrillGoal.Promote,
             "Shepherd the pawn to the eighth rank and promote."),
 
-        // ---- King and pawn: converting an extra pawn ----
         new EndgamePosition("kp_two", "King & Pawn", "Two connected pawns",
             "8/8/8/3k4/8/3K4/2PP4/8 w - - 0 1", DrillGoal.Win,
             "Advance the connected pawns side by side, each guarding the other's square, and promote."),
 
-        // ---- Minor piece: an extra minor plus a pawn is winning ----
         new EndgamePosition("mp_bishop", "Minor Piece", "Bishop and pawn",
             "8/8/8/4k3/8/4K3/3BP3/8 w - - 0 1", DrillGoal.Win,
             "Escort the pawn with the king and bishop; the bishop covers the promotion square."),
@@ -75,7 +71,6 @@ public static class EndgameLibrary
             "8/8/8/4k3/8/4K1N1/4P3/8 w - - 0 1", DrillGoal.Win,
             "Shepherd the pawn with the king while the knight controls key squares, then promote."),
 
-        // ---- Rook endgames: the most common ending (both FENs engine-verified) ----
         new EndgamePosition("rk_lucena", "Rook", "Win with the Lucena",
             "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1", DrillGoal.Win,
             "Build a bridge: shield your king from the checks with the rook, then escort the pawn in."),
@@ -83,7 +78,6 @@ public static class EndgameLibrary
             "3k4/8/3K4/3P4/8/8/1r6/3R4 b - - 0 1", DrillGoal.Draw,
             "King in front of the pawn, rook active from behind - a single extra pawn cannot break through."),
 
-        // ---- Queen technique ----
         new EndgamePosition("q_vs_p", "Queen", "Queen vs pawn",
             "8/8/8/8/8/1k6/1p6/4K1Q1 w - - 0 1", DrillGoal.Win,
             "Approach with checks that gain a tempo to stop the pawn, then win it."),

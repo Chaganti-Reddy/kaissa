@@ -53,7 +53,7 @@ public static class KaissaGameLog
         File.WriteAllText(Path, JsonUtility.ToJson(D));
     }
 
-    // Cumulative move-quality mix + per-phase accuracy from a game review (the deeper insights).
+    // Cumulative move-quality mix + per-phase accuracy from a game review.
     public static void RecordReview(IEnumerable<string> moveQualities, double? open, double? mid, double? end)
     {
         while (D.quality.Count < 6) D.quality.Add(0);

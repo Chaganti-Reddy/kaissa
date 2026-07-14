@@ -22,7 +22,6 @@ public sealed class TrayIcon : MonoBehaviour
         go.AddComponent<TrayIcon>();
     }
 
-    // ---- Win32 ----
     private const int GWLP_WNDPROC = -4;
     private const int WM_USER = 0x0400;
     private const int WM_TRAYICON = WM_USER + 1;
@@ -32,8 +31,7 @@ public sealed class TrayIcon : MonoBehaviour
     private const int WM_LBUTTONUP = 0x0202;
     private const int WM_LBUTTONDBLCLK = 0x0203;
     private const int WM_RBUTTONUP = 0x0205;
-    private const int WM_COMMAND = 0x0111;
-    private const int SW_HIDE = 0, SW_SHOW = 5, SW_RESTORE = 9;
+    private const int SW_HIDE = 0, SW_SHOW = 5;
     private const uint NIM_ADD = 0, NIM_DELETE = 2;
     private const uint NIF_MESSAGE = 0x01, NIF_ICON = 0x02, NIF_TIP = 0x04;
     private const uint MF_STRING = 0x0000;

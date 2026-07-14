@@ -12,8 +12,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 // Insights / progress dashboard: headline stat tiles, a rating-over-time chart, tier + XP progression,
-// puzzle / Puzzle Blitz / play summaries, and the per-pattern mastery map - the player's pattern
-// library made visible, which is the point of the whole app. Read-only, no engine, no board.
+// puzzle / Puzzle Blitz / play summaries, and the per-pattern mastery map. Read-only, no engine, no board.
 public sealed class StatsController : MonoBehaviour
 {
     private IReadOnlyList<double> _ratingHistory = Array.Empty<double>();
@@ -97,8 +96,6 @@ public sealed class StatsController : MonoBehaviour
         return null;
     }
 
-    // ---------------- tiles ----------------
-
     private void BuildTiles(VisualElement main, PlayerStats stats, PuzzleProgression.TierStanding standing)
     {
         var row = UiKit.Row(); row.style.marginTop = 16; row.style.flexWrap = Wrap.Wrap;
@@ -121,8 +118,6 @@ public sealed class StatsController : MonoBehaviour
         if (!string.IsNullOrEmpty(sub)) t.Add(UiKit.Text_(sub, 12, UiKit.Dim));
         return t;
     }
-
-    // ---------------- rating trend chart ----------------
 
     private void BuildRatingTrend(VisualElement main, PlayerStats stats)
     {
@@ -162,21 +157,16 @@ public sealed class StatsController : MonoBehaviour
         float PlotX(int i) => (float)i / (h.Count - 1) * rect.width;
 
         var p = ctx.painter2D;
-        // baseline
         p.strokeColor = new Color(1, 1, 1, 0.08f); p.lineWidth = 1;
         p.BeginPath(); p.MoveTo(new Vector2(0, rect.height - padY)); p.LineTo(new Vector2(rect.width, rect.height - padY)); p.Stroke();
-        // rating line
         p.strokeColor = UiKit.GreenHi; p.lineWidth = 2.5f; p.lineJoin = LineJoin.Round; p.lineCap = LineCap.Round;
         p.BeginPath();
         p.MoveTo(new Vector2(PlotX(0), PlotY(h[0])));
         for (int i = 1; i < h.Count; i++) p.LineTo(new Vector2(PlotX(i), PlotY(h[i])));
         p.Stroke();
-        // end dot
         p.fillColor = UiKit.Gold;
         p.BeginPath(); p.Arc(new Vector2(PlotX(h.Count - 1), PlotY(h[^1])), 4f, 0f, 360f); p.Fill();
     }
-
-    // ---------------- progression ----------------
 
     private void BuildProgression(VisualElement main, PuzzleProgression.TierStanding standing)
     {
@@ -196,8 +186,6 @@ public sealed class StatsController : MonoBehaviour
         body.Add(UiKit.Text_(next, 12, UiKit.Dim));
         main.Add(card);
     }
-
-    // ---------------- summary row (puzzle / blitz / play) ----------------
 
     private void BuildSummaryRow(VisualElement main, PlayerStats stats)
     {
@@ -312,8 +300,6 @@ public sealed class StatsController : MonoBehaviour
         body.Add(r);
     }
 
-    // ---------------- mastery map ----------------
-
     private void BuildMastery(VisualElement main, KaissaTrainer trainer, PlayerStats stats)
     {
         var (card, body) = Card("Pattern mastery");
@@ -378,8 +364,6 @@ public sealed class StatsController : MonoBehaviour
         PuzzleProgression.Mastery.Learning => UiKit.Mute,
         _ => UiKit.Mute,
     };
-
-    // ---------------- helpers ----------------
 
     private static (VisualElement card, VisualElement body) Card(string title)
     {

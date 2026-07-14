@@ -4,12 +4,11 @@ namespace Kaissa.Training;
 
 /// <summary>
 /// The hybrid progression layer that sits on top of the skill rating. Rating measures strength;
-/// this measures <em>engagement and mastery</em>. Every solve earns XP (scaled by difficulty,
+/// this measures engagement and mastery. Every solve earns XP (scaled by difficulty,
 /// solving above your level, solving unaided, first-try, speed, and an in-session solve streak),
-/// XP rolls up into named tiers, and - the part chess.com does not do - each trained pattern gets
-/// its own mastery level derived from how well the spaced-repetition schedule says the chunk has
-/// consolidated. So a player sees not one league but a map of which patterns they have actually
-/// internalised. Pure logic, no Unity, so it is unit-testable and portable.
+/// XP rolls up into named tiers, and each trained pattern gets its own mastery level derived from
+/// how well the spaced-repetition schedule says the chunk has consolidated. Pure logic, no Unity,
+/// so it is unit-testable and portable.
 /// </summary>
 public static class PuzzleProgression
 {

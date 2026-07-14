@@ -33,11 +33,9 @@ public sealed class PromotionPicker : MonoBehaviour
         Hud.ConfigureScaler(canvasObj.AddComponent<CanvasScaler>());
         canvasObj.AddComponent<GraphicRaycaster>();
 
-        // Dim backdrop.
         var dim = NewImage(canvasObj.transform, new Color(0f, 0f, 0f, 0.55f));
         Stretch(dim.rectTransform);
 
-        // Centered panel.
         var panel = NewImage(canvasObj.transform, new Color(0.12f, 0.13f, 0.17f, 0.98f));
         panel.rectTransform.sizeDelta = new Vector2(520f, 190f);
         panel.rectTransform.anchoredPosition = Vector2.zero;

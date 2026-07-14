@@ -43,7 +43,7 @@ public static class Pieces
     }
 
     // Assign one consistent material to every renderer/slot so a piece reads the same regardless of
-    // whatever material the OBJ or procedural mesh shipped with. Ivory vs polished obsidian.
+    // whatever material the OBJ or procedural mesh shipped with.
     private static void ApplyMaterial(GameObject root, bool white)
     {
         var color = white ? new Color(0.86f, 0.83f, 0.76f) : new Color(0.11f, 0.11f, 0.14f);

@@ -11,13 +11,11 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Openings page, rebuilt to mirror chess.com's opening surface and layered with Kaissa's training.
-// Three modes share the board (IBoardView, so 2D or 3D):
-//   Explore - play any moves; the current position is named (ECO + opening) and its book continuations
-//             are listed with the opening each leads to; click one to play it.
-//   Learn   - browse 3,790 named openings grouped by first move, search by name, and step a mainline.
-//   Drill   - spaced-repetition recall of your repertoire lines (find the book move).
-// The opening book is the CC0 Lichess dataset, loaded off the main thread so the scene stays responsive.
+// Three modes share the board:
+//   Explore - play any moves; the position is named (ECO + opening) with its book continuations.
+//   Learn   - browse named openings grouped by first move, search, and step a mainline.
+//   Drill   - spaced-repetition recall of your repertoire lines.
+// The opening book is the CC0 Lichess dataset.
 public sealed class OpeningController : MonoBehaviour
 {
     private enum Mode { Explore, Learn, Drill }
@@ -29,15 +27,12 @@ public sealed class OpeningController : MonoBehaviour
     private PieceAudio _audio;
     private bool _whiteBottom = true;
 
-    // explore / learn shared played path
-    private readonly List<string> _path = new(); // UCI from the start
+    private readonly List<string> _path = new(); // UCI from the start, shared by explore and learn
     private string _fen = ChessGame.StartFen;
 
-    // learn
     private OpeningEntry _learnLine;
     private int _learnPly;
 
-    // drill
     private OpeningProgress _progress;
     private RepertoireSession _repertoire;
     private RepertoireCard _card;
@@ -95,8 +90,7 @@ public sealed class OpeningController : MonoBehaviour
             StartCoroutine(AutoDemo());
     }
 
-    // Self-test: exercises every mode and control with dense burst recording so the whole page can be
-    // verified frame-by-frame without a human (2D and 3D).
+    // Self-test: exercises every mode and control through the real input paths, with burst recording.
     private IEnumerator AutoDemo()
     {
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
@@ -107,11 +101,10 @@ public sealed class OpeningController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_warmup.png"));
         yield return new WaitForSeconds(0.6f);
 
-        // Explore: start position + book moves.
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_start.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Play into the Italian Game via the real board input path, filming each move.
+        // Play into the Italian Game.
         foreach (var mv in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" })
         {
             _board.DebugClickMove(mv.Substring(0, 2), mv.Substring(2, 2));
@@ -121,33 +114,29 @@ public sealed class OpeningController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_named.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Click a book-move row (real click) to play its continuation.
         UiAutomation.Click(_root.Q("bookrow"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_bookrow.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // Back + Reset buttons (real clicks).
         UiAutomation.Click(UiAutomation.FindButton(_root, "Back"));
         yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_back.png"));
         UiAutomation.Click(UiAutomation.FindButton(_root, "Reset"));
         yield return new WaitForSeconds(0.5f);
 
-        // Learn tab (real click).
         UiAutomation.Click(_tabLearn);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_list.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Search: set the field value (fires the same value-changed callback typing does).
+        // Setting the field value fires the same value-changed callback typing does.
         var search = _root.Q<TextField>();
         if (search != null) search.value = "Sicilian";
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_search.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Load a line by clicking an opening row (real click), then step with Prev/Next buttons.
         UiAutomation.Click(_root.Q("openrow"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_loaded.png"));
@@ -164,7 +153,7 @@ public sealed class OpeningController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_next.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Drill tab (real click): a correct recall, then a wrong one - both through the board input path.
+        // Drill: a correct recall, then a wrong one.
         UiAutomation.Click(_tabDrill);
         yield return new WaitForSeconds(0.7f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_drill_prompt.png"));
@@ -183,7 +172,6 @@ public sealed class OpeningController : MonoBehaviour
         }
         yield return new WaitForSeconds(0.8f);
 
-        // Flip (back in Explore) via the real Flip button.
         UiAutomation.Click(_tabExplore);
         yield return new WaitForSeconds(0.4f);
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
@@ -217,8 +205,6 @@ public sealed class OpeningController : MonoBehaviour
             if (args[i] == key) return args[i + 1];
         return null;
     }
-
-    // ---------------- layout ----------------
 
     private VisualElement BuildCenter()
     {
@@ -290,8 +276,6 @@ public sealed class OpeningController : MonoBehaviour
         return p;
     }
 
-    // ---------------- mode switching ----------------
-
     private void SetMode(Mode m)
     {
         _mode = m;
@@ -313,8 +297,6 @@ public sealed class OpeningController : MonoBehaviour
     {
         tab.style.backgroundColor = on ? UiKit.Green : UiKit.Panel2;
     }
-
-    // ---------------- explore ----------------
 
     private VisualElement _bookList;
 
@@ -374,8 +356,6 @@ public sealed class OpeningController : MonoBehaviour
         UiKit.Interactive(row, 1.02f);
         return row;
     }
-
-    // ---------------- learn ----------------
 
     private VisualElement _openingList;
 
@@ -484,8 +464,6 @@ public sealed class OpeningController : MonoBehaviour
         UpdateHistory();
     }
 
-    // ---------------- drill ----------------
-
     private void EnterDrill()
     {
         var panel = Panel(); UiKit.Pad(panel, 14, 16, 14, 16);
@@ -538,8 +516,6 @@ public sealed class OpeningController : MonoBehaviour
         _drillBusy = false;
         DrillNext();
     }
-
-    // ---------------- board input / shared ----------------
 
     private void OnPlayerMove(string uci)
     {
