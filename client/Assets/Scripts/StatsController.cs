@@ -74,6 +74,16 @@ public sealed class StatsController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_top.png"));
         yield return new WaitForSeconds(0.6f);
 
+        // Mid-scroll: the move-quality / phase / tactics insight cards (two depths to be sure to frame them).
+        _scroll.scrollOffset = new Vector2(0, 700f);
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_insights1.png"));
+        yield return new WaitForSeconds(0.3f);
+        _scroll.scrollOffset = new Vector2(0, 1150f);
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_insights2.png"));
+        yield return new WaitForSeconds(0.4f);
+
         _scroll.scrollOffset = new Vector2(0, 10000f);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_mastery.png"));
@@ -279,6 +289,31 @@ public sealed class StatsController : MonoBehaviour
             StatLine(pb, "Middlegame", m.HasValue ? $"{m:0}%" : "-");
             StatLine(pb, "Endgame", e.HasValue ? $"{e:0}%" : "-");
             main.Add(pc);
+        }
+
+        // Tactics found vs missed - the pattern-recognition scoreboard: green bar = share you took,
+        // red remainder = share you let slip, with the raw found/total on the right.
+        var tf = KaissaGameLog.TacticsFound; var tm = KaissaGameLog.TacticsMissed;
+        if (tf.Sum() + tm.Sum() > 0)
+        {
+            var (tc, tb) = Card("Tactics found vs missed");
+            for (int i = 0; i < 4; i++)
+            {
+                int f = tf[i], miss = tm[i], tot = f + miss;
+                var r = UiKit.Row(); r.style.alignItems = Align.Center; r.style.marginBottom = 5;
+                var name = UiKit.Text_(KaissaGameLog.TacticNames[i], 13, UiKit.Dim); name.style.width = 90;
+                r.Add(name);
+                var track = new VisualElement(); track.style.flexGrow = 1; track.style.height = 10; track.style.marginRight = 8;
+                track.style.backgroundColor = tot > 0 ? new Color(0.60f, 0.25f, 0.25f, 0.55f) : UiKit.Panel3;
+                UiKit.Radius(track, 5);
+                var fill = new VisualElement(); fill.style.height = 10; UiKit.Radius(fill, 5);
+                fill.style.width = new Length(tot > 0 ? 100f * f / tot : 0f, LengthUnit.Percent);
+                fill.style.backgroundColor = UiKit.GreenHi;
+                track.Add(fill); r.Add(track);
+                r.Add(UiKit.Text_($"{f}/{tot}", 13, UiKit.Text, bold: true));
+                tb.Add(r);
+            }
+            main.Add(tc);
         }
     }
 
