@@ -262,7 +262,6 @@ public sealed class MainMenuController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "home.png"));
         yield return new WaitForSeconds(0.6f);
 
-        // Real click the Play hero button -> routes to Play (proves the launcher wiring).
         UiAutomation.Click(UiAutomation.FindButton(_root, "Play"));
         yield return new WaitForSeconds(1.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "home_play.png"));

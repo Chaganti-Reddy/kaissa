@@ -473,7 +473,6 @@ public sealed class RushController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_warmup.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Mode picker overlay.
         ShowStartOverlay();
         yield return new WaitForSeconds(1.2f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"rush_{tag}_a_modes.png"));

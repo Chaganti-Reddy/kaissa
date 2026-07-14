@@ -42,7 +42,6 @@ Console.WriteLine();
 
 await engine.NewGameAsync(ct);
 
-// Full strength: top three candidate moves from the starting position.
 await engine.ConfigureStrengthAsync(StrengthSettings.Full, ct);
 var analysis = await engine.AnalyzeAsync("startpos", SearchLimits.ToDepth(18, multiPv: 3), ct);
 

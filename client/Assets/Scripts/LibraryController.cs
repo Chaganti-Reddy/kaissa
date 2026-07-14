@@ -233,7 +233,7 @@ public sealed class LibraryController : MonoBehaviour
         _audio.PlayVictory();
         Enable(_nextBtn, true); Enable(_hintBtn, false);
         _nextBtn.text = "Next lesson";
-        PopulateList(); // refresh the earned-crown display on the lesson rows
+        PopulateList();
     }
 
     private void OnMove(string uci)

@@ -231,7 +231,6 @@ public sealed class VisionController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "vision_playing.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Correct answer (light iff the square is light), then a deliberate wrong one, via real button clicks.
         bool isLight = BoardVision.IsLightSquare(_current);
         UiAutomation.Click(isLight ? _lightBtn : _darkBtn);
         yield return new WaitForSeconds(0.5f);

@@ -33,7 +33,6 @@ public sealed class Board2D : IBoardView
     private (int f, int r)? _sel;
     private string _lastMove;
 
-    // drag-to-move state
     private (int row, int col)? _downRC;
     private Vector2 _downPos;
     private string _dragFrom;
@@ -71,7 +70,6 @@ public sealed class Board2D : IBoardView
         UiKit.Radius(Root, 6);
         Root.style.overflow = Overflow.Hidden;
         Build();
-        // Size the piece glyphs to the board whenever it is laid out or resized.
         Root.RegisterCallback<GeometryChangedEvent>(e =>
         {
             int fs = Mathf.RoundToInt(e.newRect.width / 8f * 0.78f);
@@ -296,7 +294,6 @@ public sealed class Board2D : IBoardView
             }
         }
 
-        // last-move highlight (honoring the Highlight-move setting)
         if (KaissaSettings.HighlightMove && !string.IsNullOrEmpty(lastMove) && lastMove.Length >= 4)
         {
             Highlight(Sq(lastMove.Substring(0, 2)), Sel);

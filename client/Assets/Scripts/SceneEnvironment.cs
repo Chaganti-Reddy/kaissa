@@ -10,7 +10,7 @@ public static class SceneEnvironment
     {
         var texture = Resources.Load<Texture>("env");
         if (texture == null)
-            return; // HDRI not added yet
+            return;
 
         // Shader.Find only sees shaders the build kept. Skybox/Panoramic is referenced solely from
         // code, so it gets stripped from player builds and Find returns null - guard it, or the

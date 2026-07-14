@@ -74,7 +74,6 @@ public sealed class StatsController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_top.png"));
         yield return new WaitForSeconds(0.6f);
 
-        // Scroll down to the mastery map.
         _scroll.scrollOffset = new Vector2(0, 10000f);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_mastery.png"));
@@ -219,7 +218,6 @@ public sealed class StatsController : MonoBehaviour
         main.Add(row);
     }
 
-    // Recent games insights: win/loss/draw split + a bar chart of the last dozen game accuracies.
     private void BuildRecentGames(VisualElement main)
     {
         if (KaissaGameLog.Count == 0) return;
@@ -249,7 +247,6 @@ public sealed class StatsController : MonoBehaviour
         main.Add(card);
     }
 
-    // Deeper insights from finished games: your move-quality mix and accuracy by game phase.
     private void BuildInsights(VisualElement main)
     {
         var mix = KaissaGameLog.QualityMix;

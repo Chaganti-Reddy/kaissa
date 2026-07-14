@@ -23,7 +23,7 @@ public sealed class Board3DView : IBoardView
     {
         Board3D.SetupScene();
         if (Camera.main != null && Camera.main.GetComponent<CameraOrbit3D>() == null)
-            Camera.main.gameObject.AddComponent<CameraOrbit3D>(); // right-drag orbit, scroll zoom
+            Camera.main.gameObject.AddComponent<CameraOrbit3D>();
         _interactor = go.AddComponent<BoardInteractor>();
         _interactor.Init(onMove, audio);
     }

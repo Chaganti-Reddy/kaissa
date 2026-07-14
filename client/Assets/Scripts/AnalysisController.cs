@@ -675,7 +675,6 @@ public sealed class AnalysisController : MonoBehaviour
 
         yield return Shot(dir, tag, "warmup", 1.2f);
 
-        // Play into a known opening via the real board input path (eval + lines + best-move arrow appear).
         foreach (var mv in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1b5" })
         {
             _board.DebugClickMove(mv.Substring(0, 2), mv.Substring(2, 2));
@@ -684,19 +683,16 @@ public sealed class AnalysisController : MonoBehaviour
         yield return new WaitForSeconds(2.0f); // let the engine finish a depth-18 eval
         yield return Shot(dir, tag, "eval_lines", 0.8f);
 
-        // Threats arrow on.
         UiAutomation.Click(_threatsBtn);
         yield return new WaitForSeconds(2.0f);
         yield return Shot(dir, tag, "threats", 0.8f);
         UiAutomation.Click(_threatsBtn);
         yield return new WaitForSeconds(0.5f);
 
-        // Click an engine line to play it into the board.
         UiAutomation.Click(_root.Q("engineline"));
         yield return new WaitForSeconds(2.0f);
         yield return Shot(dir, tag, "played_line", 0.8f);
 
-        // Move-list navigation: click an earlier ply, and the nav buttons.
         UiAutomation.Click(_root.Q("movecell"));
         yield return new WaitForSeconds(1.2f);
         yield return Shot(dir, tag, "ply_jump", 0.6f);
@@ -706,7 +702,6 @@ public sealed class AnalysisController : MonoBehaviour
         yield return new WaitForSeconds(1.5f);
         yield return Shot(dir, tag, "nav_end", 0.6f);
 
-        // Load a FEN, then copy FEN/PGN (clipboard).
         _fenField.value = "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3";
         UiAutomation.Click(UiAutomation.FindButton(_root, "Load FEN"));
         yield return new WaitForSeconds(2.0f);
@@ -732,7 +727,6 @@ public sealed class AnalysisController : MonoBehaviour
         yield return new WaitForSeconds(1.8f);
         yield return Shot(dir, tag, "editor_applied", 0.6f);
 
-        // Flip.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
         yield return new WaitForSeconds(1.5f);
         yield return Shot(dir, tag, "flip", 0.6f);

@@ -104,7 +104,6 @@ public sealed class OpeningController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_explore_start.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Play into the Italian Game.
         foreach (var mv in new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" })
         {
             _board.DebugClickMove(mv.Substring(0, 2), mv.Substring(2, 2));
@@ -153,7 +152,6 @@ public sealed class OpeningController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_learn_next.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Drill: a correct recall, then a wrong one.
         UiAutomation.Click(_tabDrill);
         yield return new WaitForSeconds(0.7f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"op_{tag}_drill_prompt.png"));
@@ -375,7 +373,6 @@ public sealed class OpeningController : MonoBehaviour
         pick.Add(scroll);
         _rightRail.Add(pick);
 
-        // current line info reuses the name/eco labels
         var info = Panel(); info.style.marginTop = 14; UiKit.Pad(info, 12, 14, 12, 14);
         _nameLabel = UiKit.Text_("Pick an opening to study", 16, UiKit.Text, bold: true);
         _nameLabel.style.whiteSpace = WhiteSpace.Normal;
@@ -521,7 +518,7 @@ public sealed class OpeningController : MonoBehaviour
     {
         if (_book == null) return;
         if (_mode == Mode.Drill) { OnDrillMove(uci); return; }
-        PlayUci(uci); // explore + learn: play a move onto the current path
+        PlayUci(uci);
     }
 
     private void PlayUci(string uci)

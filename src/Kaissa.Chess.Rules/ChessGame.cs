@@ -2,14 +2,12 @@ using Chess;
 
 namespace Kaissa.Chess.Rules;
 
-/// <summary>Side to move.</summary>
 public enum Side
 {
     White,
     Black,
 }
 
-/// <summary>Outcome of a game.</summary>
 public enum GameResult
 {
     Ongoing,

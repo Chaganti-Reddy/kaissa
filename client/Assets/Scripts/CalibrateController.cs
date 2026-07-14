@@ -122,7 +122,7 @@ public sealed class CalibrateController : MonoBehaviour
         _scenario = _session.Next();
         if (_scenario == null) { Finish(); return; }
         var view = BoardView.FromFen(_scenario.Fen);
-        _whiteBottom = view.WhiteToMove; // always orient to the side to move
+        _whiteBottom = view.WhiteToMove;
         _board.Render(_scenario.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
         UpdateSideBadge(view.WhiteToMove);
         _progressLabel.text = $"Puzzle {_session.Answered + 1} of {_session.Total}";
@@ -288,7 +288,6 @@ public sealed class CalibrateController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"cal_{tag}_puzzle.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Solve the whole run by playing each puzzle's solution through the real board input path.
         int guard = 0;
         while (_running && _scenario != null && guard++ < Puzzles + 4)
         {

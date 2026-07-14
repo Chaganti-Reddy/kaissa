@@ -337,12 +337,11 @@ public sealed class EndgameController : MonoBehaviour
         _challenge = on; _chRunning = false;
         _timerLabel.text = "";
         RefreshModeChips();
-        if (!on) LoadDrill(_index); // back to free practice on the current drill
+        if (!on) LoadDrill(_index);
     }
 
     private void StartChallenge()
     {
-        // A fresh shuffled queue of ChallengeLen distinct drills.
         var all = Enumerable.Range(0, EndgameLibrary.All.Count).ToList();
         for (int i = all.Count - 1; i > 0; i--) { int j = _rng.Next(i + 1); (all[i], all[j]) = (all[j], all[i]); }
         _chQueue = all.Take(Mathf.Min(ChallengeLen, all.Count)).ToList();

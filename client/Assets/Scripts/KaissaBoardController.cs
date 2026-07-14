@@ -98,7 +98,6 @@ public sealed class KaissaBoardController : MonoBehaviour
 
         _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnPlayerMove(uci), _audio);
 
-        // Entry routing: Daily / themed drill / adaptive.
         if (DailyRoute.Active) { DailyRoute.Active = false; _mode = Mode.Daily; }
         else if (!string.IsNullOrEmpty(ThemeRoute.PatternId))
         {
@@ -155,7 +154,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_solved.png"));
 
-        // Next puzzle via the Next button.
         UiAutomation.Click(_nextBtn);
         yield return new WaitForSeconds(1.0f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_next.png"));
@@ -173,7 +171,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         yield return new WaitForSeconds(0.7f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_retry.png"));
 
-        // Themes: click the Themes chip to open the picker, capture it, then click a theme row.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Themes"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_themes.png"));
@@ -183,7 +180,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_theme_loaded.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // Difficulty: open the picker, capture it, then pick a band.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Difficulty"));
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_difficulty.png"));
@@ -199,7 +195,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_weakness.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // Back to the Rated feed.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Rated"));
         yield return new WaitForSeconds(0.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_rated.png"));
@@ -577,7 +572,6 @@ public sealed class KaissaBoardController : MonoBehaviour
             return;
         }
 
-        // correct
         TintMove(result.PlayerMove, Good);
 
         if (result.Outcome == PuzzleOutcome.Continue)

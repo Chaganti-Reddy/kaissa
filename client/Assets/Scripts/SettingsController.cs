@@ -48,8 +48,8 @@ public sealed class SettingsController : MonoBehaviour
 
         var cols = UiKit.Row(); cols.style.marginTop = 16; cols.style.flexGrow = 1; cols.style.alignItems = Align.FlexStart;
 
-        // left: live preview + theme / piece / sound pickers. Scrollable so every card is reachable
-        // even at short window heights (the pickers used to fall below the fold).
+        // Scrollable so every card is reachable even at short window heights (the pickers used to
+        // fall below the fold).
         var left = new ScrollView(ScrollViewMode.Vertical);
         left.style.width = 320; left.style.marginRight = 24; left.style.flexShrink = 0;
         left.style.alignSelf = Align.Stretch;
@@ -85,7 +85,6 @@ public sealed class SettingsController : MonoBehaviour
         left.Add(soundCard);
         cols.Add(left);
 
-        // right: grouped settings
         var scroll = new ScrollView(); scroll.style.flexGrow = 1; scroll.style.maxWidth = 620;
         _groups = scroll.contentContainer;
         cols.Add(scroll);
@@ -261,7 +260,6 @@ public sealed class SettingsController : MonoBehaviour
         return card;
     }
 
-    // A setting row: label on the left, a pill button on the right whose colour reflects the value.
     private void Toggle(VisualElement group, string label, string value, Action onToggle)
     {
         var l = UiKit.Text_(label, 15, UiKit.Text, bold: true); l.style.flexGrow = 1;
@@ -334,33 +332,28 @@ public sealed class SettingsController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_top.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Click a theme swatch (preview updates).
         var sw = _swatches.Children().ElementAtOrDefault(3);
         UiAutomation.Click(sw);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_theme.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Click a piece set (preview repaints with the new art).
         var ps = _pieceSets.Children().ElementAtOrDefault(3);
         UiAutomation.Click(ps);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_pieceset.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Pick a sound theme (plays a preview cue).
         UiAutomation.Click(UiAutomation.FindButton(_root, "Piano"));
         yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_sound.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Toggle coordinates off (preview updates), and a couple of gameplay toggles.
-        UiAutomation.Click(UiAutomation.FindButton(_root, "On"));   // first "On" pill
+        UiAutomation.Click(UiAutomation.FindButton(_root, "On"));
         yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_toggled.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Reset progress -> confirm step -> confirm.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Reset"));
         yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "settings_reset_confirm.png"));

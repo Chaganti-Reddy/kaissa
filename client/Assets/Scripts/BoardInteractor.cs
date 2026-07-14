@@ -138,7 +138,6 @@ public sealed class BoardInteractor : MonoBehaviour
         if (mouse == null)
             return;
 
-        // right-click annotations (any time); a left press clears them
         if (mouse.rightButton.wasPressedThisFrame)
             _rDownSquare = RaycastSquare(mouse);
         else if (mouse.rightButton.wasReleasedThisFrame && _rDownSquare != null)
@@ -237,7 +236,7 @@ public sealed class BoardInteractor : MonoBehaviour
         }
         else
         {
-            TryMove(_selected, square); // click-to-move onto a target square
+            TryMove(_selected, square);
         }
     }
 

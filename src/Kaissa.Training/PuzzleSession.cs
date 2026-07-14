@@ -15,7 +15,6 @@ public enum PuzzleOutcome
     Solved,
 }
 
-/// <summary>Outcome of a single submitted move.</summary>
 public sealed record PuzzleMoveResult(
     PuzzleOutcome Outcome,
     string PlayerMove,     // the player's move, in canonical UCI (as applied)
@@ -56,7 +55,6 @@ public sealed class PuzzleSession
     /// <summary>The starting position (solver to move), for the initial render.</summary>
     public string StartFen => _scenario.Fen;
 
-    /// <summary>The current position.</summary>
     public string Fen => _game.Fen;
 
     /// <summary>The opponent's setup move that led into <see cref="StartFen"/>, if any (for the load animation).</summary>
@@ -90,20 +88,18 @@ public sealed class PuzzleSession
         if (!correct && DeliversMate(uci))
         {
             _game.TryMakeMove(uci);
-            _index = _line.Count; // puzzle is over - mate ends it
+            _index = _line.Count;
             return new PuzzleMoveResult(PuzzleOutcome.Solved, played, expected, null, _game.Fen, _game.Fen);
         }
 
         if (!correct)
             return Miss(uci);
 
-        // Apply the canonical solver move.
         if (!_game.TryMakeMove(expectedRaw))
             return Miss(uci);
         var fenAfterPlayer = _game.Fen;
         _index++;
 
-        // Play the opponent's scripted reply, if the line continues.
         if (_index < _line.Count)
         {
             var reply = _line[_index];

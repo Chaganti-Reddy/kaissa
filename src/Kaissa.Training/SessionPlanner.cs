@@ -14,7 +14,6 @@ public sealed class SessionPlanner
         if (patterns.Count == 0)
             return null;
 
-        // 1. Anything due for review - most overdue first.
         var mostOverdue = model.Due(now)
             .OrderBy(c => c.DueUtc)
             .Select(c => (PatternId?)c.Pattern)
@@ -22,14 +21,12 @@ public sealed class SessionPlanner
         if (mostOverdue is not null)
             return mostOverdue;
 
-        // 2. A pattern the player has never seen.
         foreach (var pattern in patterns)
         {
             if (!model.Has(pattern))
                 return pattern;
         }
 
-        // 3. Everything seen and nothing due: reinforce the least stable (weakest) pattern.
         return model.Cards
             .OrderBy(c => c.State?.Stability ?? 0)
             .Select(c => c.Pattern)

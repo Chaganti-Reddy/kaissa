@@ -68,7 +68,7 @@ public sealed class AnalysisSession
             return false;
 
         if (_index < _moves.Count)
-            _moves.RemoveRange(_index, _moves.Count - _index); // branch: drop the old continuation
+            _moves.RemoveRange(_index, _moves.Count - _index);
         _moves.Add(uci);
         _index++;
         return true;

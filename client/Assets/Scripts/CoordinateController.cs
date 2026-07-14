@@ -181,7 +181,7 @@ public sealed class CoordinateController : MonoBehaviour
         {
             _busy = true;
             _board.HighlightSquare(square, Bad);
-            _board.HighlightSquare(_target, Good); // reveal the right square
+            _board.HighlightSquare(_target, Good);
             SetFeedback($"That was {square}. {_target} is here.", UiKit.Danger);
             StartCoroutine(ResumeAfter(0.9f));
         }
@@ -286,7 +286,6 @@ public sealed class CoordinateController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "coord_playing.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // A correct answer (tap the target square) then a wrong one, through the real square-click path.
         _board.DebugTapSquare(_target);
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "coord_correct.png"));
@@ -297,7 +296,6 @@ public sealed class CoordinateController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "coord_wrong.png"));
         yield return new WaitForSeconds(0.6f);
 
-        // Fast-forward to the end-of-run overlay.
         _timeLeft = 0.1f;
         yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "coord_gameover.png"));

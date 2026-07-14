@@ -95,8 +95,8 @@ public static class Pieces
     private static void AddKingCross(GameObject root)
     {
         float top = TargetHeight('K'); // piece is normalized to this height, base at y = 0
-        AddBar(root, new Vector3(0f, top + 0.11f, 0f), new Vector3(0.055f, 0.24f, 0.055f)); // vertical
-        AddBar(root, new Vector3(0f, top + 0.09f, 0f), new Vector3(0.17f, 0.055f, 0.055f));  // horizontal
+        AddBar(root, new Vector3(0f, top + 0.11f, 0f), new Vector3(0.055f, 0.24f, 0.055f));
+        AddBar(root, new Vector3(0f, top + 0.09f, 0f), new Vector3(0.17f, 0.055f, 0.055f));
     }
 
     private static void AddBar(GameObject root, Vector3 localPos, Vector3 scale)

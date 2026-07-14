@@ -43,7 +43,7 @@ public sealed class GameAnalyzer
             if (game.SideToMove == playerSide)
                 assessments.Add(await AssessAsync(game.Fen, move, ply, cancellationToken).ConfigureAwait(false));
 
-            game.TryMakeMove(move); // advance the actual game
+            game.TryMakeMove(move);
             ply++;
         }
 

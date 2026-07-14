@@ -24,7 +24,6 @@ public sealed class VisionSession
     public int Score { get; private set; }
     public int Asked { get; private set; }
 
-    /// <summary>The next square to ask about.</summary>
     public string NextSquare()
     {
         int file = (_index * 5 + 2) % 8;

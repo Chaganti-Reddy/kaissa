@@ -6,7 +6,6 @@ using UnityEngine.Rendering;
 // Training/Rush controllers keep their own copies; this consolidates the rest.
 public static class Board3D
 {
-    // Board colour themes (light, dark), chosen via settings.
     public static readonly (string Name, Color Light, Color Dark)[] Themes =
     {
         ("Walnut", new Color(0.90f, 0.86f, 0.78f), new Color(0.30f, 0.20f, 0.12f)),

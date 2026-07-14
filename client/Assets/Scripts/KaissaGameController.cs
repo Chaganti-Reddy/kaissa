@@ -39,7 +39,7 @@ public sealed class KaissaGameController : MonoBehaviour
     private Dictionary<int, GameReviewItem> _reviewMistakes;
     private Dictionary<int, string> _reviewAll;      // 0-based player ply -> move quality (all moves)
     private IReadOnlyList<int> _reviewEval;           // player-POV cp after each player move (eval graph)
-    private VisualElement _graphHost;                 // eval-graph panel, populated during review
+    private VisualElement _graphHost;
 
     private VisualElement _root;
     private VisualElement _movesBody;
@@ -48,8 +48,8 @@ public sealed class KaissaGameController : MonoBehaviour
     private Label _matLabel;
     private Label _topName;
     private Label _botName;
-    private VisualElement _botCaptured;   // mini captured-piece tray (opponent plate)
-    private VisualElement _youCaptured;   // mini captured-piece tray (player plate)
+    private VisualElement _botCaptured;
+    private VisualElement _youCaptured;
     private Label _botMat, _youMat;       // material advantage "+N" on the side that is ahead
     private Label _botClock;
     private Label _youClock;
@@ -279,7 +279,6 @@ public sealed class KaissaGameController : MonoBehaviour
         var panel = OverlayPanel();
         panel.Add(UiKit.Text_("Choose your opponent", 24, UiKit.Text, bold: true));
 
-        // time control selector
         var tcRow = UiKit.Row(); tcRow.style.marginTop = 12; tcRow.style.marginBottom = 12;
         var tcBtns = new List<VisualElement>();
         for (int i = 0; i < TimeControls.Length; i++)
@@ -297,7 +296,6 @@ public sealed class KaissaGameController : MonoBehaviour
         }
         panel.Add(tcRow);
 
-        // colour selector: play as White, Black, or Random
         var colorRow = UiKit.Row(); colorRow.style.marginBottom = 12;
         var colorNames = new[] { "White", "Black", "Random" };
         var colorBtns = new List<VisualElement>();
@@ -439,47 +437,43 @@ public sealed class KaissaGameController : MonoBehaviour
 
         KaissaSettings.AutoQueen = true;
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_warmup.png"));
-        yield return new WaitForSeconds(1.8f); // board + clock settle
+        yield return new WaitForSeconds(1.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_start.png"));
-        yield return new WaitForSeconds(0.5f); // let the start frame flush before moving
+        yield return new WaitForSeconds(0.5f);
 
         // Opening move through the real board input path: film the glide while the bot thinks.
         if (_game != null && !_busy) _board.DebugClickMove("e2", "e4");
         yield return Burst(dir, $"play_{tag}_move", 12, 0.06f);
-        yield return new WaitForSeconds(2.5f); // bot reply
+        yield return new WaitForSeconds(2.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_afterbot.png"));
 
         if (_game != null && !_busy && !_game.IsGameOver) _board.DebugClickMove("g1", "f3");
         yield return new WaitForSeconds(2.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_midgame.png"));
 
-        // Flip button (real click), then back.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip")); yield return new WaitForSeconds(0.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_flip.png"));
         yield return new WaitForSeconds(0.4f);
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip")); yield return new WaitForSeconds(0.3f);
 
-        // Takeback button (real click).
         UiAutomation.Click(UiAutomation.FindButton(_root, "Takeback")); yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_takeback.png"));
 
-        // Resign button (real click) -> post-game review; then navigate the move list by clicking a cell.
         UiAutomation.Click(UiAutomation.FindButton(_root, "Resign"));
-        yield return new WaitForSeconds(3.0f); // engine review runs
+        yield return new WaitForSeconds(3.0f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_review.png"));
         yield return new WaitForSeconds(0.4f);
         UiAutomation.Click(_movesBody.Q("movecell")); yield return new WaitForSeconds(0.6f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_movenav.png"));
         yield return new WaitForSeconds(0.3f);
 
-        // New-game picker via the New button (real click), then pick a time control + opponent.
         UiAutomation.Click(UiAutomation.FindButton(_root, "New")); yield return new WaitForSeconds(0.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_picker.png"));
         yield return new WaitForSeconds(0.4f);
         UiAutomation.Click(UiAutomation.FindButton(_root, "5 min")); yield return new WaitForSeconds(0.4f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_picker_tc.png"));
         UiAutomation.Click(_root.Q("pickopp")); // Adaptive (first opponent button)
-        yield return new WaitForSeconds(2.5f); // engine restart
+        yield return new WaitForSeconds(2.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_newgame.png"));
         yield return new WaitForSeconds(0.4f);
         Application.Quit();
@@ -775,7 +769,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _reviewPly = _reviewMoves.Count;
         _reviewMode = true;
         _matLabel.text = $"acc {review.Accuracy:0}%";
-        UpdateMoveList();     // rebuild with quality badges
+        UpdateMoveList();
         BuildEvalGraph();
         RenderReviewPosition();
     }
@@ -816,7 +810,6 @@ public sealed class KaissaGameController : MonoBehaviour
             }
             p.Stroke();
         };
-        // Click to jump to that player move.
         graph.RegisterCallback<ClickEvent>(e =>
         {
             var r = graph.contentRect;

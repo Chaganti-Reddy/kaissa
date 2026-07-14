@@ -10,7 +10,7 @@ public static class KaissaStreak
         var today = DateTime.Now.Date;
         var last = Parse(KaissaSettings.LastActive);
         if (last == today)
-            return; // already counted today
+            return;
         KaissaSettings.DayStreak = last == today.AddDays(-1) ? KaissaSettings.DayStreak + 1 : 1;
         KaissaSettings.LastActive = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     }
