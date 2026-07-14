@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.0
+
+- Captures and Threats: a new board-vision drill. A real position is shown; click every enemy piece the side to move can capture, then submit, and solve as many positions as you can in 30 seconds. Trains the instant "what is hanging" recognition that underlies tactics. Your best run is kept.
+- Puzzle Blitz: the Streak mode now gives one skip per run (as on the online streak modes), and the timed modes reward consecutive solves with combo bonus time.
+
 ## v1.2.0
 
 - Memory: a new chunk-recall trainer. A position is shown for a few seconds, the board clears, and you rebuild it from memory by stamping pieces from a palette; each solve adds a piece and shortens the look. Trains the pattern recognition the whole app is built around.
