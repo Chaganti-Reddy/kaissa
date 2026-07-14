@@ -15,7 +15,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
     private static readonly string[] Scenes =
     {
         "Menu", "Play", "SampleScene", "Rush", "Opening", "Library",
-        "Endgame", "Vision", "Coordinate", "Stats", "Settings", "Calibrate", "Analysis",
+        "Endgame", "Vision", "Coordinate", "Memory", "Stats", "Settings", "Calibrate", "Analysis",
     };
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -29,6 +29,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
             && !args.Contains("-kaissa-endgametest") && !args.Contains("-kaissa-learntest")
             && !args.Contains("-kaissa-analysistest") && !args.Contains("-kaissa-statstest")
             && !args.Contains("-kaissa-visiontest") && !args.Contains("-kaissa-coordtest")
+            && !args.Contains("-kaissa-memorytest")
             && !args.Contains("-kaissa-settingstest") && !args.Contains("-kaissa-calibratetest")
             && !args.Contains("-kaissa-transition") && !args.Contains("-kaissa-startup")
             && !args.Contains("-kaissa-hometest"))
@@ -140,6 +141,14 @@ public sealed class ScreenshotHarness : MonoBehaviour
         {
             SceneManager.LoadScene("Coordinate");
             yield return new WaitForSeconds(20f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-memorytest"))
+        {
+            SceneManager.LoadScene("Memory");
+            yield return new WaitForSeconds(18f);
             Application.Quit();
             yield break;
         }

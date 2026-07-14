@@ -44,5 +44,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Analysis.unity
     guid: c4d5e6f7a8b9012a3b4c5d6e7f809124
+  - enabled: 1
+    path: Assets/Scenes/Memory.unity
+    guid: afcc0c502462e29439479b8c8ad6fd83
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
