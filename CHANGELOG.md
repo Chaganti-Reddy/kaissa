@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.0
+
+- Stats: a Tactics found-vs-missed breakdown. Your games are scanned for tactical chances - forks, pins, mates, and hanging pieces - and the insights dashboard shows how many you took versus let slip in each category, rounding out the rating trend, accuracy-by-phase, and move-quality mix already there. This is the pattern-recognition scoreboard the whole app is built around.
+
 ## v1.3.0
 
 - Captures and Threats: a new board-vision drill. A real position is shown; click every enemy piece the side to move can capture, then submit, and solve as many positions as you can in 30 seconds. Trains the instant "what is hanging" recognition that underlies tactics. Your best run is kept.
