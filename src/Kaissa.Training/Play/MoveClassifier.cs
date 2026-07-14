@@ -62,8 +62,11 @@ public static class MoveClassifier
         int loss = j.CentipawnLoss;
         bool isBest = loss <= 10;
 
-        // A best (or near-best) move that gives up material but keeps a clear edge is Brilliant.
-        if (isBest && j.IsSacrifice && j.PlayedEvalCp >= 50)
+        // Brilliant (chess.com's definition): a best move that SACRIFICES material, leaves you NOT
+        // losing (>= ~0), and where you were NOT already winning without it - i.e. the next-best
+        // alternative was not itself clearly winning (best eval minus the gap to second-best stays
+        // below a winning margin). A sac that only converts an already-won position is not brilliant.
+        if (isBest && j.IsSacrifice && j.PlayedEvalCp >= -50 && (j.BestEvalCp - j.SecondBestGap) < 300)
             return MoveQuality.Brilliant;
 
         // A best move that is the only good one - every alternative is much worse - is Great.
