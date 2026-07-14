@@ -29,11 +29,13 @@ public static class KaissaSettings
         public int rushBest3;         // Puzzle Rush best score: 3-minute mode
         public int rushBest5;         // Puzzle Rush best score: 5-minute mode
         public int rushBestSurvival;  // Puzzle Rush best score: survival mode
+        public int rushBestStreak;    // Puzzle Streak best: longest run (one wrong ends it)
         public string lessonsDone = ""; // comma-joined ids of completed lessons
         public string lessonCrowns = ""; // per-lesson best crowns, "id:n,id:n" (1-3)
         public int visionBest;        // best light/dark board-vision score in a 30s run
         public int coordBest;         // best coordinate-finding score in a 30s run
         public int memoryBest;        // best memory-reconstruction level reached
+        public bool premove = true;   // queue a move during the opponent's turn (timed play)
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
         public string soundTheme = "sfx"; // sound set (folder under Resources/Sounds); empty = Classic procedural
         public bool closeToTray; // Windows: closing the window hides to a system-tray icon instead of quitting
@@ -82,10 +84,12 @@ public static class KaissaSettings
     public static int RushBest3 { get => D.rushBest3; set { D.rushBest3 = value; Save(); } }
     public static int RushBest5 { get => D.rushBest5; set { D.rushBest5 = value; Save(); } }
     public static int RushBestSurvival { get => D.rushBestSurvival; set { D.rushBestSurvival = value; Save(); } }
+    public static int RushBestStreak { get => D.rushBestStreak; set { D.rushBestStreak = value; Save(); } }
 
     public static int VisionBest { get => D.visionBest; set { D.visionBest = value; Save(); } }
     public static int CoordBest { get => D.coordBest; set { D.coordBest = value; Save(); } }
     public static int MemoryBest { get => D.memoryBest; set { D.memoryBest = value; Save(); } }
+    public static bool Premove { get => D.premove; set { D.premove = value; Save(); } }
     public static string PieceSet { get => string.IsNullOrEmpty(D.pieceSet) ? "cburnett" : D.pieceSet; set { D.pieceSet = value; Save(); } }
     public static string SoundTheme { get => D.soundTheme ?? ""; set { D.soundTheme = value; Save(); } }
     public static bool CloseToTray { get => D.closeToTray; set { D.closeToTray = value; Save(); } }

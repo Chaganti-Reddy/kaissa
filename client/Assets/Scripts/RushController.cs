@@ -18,7 +18,7 @@ using UnityEngine.UIElements;
 // the point. Per-mode personal bests are kept. Works on the 2D or 3D board through IBoardView.
 public sealed class RushController : MonoBehaviour
 {
-    private enum RushMode { ThreeMin, FiveMin, Survival }
+    private enum RushMode { ThreeMin, FiveMin, Survival, Streak }
 
     private ScenarioLibrary _library;
     private RushSession _rush;
@@ -196,6 +196,7 @@ public sealed class RushController : MonoBehaviour
         panel.Add(ModeButton("3 Minutes", () => StartRun(RushMode.ThreeMin)));
         panel.Add(ModeButton("5 Minutes", () => StartRun(RushMode.FiveMin)));
         panel.Add(ModeButton("Survival", () => StartRun(RushMode.Survival)));
+        panel.Add(ModeButton("Streak (one wrong ends it)", () => StartRun(RushMode.Streak)));
 
         dim.Add(panel);
         _overlayHost.Add(dim);
@@ -293,6 +294,8 @@ public sealed class RushController : MonoBehaviour
         _audio.PlayWrong();
         SetFeedback("Strike!", UiKit.Danger);
         UpdateHud();
+        // Streak ends on the first wrong move; the timed/survival modes allow three.
+        if (_mode == RushMode.Streak) { StartCoroutine(EndAfter(1.0f, "Streak ended")); return; }
         if (_rush.IsOver) { StartCoroutine(EndAfter(1.0f, "Three strikes")); return; }
         StartCoroutine(NextAfter(1.0f));
     }
@@ -364,13 +367,14 @@ public sealed class RushController : MonoBehaviour
 
     private void UpdateBestLabel()
     {
-        _bestLabel.text = $"3 min: {KaissaSettings.RushBest3}\n5 min: {KaissaSettings.RushBest5}\nSurvival: {KaissaSettings.RushBestSurvival}";
+        _bestLabel.text = $"3 min: {KaissaSettings.RushBest3}\n5 min: {KaissaSettings.RushBest5}\nSurvival: {KaissaSettings.RushBestSurvival}\nStreak: {KaissaSettings.RushBestStreak}";
     }
 
     private int BestFor(RushMode m) => m switch
     {
         RushMode.ThreeMin => KaissaSettings.RushBest3,
         RushMode.FiveMin => KaissaSettings.RushBest5,
+        RushMode.Streak => KaissaSettings.RushBestStreak,
         _ => KaissaSettings.RushBestSurvival,
     };
 
@@ -381,6 +385,7 @@ public sealed class RushController : MonoBehaviour
         {
             case RushMode.ThreeMin: KaissaSettings.RushBest3 = score; break;
             case RushMode.FiveMin: KaissaSettings.RushBest5 = score; break;
+            case RushMode.Streak: KaissaSettings.RushBestStreak = score; break;
             default: KaissaSettings.RushBestSurvival = score; break;
         }
         return true;

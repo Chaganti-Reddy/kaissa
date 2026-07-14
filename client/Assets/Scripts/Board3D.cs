@@ -16,6 +16,9 @@ public static class Board3D
         ("Coral", new Color(0.98f, 0.92f, 0.86f), new Color(0.78f, 0.44f, 0.40f)),
         ("Ice", new Color(0.90f, 0.94f, 0.98f), new Color(0.50f, 0.64f, 0.80f)),
         ("Midnight", new Color(0.60f, 0.65f, 0.80f), new Color(0.15f, 0.17f, 0.30f)),
+        // Colorblind-safe: near-white vs deep blue - a large lightness gap plus blue (which every kind
+        // of colour blindness perceives correctly), so the squares stay distinct without red/green.
+        ("High Contrast", new Color(0.97f, 0.97f, 0.95f), new Color(0.16f, 0.31f, 0.55f)),
     };
 
     /// <summary>Builds a full board with pieces from a BoardView; returns the root transform.</summary>

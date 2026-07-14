@@ -234,6 +234,8 @@ public sealed class SettingsController : MonoBehaviour
             () => KaissaSettings.ConfirmResign = !KaissaSettings.ConfirmResign);
         Toggle(play, "Low-time warning", KaissaSettings.LowTimeWarning ? "On" : "Off",
             () => KaissaSettings.LowTimeWarning = !KaissaSettings.LowTimeWarning);
+        Toggle(play, "Premove", KaissaSettings.Premove ? "On" : "Off",
+            () => KaissaSettings.Premove = !KaissaSettings.Premove);
         Toggle(play, "Bot speed", speeds[Mathf.Clamp(KaissaSettings.BotSpeed, 0, 2)],
             () => KaissaSettings.BotSpeed = (KaissaSettings.BotSpeed + 1) % 3);
 

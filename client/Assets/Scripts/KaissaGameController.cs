@@ -99,7 +99,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _root.Add(BuildRightRail());
 
         _board = BoardMount.Create(gameObject, _boardHost, _root, uci => OnMove(uci), _audio);
-        _board.AllowPremove = true; // queue a move while the bot thinks
+        _board.AllowPremove = KaissaSettings.Premove; // queue a move while the bot thinks (opt-out in Settings)
         if (KaissaSettings.EvalBar) StartCoroutine(StartAnalysis());
 
         if (Environment.GetCommandLineArgs().Contains("-kaissa-playtest"))
@@ -264,11 +264,43 @@ public sealed class KaissaGameController : MonoBehaviour
         ctrls.style.borderTopWidth = 1; ctrls.style.borderTopColor = UiKit.Line;
         panel.Add(ctrls);
 
+        // Keyboard move entry: type a move in algebraic (e4, Nf3, O-O) and press Enter. Accessibility
+        // plus power-user input; goes through the same move path as the board.
+        var kb = new VisualElement();
+        UiKit.Pad(kb, 10, 12, 12, 12);
+        kb.style.borderTopWidth = 1; kb.style.borderTopColor = UiKit.Line;
+        kb.Add(UiKit.Text_("Type a move (e.g. Nf3, e4, O-O)", 11, UiKit.Mute, bold: true));
+        var field = new TextField { name = "movetype" };
+        field.style.marginTop = 4;
+        field.RegisterCallback<KeyDownEvent>(e =>
+        {
+            if (e.keyCode is KeyCode.Return or KeyCode.KeypadEnter)
+            {
+                TryTypedMove(field.value);
+                field.value = "";
+                e.StopPropagation();
+            }
+        });
+        kb.Add(field);
+        panel.Add(kb);
+
         rail.Add(panel);
         _graphHost = new VisualElement();
         _graphHost.style.marginTop = 12;
         rail.Add(_graphHost);
         return rail;
+    }
+
+    // Resolve a typed move (SAN or UCI) against the current position and play it if it is legal and
+    // it is the player's turn.
+    private void TryTypedMove(string text)
+    {
+        if (_game == null || _busy || _reviewMode || _game.IsGameOver || string.IsNullOrWhiteSpace(text))
+            return;
+        string uci = null;
+        try { uci = ChessGame.FromFen(_currentFen).ResolveToUci(text.Trim()); } catch { }
+        if (string.IsNullOrEmpty(uci)) { _statusLabel.text = $"Could not read move: {text.Trim()}"; return; }
+        OnMove(uci);
     }
 
     private VisualElement Ctrl(string label, Action onClick)
