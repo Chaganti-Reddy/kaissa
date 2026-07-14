@@ -8,7 +8,7 @@ namespace Kaissa.Training.Play;
 /// The engine sits behind <see cref="IChessEngine"/>, so a more human-like engine can be swapped
 /// in later without changing this class.
 /// </summary>
-public sealed class AdaptiveOpponent
+public sealed class AdaptiveOpponent : IOpponent
 {
     // Stockfish's UCI_Elo limiter is defined over roughly this range.
     private const int MinElo = 1320;

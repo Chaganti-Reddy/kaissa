@@ -36,7 +36,8 @@ public sealed class KaissaGame : IAsyncDisposable
     {
         var engine = UciChessEngine.LaunchProcess(enginePath);
         await engine.HandshakeAsync(cancellationToken).ConfigureAwait(false);
-        return await AttachAsync(engine, playerSide, playerRating, fen, botThinkTime, fixedOpponentElo, ownsEngine: true, cancellationToken)
+        return await AttachAsync(engine, playerSide, playerRating, fen, botThinkTime, fixedOpponentElo,
+                ownsEngine: true, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -52,12 +53,13 @@ public sealed class KaissaGame : IAsyncDisposable
         TimeSpan? botThinkTime = null,
         int? fixedOpponentElo = null,
         bool ownsEngine = false,
+        IOpponent? opponent = null,
         CancellationToken cancellationToken = default)
     {
         await engine.NewGameAsync(cancellationToken).ConfigureAwait(false);
 
-        var opponent = new AdaptiveOpponent(engine, botThinkTime ?? TimeSpan.FromMilliseconds(200), fixedElo: fixedOpponentElo);
-        var session = new GameSession(engine, playerSide, playerRating, fen, opponent);
+        var opp = opponent ?? new AdaptiveOpponent(engine, botThinkTime ?? TimeSpan.FromMilliseconds(200), fixedElo: fixedOpponentElo);
+        var session = new GameSession(engine, playerSide, playerRating, fen, opp);
         var game = new KaissaGame(engine, session, playerSide, ownsEngine);
 
         // If the player is Black, the bot (White) opens.
@@ -78,11 +80,12 @@ public sealed class KaissaGame : IAsyncDisposable
         string? fen = null,
         TimeSpan? botThinkTime = null,
         int? fixedOpponentElo = null,
+        IOpponent? opponent = null,
         CancellationToken cancellationToken = default)
     {
         await _engine.NewGameAsync(cancellationToken).ConfigureAwait(false);
-        var opponent = new AdaptiveOpponent(_engine, botThinkTime ?? TimeSpan.FromMilliseconds(200), fixedElo: fixedOpponentElo);
-        _session = new GameSession(_engine, playerSide, playerRating, fen, opponent);
+        var opp = opponent ?? new AdaptiveOpponent(_engine, botThinkTime ?? TimeSpan.FromMilliseconds(200), fixedElo: fixedOpponentElo);
+        _session = new GameSession(_engine, playerSide, playerRating, fen, opp);
         _playerSide = playerSide;
 
         if (_session.SideToMove != playerSide && !_session.IsGameOver)

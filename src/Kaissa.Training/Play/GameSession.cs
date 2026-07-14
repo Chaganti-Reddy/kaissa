@@ -10,7 +10,7 @@ namespace Kaissa.Training.Play;
 /// </summary>
 public sealed class GameSession
 {
-    private readonly AdaptiveOpponent _opponent;
+    private readonly IOpponent _opponent;
     private ChessGame _game;
     private readonly int _opponentElo;
     private readonly List<string> _moves = new();
@@ -20,7 +20,7 @@ public sealed class GameSession
         Side playerSide,
         double playerRating,
         string? fen = null,
-        AdaptiveOpponent? opponent = null)
+        IOpponent? opponent = null)
     {
         _opponent = opponent ?? new AdaptiveOpponent(engine);
         StartFen = fen ?? ChessGame.StartFen;

@@ -5,6 +5,8 @@ Kaissa is GPLv3. It uses the following third-party components. Their licenses ar
 ## Engine
 
 - **Stockfish** — GPLv3. https://stockfishchess.org The chess engine, run as a separate process over UCI. Not committed to this repo; fetched by `scripts/fetch-stockfish.ps1`. Any binary distribution must include the corresponding source.
+- **Leela Chess Zero (lc0)** — GPLv3. https://lczero.org The neural-network engine that runs the Maia nets for the human-like opponent, over UCI. Not committed; fetched by `scripts/fetch-lc0.ps1`. Any binary distribution must include the corresponding source.
+- **Maia Chess networks** (maia-1100 .. maia-1900) by the CSSLab, University of Toronto — GPLv3. https://github.com/CSSLab/maia-chess Human-like neural networks trained on Lichess games; run at one node on lc0 to play like a human of the corresponding rating. Not committed; fetched by `scripts/fetch-lc0.ps1`.
 
 ## Libraries
 

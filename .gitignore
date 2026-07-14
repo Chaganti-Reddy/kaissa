@@ -23,6 +23,10 @@ coverage*.xml
 # Downloaded engine binaries (fetched via scripts/fetch-stockfish.ps1, not committed)
 third_party/stockfish/
 
+# lc0 + Maia nets for the human-like opponent (fetched via scripts/fetch-lc0.ps1, not committed)
+third_party/lc0/
+client/Assets/StreamingAssets/lc0/
+
 # Raw Lichess puzzle database (large, CC0; drop here and run the importer). Not committed.
 third_party/lichess/
 *.csv.zst

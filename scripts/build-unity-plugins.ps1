@@ -54,3 +54,20 @@ if ($null -ne $engine) {
 else {
     Write-Host "Stockfish not found under third_party/stockfish; run scripts/fetch-stockfish.ps1 first." -ForegroundColor Yellow
 }
+
+# Stage lc0 + the Maia nets (human-like opponent) into StreamingAssets. Fetched by
+# scripts/fetch-lc0.ps1; not committed. Optional - the app runs without it (Maia bots are hidden).
+$lc0 = Get-ChildItem -Path (Join-Path $repoRoot 'third_party/lc0') -Filter 'lc0.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($null -ne $lc0) {
+    $lc0Dst = Join-Path $repoRoot 'client/Assets/StreamingAssets/lc0'
+    New-Item -ItemType Directory -Force -Path (Join-Path $lc0Dst 'nets') | Out-Null
+    Get-ChildItem -Path $lc0.Directory.FullName -File |
+        Where-Object { $_.Extension -in '.exe', '.dll' } |
+        ForEach-Object { Copy-Item $_.FullName $lc0Dst -Force }
+    $netSrc = Join-Path $repoRoot 'third_party/lc0/nets'
+    if (Test-Path $netSrc) { Copy-Item (Join-Path $netSrc '*.pb.gz') (Join-Path $lc0Dst 'nets') -Force }
+    Write-Host "lc0 + Maia nets staged in $lc0Dst"
+}
+else {
+    Write-Host "lc0 not found under third_party/lc0; run scripts/fetch-lc0.ps1 for the human-like opponent." -ForegroundColor Yellow
+}
