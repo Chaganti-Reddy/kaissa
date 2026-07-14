@@ -325,6 +325,15 @@ public sealed class KaissaGameController : MonoBehaviour
             var b = bot;
             panel.Add(PickBtn($"{b.Name}  ({b.Elo})", () => { _root.Remove(dim); StartGame(b.Name, b.Elo); }));
         }
+        // Human-like Maia opponents, only when lc0 + the nets were staged.
+        if (EngineHub.MaiaAvailable)
+        {
+            foreach (var bot in BotRoster.Maia)
+            {
+                var b = bot;
+                panel.Add(PickBtn($"{b.Name}  (human)", () => { _root.Remove(dim); StartGame(b.Name, b.Elo, b.Weights); }));
+            }
+        }
         var back = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu"));
         back.style.marginTop = 8; back.style.width = 360;
         panel.Add(back);
@@ -391,15 +400,15 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private bool _starting; // guards against concurrent engine ops from rapid New/Rematch clicks
 
-    private async void StartGame(string label, int? fixedElo)
+    private async void StartGame(string label, int? fixedElo, string maiaWeights = null)
     {
         if (_starting) return;
         _starting = true;
-        try { await StartGameCore(label, fixedElo); }
+        try { await StartGameCore(label, fixedElo, maiaWeights); }
         finally { _starting = false; }
     }
 
-    private async System.Threading.Tasks.Task StartGameCore(string label, int? fixedElo)
+    private async System.Threading.Tasks.Task StartGameCore(string label, int? fixedElo, string maiaWeights = null)
     {
         if (!EngineHub.Available)
         {
@@ -429,12 +438,21 @@ public sealed class KaissaGameController : MonoBehaviour
         {
             // Use the shared, app-wide play engine (spawned once at launch); reuse it across games.
             var engine = await EngineHub.PlayEngineAsync();
+
+            // A Maia bot plays through lc0 with a human-trained net; anything else is Stockfish-capped.
+            IOpponent opponent = null;
+            if (maiaWeights != null && EngineHub.MaiaAvailable)
+            {
+                var lc0 = await EngineHub.MaiaEngineAsync();
+                opponent = new MaiaOpponent(lc0, EngineHub.MaiaNetPath(maiaWeights), fixedElo ?? 1500);
+            }
+
             if (_game == null)
                 _game = await KaissaGame.AttachAsync(engine, playerSide, playerRating,
-                    fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
+                    fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo, opponent: opponent);
             else
                 await _game.ResetAsync(playerSide, playerRating,
-                    fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo);
+                    fen: startFen, botThinkTime: TimeSpan.FromMilliseconds(BotThinkMs()), fixedOpponentElo: fixedElo, opponent: opponent);
         }
         catch (Exception e)
         {

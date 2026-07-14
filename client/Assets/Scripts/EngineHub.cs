@@ -12,12 +12,30 @@ public static class EngineHub
 {
     private static Task<IChessEngine> _play;
     private static Task<IChessEngine> _analysis;
+    private static Task<IChessEngine> _maia;
 
     public static string EnginePath => Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
     public static bool Available => File.Exists(EnginePath);
 
+    // lc0 + Maia nets power the human-like opponent. Optional: absent unless fetch-lc0 staged them.
+    public static string MaiaPath => Path.Combine(Application.streamingAssetsPath, "lc0", "lc0.exe");
+    public static bool MaiaAvailable => File.Exists(MaiaPath);
+    public static string MaiaNetPath(string netFile) =>
+        Path.Combine(Application.streamingAssetsPath, "lc0", "nets", netFile);
+
     public static Task<IChessEngine> PlayEngineAsync() => _play ??= LaunchAsync(analysis: false);
     public static Task<IChessEngine> AnalysisEngineAsync() => _analysis ??= LaunchAsync(analysis: true);
+
+    // The shared lc0 process for Maia games (one node per move; the net is set per opponent). Reused
+    // across games; weights loading happens on first move of each Maia opponent.
+    public static Task<IChessEngine> MaiaEngineAsync() => _maia ??= LaunchMaiaAsync();
+
+    private static async Task<IChessEngine> LaunchMaiaAsync()
+    {
+        var engine = UciChessEngine.LaunchProcess(MaiaPath);
+        await engine.HandshakeAsync();
+        return new SerializedEngine(engine);
+    }
 
     private static async Task<IChessEngine> LaunchAsync(bool analysis)
     {
@@ -49,10 +67,11 @@ public static class EngineHub
 
     public static async void Shutdown()
     {
-        var play = _play; var analysis = _analysis;
-        _play = null; _analysis = null;
+        var play = _play; var analysis = _analysis; var maia = _maia;
+        _play = null; _analysis = null; _maia = null;
         try { if (play != null) await (await play).DisposeAsync(); } catch { }
         try { if (analysis != null) await (await analysis).DisposeAsync(); } catch { }
+        try { if (maia != null) await (await maia).DisposeAsync(); } catch { }
     }
 }
 
