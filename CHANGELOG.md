@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0
+
+- Human-like opponents (Maia): a set of neural-network bots (Maia 1100 through 1900) that play like a human of that rating rather than a strength-capped engine - natural developing moves and human mistakes, not computer lines. They run on Leela Chess Zero (lc0) at a single node and appear in the opponent picker when the engine is installed. Both lc0 and the Maia nets are GPLv3; they are fetched by `scripts/fetch-lc0.ps1` and staged into the build, credited in THIRD-PARTY-NOTICES.md.
+- Human move timing: the computer opponent now spends time like a person instead of replying instantly - book moves and recaptures are quick, hard positions take longer, with natural variation. In a timed game it spends that time from its own clock, manages it, and can get into time trouble or flag, so blitz against the bot is a fair race rather than the engine having unlimited time.
+- Abandon confirmation: starting a new game or leaving the page in the middle of a live game now asks first, so a game in progress is not thrown away by accident.
+
 ## v1.0.0
 
 The first full release. A complete, page-by-page build of the training and study screens, each working on both the 2D and 3D board, on top of a pure-C# learning core and Stockfish behind a single engine seam.
