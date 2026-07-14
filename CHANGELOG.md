@@ -1,8 +1,8 @@
 # Changelog
 
-## v0.2.1 (alpha) - in progress
+## v1.0.0
 
-A page-by-page rebuild and expansion of the training and study screens, each done for both the 2D and 3D board.
+The first full release. A complete, page-by-page build of the training and study screens, each working on both the 2D and 3D board, on top of a pure-C# learning core and Stockfish behind a single engine seam.
 
 - Puzzles: puzzles are now multi-move - you play the whole solution line and the opponent's replies play automatically. The bundled set was regenerated to 52,500 positions spanning the full rating range (about 400 to 3100, beginner through grandmaster) with full theme tags; the hardest puzzles are included rather than capped. The solve page gained hint, solution, retry, next, analyze, a side-to-move indicator, theme chips, puzzle and player ratings, a timer, and an on-page mode picker (rated, by theme, by difficulty from Beginner to Grandmaster).
 - A hybrid progression layer was added: XP and named tiers alongside the rating, plus a per-pattern mastery map derived from the spaced-repetition schedule.
@@ -21,7 +21,7 @@ A page-by-page rebuild and expansion of the training and study screens, each don
 - Practice generator: the Puzzles page gained a Weakness mode that builds a tailored set on demand from the patterns your history marks weakest (falling back to a band around your rating for new players), alongside the existing rating-band and theme feeds.
 - Analysis board editor: set up any position by hand on the 2D board - a piece palette to stamp squares, an eraser, side-to-move and castling toggles, clear and reset, then apply to load and analyze it (FEN paste still works too).
 - Play page: the name plates now show each side's rating and a captured-piece tray drawn with the real piece art plus a running material-advantage number, and you can choose to play White, Black, or a random colour before the game.
-- Game Review: the post-game review now marks each of your moves with a colour-coded quality badge (best, excellent, good, inaccuracy, mistake, blunder) and draws a clickable advantage graph across the game; click a point to jump to that move.
+- Game Review: a full post-game review in the style of the paid tools on the big sites. Every move on both sides is classified across ten tiers (brilliant, great, best, book, excellent, good, inaccuracy, miss, mistake, blunder) with a colour-coded badge and a one-line explanation; the summary shows your accuracy and the opponent's, a single-game performance estimate, and the opening played with how far it stayed in book. A clickable advantage graph plots the whole game per move, a Key Moments list jumps to the turning points, and your mistakes still become practice puzzles.
 - Puzzles: a "Review misses" mode replays the puzzles you got wrong or gave up on.
 - Home: a Rematch card offers your last opponent again at the same time control, one click.
 - Settings: new options - highlight last move, piece-animation speed, confirm resign, low-time warning, and (Windows) minimize to a system-tray icon.
@@ -41,6 +41,8 @@ A page-by-page rebuild and expansion of the training and study screens, each don
 - Analysis: rebuilt into a full analysis board - an evaluation bar, several engine lines at once (click one to play it), a best-move arrow and an optional threat arrow, a clickable move list, the opening name, load-a-FEN and copy FEN/PGN, and play-vs-computer from the current position. Works on the 2D or 3D board.
 - Learn: rebuilt into a guided lesson trainer. Each lesson explains a motif in plain terms, then has you solve it on a series of real positions with feedback and commentary; lessons are grouped by topic, completion is saved, and there are hint, restart, and flip controls.
 - Performance: opening and puzzle indexes are precomputed offline and shipped, parsed once per run, and warmed on a background thread at launch, so pages open near-instantly. The chess engine is now launched once at startup and shared across every screen (a play engine and a full-strength analysis engine), so opening Play, Endgames, or the analysis board no longer spawns a new engine or shows a "starting engine" wait.
+- Board orientation always follows the side you play: your colour sits at the bottom in Play, Puzzles, and Puzzle Blitz, with a Flip control for a manual, temporary flip.
+- Interface polish: scrollbars are hidden while scrolling still works by wheel, and engine lines in Analysis wrap within their panel instead of overflowing.
 
 ## v0.2.0 (alpha) - 2026-07-09
 
