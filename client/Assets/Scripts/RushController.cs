@@ -40,6 +40,9 @@ public sealed class RushController : MonoBehaviour
     private VisualElement _root, _overlayHost;
     private VisualElement _sideBadge, _sideDot;
     private Label _sideText, _timerLabel, _scoreLabel, _streakLabel, _feedbackLabel, _bestLabel;
+    private Button _skipBtn;
+    private bool _skipUsed;
+    private int _combo;
     private readonly VisualElement[] _strikeMarks = new VisualElement[3];
 
     private static readonly Color Good = new(0.30f, 0.85f, 0.45f, 0.55f);
@@ -116,7 +119,22 @@ public sealed class RushController : MonoBehaviour
         _feedbackLabel.style.marginTop = 10; _feedbackLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
         UiKit.Pad(_feedbackLabel, 6, 14, 6, 14); UiKit.Radius(_feedbackLabel, 8);
         center.Add(_feedbackLabel);
+
+        // Streak mode gets one skip per run (like Lichess); hidden in the other modes.
+        _skipBtn = UiKit.Ghost("Skip (1 left)", UseSkip, 13);
+        _skipBtn.style.width = 200; _skipBtn.style.marginTop = 8; _skipBtn.style.display = DisplayStyle.None;
+        center.Add(_skipBtn);
         return center;
+    }
+
+    private void UseSkip()
+    {
+        if (_mode != RushMode.Streak || _skipUsed || !_started || _over || _busy || _session == null) return;
+        _skipUsed = true;
+        _skipBtn.SetEnabled(false);
+        _skipBtn.text = "Skip used";
+        SetFeedback("Skipped", UiKit.Dim);
+        DealNext();
     }
 
     private VisualElement MakeSideBadge()
@@ -217,6 +235,9 @@ public sealed class RushController : MonoBehaviour
         _timeLeft = _timeLimit; _elapsed = 0f;
         _rush = new RushSession(_library, startRating: 600, lives: 3);
         _started = true; _over = false; _timing = true;
+        _skipUsed = false; _combo = 0;
+        _skipBtn.text = "Skip (1 left)"; _skipBtn.SetEnabled(true);
+        _skipBtn.style.display = mode == RushMode.Streak ? DisplayStyle.Flex : DisplayStyle.None;
         _timerLabel.text = Fmt(_timeLimit > 0f ? _timeLimit : 0f); // paint the clock immediately, not next frame
         _overlayHost.style.display = DisplayStyle.None;
         _overlayHost.Clear();
@@ -277,6 +298,13 @@ public sealed class RushController : MonoBehaviour
         if (_graded) return;
         _graded = true;
         _rush.Submit(_scenario.Solutions[0], TimeSpan.Zero);
+        _combo++;
+        // Storm-style combo: consecutive solves in a timed run add bonus time that grows with the combo.
+        if (_timeLimit > 0f)
+        {
+            _timeLeft += 1f + Mathf.Min(4f, (_combo - 1) * 0.25f);
+            if (_combo >= 3) SetFeedback($"Combo x{_combo}", UiKit.GreenHi);
+        }
         UpdateHud();
         StartCoroutine(NextAfter(0.45f));
     }
@@ -286,6 +314,7 @@ public sealed class RushController : MonoBehaviour
         if (_graded)
             return;
         _graded = true;
+        _combo = 0; // a wrong move breaks the combo
         _rush.Submit(wrongMove, TimeSpan.Zero); // grades as a miss -> costs a life
         _board.Render(_session.Fen, canMove: false, lastMove: null, whiteBottom: _whiteBottom); // snap back
         TintMove(wrongMove, Bad);
