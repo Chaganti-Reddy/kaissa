@@ -38,4 +38,6 @@ public sealed record GameReviewResult(
     string OpeningName,
     string OpeningEco,
     int BookUntilMove,               // last full-move number that was still opening theory (0 = none)
-    int PerformanceRating);
+    int PerformanceRating,
+    IReadOnlyList<int> TacticsFound,   // player's tactics taken, indexed [fork, pin, mate, hanging]
+    IReadOnlyList<int> TacticsMissed); // tactics that were there and the player did not play

@@ -915,6 +915,7 @@ public sealed class KaissaGameController : MonoBehaviour
         KaissaGameLog.RecordReview(
             review.AllMoves.Where(m => m.Side == playerSideName).Select(m => m.Quality),
             review.PhaseAccuracy.Opening, review.PhaseAccuracy.Middlegame, review.PhaseAccuracy.Endgame);
+        KaissaGameLog.RecordTactics(review.TacticsFound, review.TacticsMissed);
 
         _review = review;
         _reviewMoves = _game.MoveHistory;

@@ -15,6 +15,8 @@ public static class KaissaGameLog
         public List<int> results = new(); // parallel to accuracies: 0 loss, 1 draw, 2 win
         public List<int> quality = new(); // cumulative move-quality counts: best,excellent,good,inaccuracy,mistake,blunder
         public List<double> phaseOpen = new(), phaseMid = new(), phaseEnd = new(); // per-game phase accuracies
+        public List<int> tacticsFound = new();   // cumulative tactics taken   [fork, pin, mate, hanging]
+        public List<int> tacticsMissed = new();  // cumulative tactics missed  [fork, pin, mate, hanging]
     }
 
     public static readonly string[] QualityNames = { "Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder" };
@@ -70,6 +72,23 @@ public static class KaissaGameLog
     }
 
     private static void Cap(List<double> l) { if (l.Count > MaxEntries) l.RemoveRange(0, l.Count - MaxEntries); }
+
+    // Accumulate found/missed tactics from a review, each indexed [fork, pin, mate, hanging].
+    public static void RecordTactics(IReadOnlyList<int> found, IReadOnlyList<int> missed)
+    {
+        Pad(D.tacticsFound); Pad(D.tacticsMissed);
+        for (int i = 0; i < 4; i++)
+        {
+            if (found != null && i < found.Count) D.tacticsFound[i] += found[i];
+            if (missed != null && i < missed.Count) D.tacticsMissed[i] += missed[i];
+        }
+        File.WriteAllText(Path, JsonUtility.ToJson(D));
+    }
+
+    public static IReadOnlyList<int> TacticsFound { get { Pad(D.tacticsFound); return D.tacticsFound; } }
+    public static IReadOnlyList<int> TacticsMissed { get { Pad(D.tacticsMissed); return D.tacticsMissed; } }
+    public static readonly string[] TacticNames = { "Forks", "Pins", "Mates", "Hanging" };
+    private static void Pad(List<int> l) { while (l.Count < 4) l.Add(0); }
 
     public static IReadOnlyList<int> QualityMix => D.quality.Count >= 6 ? D.quality : new List<int> { 0, 0, 0, 0, 0, 0 };
     public static double? PhaseOpen => D.phaseOpen.Count > 0 ? D.phaseOpen.Average() : (double?)null;

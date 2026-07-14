@@ -177,8 +177,27 @@ public sealed class KaissaGame : IAsyncDisposable
         int performance = PerformanceRating.Estimate(accuracy, _session.OpponentElo);
         var practice = GamePractice.FromAssessments(playerMoves);
 
+        // Found vs missed tactics [fork, pin, mate, hanging]: for each player move, if the best move was
+        // a recognisable tactic, did the player take it (best-tier) or let it slip (an error)?
+        var found = new int[4];
+        var missed = new int[4];
+        foreach (var a in playerMoves)
+        {
+            int idx = MotifClassifier.Classify(a.Fen, a.BestMove) switch
+            {
+                Motif.Fork => 0,
+                Motif.Pin or Motif.Skewer => 1,
+                Motif.Checkmate or Motif.BackRankMate or Motif.SmotheredMate => 2,
+                Motif.HangingPiece => 3,
+                _ => -1,
+            };
+            if (idx < 0) continue;
+            if (a.Quality is MoveQuality.Brilliant or MoveQuality.Great or MoveQuality.Best) found[idx]++;
+            else if (MoveClassifier.IsMistake(a.Quality)) missed[idx]++;
+        }
+
         return new GameReviewResult(mistakes, practice, accuracy, opponentAccuracy, evalSeries, phaseAccuracy,
-            allMoves, keyMoments, openingName, openingEco, bookUntil, performance);
+            allMoves, keyMoments, openingName, openingEco, bookUntil, performance, found, missed);
     }
 
     // Walks the game against the opening book: the opening is the deepest named position reached while
