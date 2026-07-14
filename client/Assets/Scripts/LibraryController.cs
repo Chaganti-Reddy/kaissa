@@ -10,9 +10,8 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Learn: a guided lesson trainer. Each lesson explains an idea in our own words, then drills it on
-// real positions (drawn from the puzzle library by pattern) that the player solves on the board with
-// feedback and commentary. Completed lessons are saved. Works on the 2D or 3D board via IBoardView.
+// Guided lesson trainer: each lesson explains an idea, then drills it on positions drawn from the
+// puzzle library by pattern. Completed lessons are saved.
 public sealed class LibraryController : MonoBehaviour
 {
     private ScenarioLibrary _lib;
@@ -66,8 +65,6 @@ public sealed class LibraryController : MonoBehaviour
         if (Environment.GetCommandLineArgs().Contains("-kaissa-learntest"))
             StartCoroutine(AutoDemo());
     }
-
-    // ---------------- layout ----------------
 
     private VisualElement BuildCenter()
     {
@@ -143,7 +140,6 @@ public sealed class LibraryController : MonoBehaviour
                 mark.style.backgroundColor = done ? UiKit.Green : UiKit.Mute;
                 var topic = UiKit.Text_(lesson.Topic, 11, UiKit.Mute); topic.style.marginLeft = 8;
                 var row = UiKit.Row(mark, UiKit.Text_(lesson.Title, 14, active ? UiKit.Text : UiKit.Dim, bold: active), topic);
-                // Earned crowns (1-3) as small gold dots on the right.
                 int crowns = KaissaSettings.LessonCrowns(lesson.Id);
                 if (crowns > 0)
                 {
@@ -177,8 +173,6 @@ public sealed class LibraryController : MonoBehaviour
         UiKit.Radius(p, 12);
         return p;
     }
-
-    // ---------------- lesson flow ----------------
 
     private void SelectLesson(Lesson lesson)
     {
@@ -233,14 +227,13 @@ public sealed class LibraryController : MonoBehaviour
         KaissaSettings.MarkLessonDone(_lesson.Id);
         int crowns = _lessonSlips == 0 ? 3 : _lessonSlips <= 2 ? 2 : 1; // clean run = 3, like chess.com
         KaissaSettings.SetLessonCrowns(_lesson.Id, crowns);
-        PopulateList(); // refresh the earned-crown display on the lesson rows
         _stepLabel.text = "Lesson complete";
         _text.text = $"You have finished \"{_lesson.Title}\" - {crowns}/3 crowns. Keep the pattern in mind; it will keep coming up.";
         SetFeedback($"Lesson complete - {crowns}/3 crowns", UiKit.GreenHi);
         _audio.PlayVictory();
         Enable(_nextBtn, true); Enable(_hintBtn, false);
         _nextBtn.text = "Next lesson";
-        PopulateList();
+        PopulateList(); // refresh the earned-crown display on the lesson rows
     }
 
     private void OnMove(string uci)
@@ -279,8 +272,6 @@ public sealed class LibraryController : MonoBehaviour
         SetFeedback("", UiKit.Dim);
         _busy = false;
     }
-
-    // ---------------- controls / helpers ----------------
 
     private void ShowHint()
     {
@@ -341,15 +332,11 @@ public sealed class LibraryController : MonoBehaviour
         else if (kb.rightArrowKey.wasPressedThisFrame) NextPressed();
     }
 
-    // ---------------- self-test ----------------
-
     private bool _recording, _pauseRec;
     private int _seq;
 
-    // End-to-end self-test driven by REAL UI events (not controller method calls): clicks the lesson
-    // rows and the Next/Hint/Restart buttons through the panel, and plays each challenge move through
-    // the board's real click-to-move input path. A dense frame recorder runs the whole time so the run
-    // can be reviewed like a video, and labeled milestone frames are captured at each step.
+    // Self-test driven by real UI events (clicks + board click-to-move), not controller method calls,
+    // with a dense frame recorder running throughout and labeled milestone frames at each step.
     private IEnumerator AutoDemo()
     {
         string dir = ArgValue("-shotdir") ?? System.IO.Path.Combine(Application.persistentDataPath, "shots");
@@ -364,21 +351,17 @@ public sealed class LibraryController : MonoBehaviour
 
         yield return Shot(dir, tag, "warmup", 1.0f);
 
-        // Real click on a lesson row to prove list selection wiring.
         UiAutomation.Click(_root.Q("lesson-skewer"));
         yield return Shot(dir, tag, "select_skewer", 0.9f);
         UiAutomation.Click(_root.Q("lesson-fork"));
         yield return Shot(dir, tag, "intro", 0.9f);
 
-        // Real click on Next advances the intro to the first challenge.
         UiAutomation.Click(_nextBtn);
         yield return Shot(dir, tag, "challenge", 0.8f);
 
-        // Real click on Hint highlights the key piece.
         UiAutomation.Click(_hintBtn);
         yield return Shot(dir, tag, "hint", 0.8f);
 
-        // Solve each challenge through the board's real click-to-move path.
         int guard = 0;
         while (!_completed && _step is { Interactive: true } && !string.IsNullOrEmpty(_step.ExpectedMove) && guard++ < 12)
         {
@@ -390,7 +373,6 @@ public sealed class LibraryController : MonoBehaviour
 
         yield return Shot(dir, tag, "complete", 0.6f);
 
-        // Real click on Restart replays the lesson (proves the button path + fresh session).
         UiAutomation.Click(_retryBtn);
         yield return Shot(dir, tag, "restart", 0.8f);
 

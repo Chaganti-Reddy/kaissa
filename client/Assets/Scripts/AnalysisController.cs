@@ -41,8 +41,7 @@ public sealed class AnalysisController : MonoBehaviour
     private TextField _fenField;
     private Button _threatsBtn;
 
-    // ---- board editor (2D) state ----
-    private VisualElement _editorHost, _paletteRow;
+    private VisualElement _editorHost;
     private Label _editStatus;
     private bool _editing;
     private readonly char[,] _edit = new char[8, 8]; // [file, rank]; '\0' = empty
@@ -91,8 +90,6 @@ public sealed class AnalysisController : MonoBehaviour
             StartCoroutine(AutoDemo());
     }
 
-    // ---------------- layout ----------------
-
     private VisualElement BuildCenter()
     {
         var center = new VisualElement();
@@ -103,7 +100,6 @@ public sealed class AnalysisController : MonoBehaviour
         _depthLabel.style.marginBottom = 8;
         center.Add(_depthLabel);
 
-        // eval bar + board side by side
         var boardRow = UiKit.Row();
         boardRow.style.alignItems = Align.Center;
         var bar = new VisualElement();
@@ -201,8 +197,6 @@ public sealed class AnalysisController : MonoBehaviour
         return b;
     }
 
-    // ---------------- actions ----------------
-
     private void OnMove(string uci)
     {
         if (_session.Play(uci)) { _lastMove = uci; RenderCurrent(); }
@@ -230,7 +224,6 @@ public sealed class AnalysisController : MonoBehaviour
 
     private void CopyPgn() => GUIUtility.systemCopyBuffer = BuildPgn();
 
-    // ---------------- board editor (2D) ----------------
     // Set up a position by hand: pick a piece from the palette and click squares to stamp it, or pick
     // the eraser to clear. Toggle side-to-move and castling rights, clear or reset the board, then Apply
     // to validate and load the FEN. Uses the 2D board's square-click reporting; the 3D board has no
@@ -260,6 +253,7 @@ public sealed class AnalysisController : MonoBehaviour
         _editing = false;
         _board.SquareClickHandler = null;
         _editorHost.Clear();
+        _evalFen = null; // EnterEdit cleared the arrows; force a re-eval even if the FEN is unchanged
         RenderCurrent();
     }
 
@@ -437,8 +431,6 @@ public sealed class AnalysisController : MonoBehaviour
         RenderCurrent();
     }
 
-    // ---------------- render ----------------
-
     private void RenderCurrent()
     {
         if (_editing) return; // the editor drives the board directly while open
@@ -482,8 +474,6 @@ public sealed class AnalysisController : MonoBehaviour
     }
 
     private static Label Cell(string s, float w, Color c) { var l = UiKit.Text_(s, 14, c); l.style.width = w; return l; }
-
-    // ---------------- engine ----------------
 
     private IEnumerator StartEngine()
     {
@@ -667,8 +657,6 @@ public sealed class AnalysisController : MonoBehaviour
         go.AddComponent<EventSystem>();
         go.AddComponent<InputSystemUIInputModule>();
     }
-
-    // ---------------- self-test ----------------
 
     private bool _recording, _pauseRec;
     private int _seq;

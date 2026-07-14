@@ -21,9 +21,8 @@ public static class EndgameRoute
     public static string Fen;
 }
 
-// Endgames drill trainer, rebuilt to mirror chess.com's Drills: pick an instructive endgame, play it
-// out against Stockfish on this page, and get graded pass/fail against the drill's goal (win / draw /
-// promote). Controls: Retry, Next, Flip, Hint. Works on the 2D or 3D board through IBoardView.
+// Play an endgame out against Stockfish and get graded pass/fail against the drill goal (win/draw/
+// promote), in free Practice or a timed Challenge run.
 public sealed class EndgameController : MonoBehaviour
 {
     private KaissaGame _game;
@@ -36,7 +35,6 @@ public sealed class EndgameController : MonoBehaviour
     private int _index;
     private bool _busy, _over, _whiteBottom = true;
     private string _fen = ChessGame.StartFen;
-    private string _enginePath;
 
     // Challenge mode: a timed run through 5 drills back to back; fastest clean run is kept.
     private const int ChallengeLen = 5;
@@ -61,7 +59,6 @@ public sealed class EndgameController : MonoBehaviour
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
         _audio = PieceAudio.Attach(gameObject);
-        _enginePath = Path.Combine(Application.streamingAssetsPath, "stockfish", "stockfish.exe");
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -87,8 +84,6 @@ public sealed class EndgameController : MonoBehaviour
             StartCoroutine(AutoDemo());
     }
 
-    // ---------------- layout ----------------
-
     private VisualElement BuildCenter()
     {
         var center = new VisualElement();
@@ -98,7 +93,6 @@ public sealed class EndgameController : MonoBehaviour
         _title.style.marginBottom = 8;
         center.Add(_title);
 
-        // Practice / Challenge mode row + timer.
         var modeRow = UiKit.Row(); modeRow.style.marginBottom = 8;
         _practiceChip = UiKit.Ghost("Practice", () => SetChallenge(false), 12);
         _challengeChip = UiKit.Ghost("Challenge", StartChallenge, 12);
@@ -217,8 +211,6 @@ public sealed class EndgameController : MonoBehaviour
         return p;
     }
 
-    // ---------------- drill lifecycle ----------------
-
     private bool _loading; // guards against concurrent engine ops from rapid Next/Retry clicks
 
     private async void LoadDrill(int index)
@@ -313,7 +305,7 @@ public sealed class EndgameController : MonoBehaviour
             {
                 _chPos++;
                 if (_chPos >= _chQueue.Count) { FinishChallenge(); return; }
-                SetFeedback($"Solved - drill {_chPos + 1} of {ChallengeLen}.", UiKit.GreenHi);
+                SetFeedback($"Solved - drill {_chPos + 1} of {_chQueue.Count}.", UiKit.GreenHi);
                 StartCoroutine(NextChallengeDrill());
             }
             else
@@ -339,8 +331,6 @@ public sealed class EndgameController : MonoBehaviour
         yield return new WaitForSeconds(1.1f);
         if (_challenge) LoadDrill(_chQueue[_chPos]);
     }
-
-    // ---------------- challenge mode ----------------
 
     private void SetChallenge(bool on)
     {
@@ -386,8 +376,6 @@ public sealed class EndgameController : MonoBehaviour
     }
 
     private static string FmtMs(int ms) => $"{ms / 60000}:{(ms / 1000) % 60:00}.{(ms % 1000) / 100}";
-
-    // ---------------- controls ----------------
 
     private IEnumerator StartAnalysis()
     {
@@ -471,8 +459,6 @@ public sealed class EndgameController : MonoBehaviour
         else if (kb.nKey.wasPressedThisFrame) NextDrill();
     }
 
-    // ---------------- self-test ----------------
-
     private IEnumerator AutoDemo()
     {
         string dir = ArgValue("-shotdir") ?? Path.Combine(Application.persistentDataPath, "shots");
@@ -485,13 +471,12 @@ public sealed class EndgameController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_start.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Load the promotion drill via a real click on its list row (deterministic: one move to pass).
+        // Promotion drill: deterministic, one move to pass.
         UiAutomation.Click(_root.Q("egrow-kp_promote"));
         yield return new WaitForSeconds(2.5f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_drill.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Hint (real click), then solve by promoting through the board input path (AutoQueen -> e8=Q).
         UiAutomation.Click(_hintBtn);
         yield return new WaitForSeconds(1.2f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_hint.png"));
@@ -502,13 +487,11 @@ public sealed class EndgameController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_passed.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Retry button resets the drill.
         UiAutomation.Click(_retryBtn);
         yield return new WaitForSeconds(2.2f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_retry.png"));
         yield return new WaitForSeconds(0.4f);
 
-        // Next + Flip buttons (real clicks).
         UiAutomation.Click(_nextBtn);
         yield return new WaitForSeconds(2.2f);
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip"));
@@ -516,7 +499,6 @@ public sealed class EndgameController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_next_flip.png"));
         yield return new WaitForSeconds(0.5f);
 
-        // Challenge mode: start a timed 5-drill run (timer ticking, first drill loaded).
         UiAutomation.Click(UiAutomation.FindButton(_root, "Challenge"));
         yield return new WaitForSeconds(2.6f);
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"eg_{tag}_challenge.png"));

@@ -14,9 +14,8 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-// Play a full game vs the adaptive bot, in the redesigned chess.com-style UI (UI Toolkit + the 2D
-// board). Drives KaissaGame (Stockfish from StreamingAssets); keeps the rating update, review,
-// walkthrough and practice-fusion logic - only the view changed from the old 3D/UGUI screen.
+// Play a full game vs the adaptive bot (UI Toolkit + the 2D board). Drives KaissaGame (Stockfish
+// from StreamingAssets) and owns the clock, rating update, post-game review and walkthrough.
 public sealed class KaissaGameController : MonoBehaviour
 {
     private KaissaGame _game;
@@ -32,7 +31,6 @@ public sealed class KaissaGameController : MonoBehaviour
     private string _currentFen = ChessGame.StartFen;
     private bool _canMove;
 
-    // review walkthrough
     private bool _reviewMode;
     private int _reviewPly;
     private string _gameStartFen;
@@ -230,7 +228,6 @@ public sealed class KaissaGameController : MonoBehaviour
         return l;
     }
 
-    // Glyphs for the pieces of `white` colour that have been captured (start count minus current).
     private VisualElement BuildRightRail()
     {
         var rail = new VisualElement();
@@ -276,7 +273,6 @@ public sealed class KaissaGameController : MonoBehaviour
         return b;
     }
 
-    // ---- opponent picker overlay ----
     private void ShowPicker()
     {
         var dim = Overlay();
@@ -518,7 +514,11 @@ public sealed class KaissaGameController : MonoBehaviour
         if (interFen != null)
             RenderBoard(interFen, canMove: false);
         _audio.PlayMove();
-        if (_timed) { _clockWhite += _increment; _activeWhite = false; } // your clock stops, bot's runs
+        if (_timed) // your clock stops (increment), bot's runs
+        {
+            if (_playerWhite) _clockWhite += _increment; else _clockBlack += _increment;
+            _activeWhite = !_playerWhite;
+        }
 
         try
         {
@@ -546,7 +546,11 @@ public sealed class KaissaGameController : MonoBehaviour
             }
             else
             {
-                if (_timed) { _clockBlack += _increment; _activeWhite = true; } // bot moved, your clock runs
+                if (_timed) // bot moved (increment), your clock runs
+                {
+                    if (_playerWhite) _clockBlack += _increment; else _clockWhite += _increment;
+                    _activeWhite = _playerWhite;
+                }
                 _statusLabel.text = $"Bot played {outcome.BotMove}. Your move.";
             }
             UpdateClockLabels();
@@ -878,13 +882,16 @@ public sealed class KaissaGameController : MonoBehaviour
         UpdateClockLabels();
     }
 
-    // The player is always White in Play, so WhiteWins is a win: victory cue + a celebration flourish.
     private void PlayResultCue(string result)
     {
         switch (result)
         {
-            case "WhiteWins": _audio.PlayVictory(); BoardCelebrate.Burst(_boardHost); break;
-            case "BlackWins": _audio.PlayDefeat(); break;
+            case "WhiteWins":
+            case "BlackWins":
+                bool playerWon = (result == "WhiteWins") == _playerWhite;
+                if (playerWon) { _audio.PlayVictory(); BoardCelebrate.Burst(_boardHost); }
+                else _audio.PlayDefeat();
+                break;
             case "Draw": _audio.PlayDraw(); break;
             default: _audio.PlayGameEnd(); break;
         }
@@ -902,10 +909,11 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (_botClock == null) return;
         if (!_timed) { _botClock.style.display = DisplayStyle.None; _youClock.style.display = DisplayStyle.None; return; }
-        _youClock.text = Fmt(_clockWhite);
-        _botClock.text = Fmt(_clockBlack);
-        _youClock.style.color = _activeWhite && !_flagged ? UiKit.Text : UiKit.Mute;
-        _botClock.style.color = !_activeWhite && !_flagged ? UiKit.Text : UiKit.Mute;
+        _youClock.text = Fmt(_playerWhite ? _clockWhite : _clockBlack);
+        _botClock.text = Fmt(_playerWhite ? _clockBlack : _clockWhite);
+        bool youActive = _activeWhite == _playerWhite;
+        _youClock.style.color = youActive && !_flagged ? UiKit.Text : UiKit.Mute;
+        _botClock.style.color = !youActive && !_flagged ? UiKit.Text : UiKit.Mute;
     }
 
     private static string Fmt(double seconds)

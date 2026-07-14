@@ -144,12 +144,9 @@ public sealed class RepertoireSession
 
         var now = _clock.UtcNow;
 
-        // 1. Most overdue.
         var dueKey = _progress.Due(now).OrderBy(d => d.Due).Select(d => d.Key).FirstOrDefault();
-        _current = dueKey is not null ? _decisions.First(d => d.Key == dueKey)
-            // 2. Something not yet learned.
-            : _decisions.FirstOrDefault(d => !IsSeen(d))
-            // 3. Reinforce the weakest (least stable) seen decision.
+        _current = (dueKey is not null ? _decisions.FirstOrDefault(d => d.Key == dueKey) : null)
+            ?? _decisions.FirstOrDefault(d => !IsSeen(d))
             ?? _decisions.OrderBy(Stability).First();
 
         return new RepertoireCard(_current.Key, _current.LineName, _current.Fen, _current.WhiteToMove, _current.Expected);
