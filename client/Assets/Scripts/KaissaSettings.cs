@@ -10,7 +10,6 @@ public static class KaissaSettings
     private sealed class Data
     {
         public bool sound = true;
-        public bool flip = true;
         public int boardTheme = 1;  // index into Board3D.Themes / Board2D themes (1 = Green, chess.com-style)
         public bool useModels = true; // modelled pieces vs procedural
         public bool autoQueen;        // auto-promote to queen instead of showing a picker
@@ -63,7 +62,6 @@ public static class KaissaSettings
     private static void Save() => File.WriteAllText(Path, JsonUtility.ToJson(D));
 
     public static bool Sound { get => D.sound; set { D.sound = value; Save(); } }
-    public static bool Flip { get => D.flip; set { D.flip = value; Save(); } }
     public static int BoardTheme { get => D.boardTheme; set { D.boardTheme = value; Save(); } }
     public static bool UseModels { get => D.useModels; set { D.useModels = value; Save(); } }
     public static bool AutoQueen { get => D.autoQueen; set { D.autoQueen = value; Save(); } }

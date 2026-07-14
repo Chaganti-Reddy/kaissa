@@ -53,7 +53,6 @@ public sealed class CalibrateController : MonoBehaviour
         var center = new VisualElement();
         center.style.flexGrow = 1; center.style.alignItems = Align.Center; UiKit.Pad(center, 18, 24, 18, 24);
 
-        // progress bar + count
         var track = new VisualElement();
         track.style.width = 480; track.style.height = 8; track.style.backgroundColor = UiKit.Panel3; UiKit.Radius(track, 4);
         _progressFill = new VisualElement();
@@ -93,8 +92,6 @@ public sealed class CalibrateController : MonoBehaviour
             ShowIntro();
     }
 
-    // ---------------- flow ----------------
-
     private void ShowIntro()
     {
         _running = false;
@@ -125,7 +122,7 @@ public sealed class CalibrateController : MonoBehaviour
         _scenario = _session.Next();
         if (_scenario == null) { Finish(); return; }
         var view = BoardView.FromFen(_scenario.Fen);
-        _whiteBottom = !KaissaSettings.Flip || view.WhiteToMove;
+        _whiteBottom = view.WhiteToMove; // always orient to the side to move
         _board.Render(_scenario.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
         UpdateSideBadge(view.WhiteToMove);
         _progressLabel.text = $"Puzzle {_session.Answered + 1} of {_session.Total}";
@@ -160,7 +157,7 @@ public sealed class CalibrateController : MonoBehaviour
     private void Finish()
     {
         _running = false;
-        _audio.PlayVictory(); // finishing calibration is a positive milestone
+        _audio.PlayVictory();
         int rating = (int)Math.Round(_session.EstimatedRating);
         var saved = KaissaProgress.Load();
         var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();
@@ -196,8 +193,6 @@ public sealed class CalibrateController : MonoBehaviour
         < 2000 => "Advanced",
         _ => "Expert",
     };
-
-    // ---------------- helpers ----------------
 
     private VisualElement MakeSideBadge()
     {
@@ -273,8 +268,6 @@ public sealed class CalibrateController : MonoBehaviour
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             SceneTransition.Go("Menu");
     }
-
-    // ---------------- self-test ----------------
 
     private IEnumerator AutoDemo()
     {

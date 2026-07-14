@@ -85,8 +85,6 @@ public sealed class RushController : MonoBehaviour
             ShowStartOverlay();
     }
 
-    // ---------------- layout ----------------
-
     private VisualElement BuildCenter()
     {
         var center = new VisualElement();
@@ -182,8 +180,6 @@ public sealed class RushController : MonoBehaviour
         return p;
     }
 
-    // ---------------- run lifecycle ----------------
-
     private void ShowStartOverlay()
     {
         _started = false; _over = false; _timing = false;
@@ -234,9 +230,8 @@ public sealed class RushController : MonoBehaviour
         _session = new PuzzleSession(_scenario);
         _graded = false; _busy = false;
         SetFeedback("", UiKit.Dim);
-        // Orient to the solver's side (setup move flips the side, so XOR its presence).
-        bool solverWhite = IsWhiteToMove(_session.StartFen) ^ (_session.SetupMove != null);
-        _whiteBottom = !KaissaSettings.Flip || solverWhite;
+        // Always orient to the solver's side; StartFen is already the solver-to-move position.
+        _whiteBottom = IsWhiteToMove(_session.StartFen);
         UpdateSideBadge();
         _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
     }
@@ -350,8 +345,6 @@ public sealed class RushController : MonoBehaviour
         _overlayHost.Add(dim);
         _overlayHost.style.display = DisplayStyle.Flex;
     }
-
-    // ---------------- hud / helpers ----------------
 
     private void UpdateHud()
     {

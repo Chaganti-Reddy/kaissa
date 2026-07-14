@@ -29,7 +29,6 @@ public sealed class KaissaBoardController : MonoBehaviour
     private PieceAudio _audio;
     private readonly System.Random _rng = new();
 
-    // current puzzle
     private Mode _mode = Mode.Rated;
     private PuzzleSession _session;
     private TrainingCard _card;        // rated feed only (for grading)
@@ -48,16 +47,13 @@ public sealed class KaissaBoardController : MonoBehaviour
     private float _elapsed;
     private bool _timing;
 
-    // custom feed queue
     private List<Scenario> _feed = new();
     private int _feedAt;
 
-    // session tallies
     private int _answered, _correct, _solveStreak;
     private double _ratingStart;
     private bool _summaryShown;
 
-    // ui
     private VisualElement _root;
     private VisualElement _sideBadge, _sideDot;
     private Label _sideText;
@@ -268,8 +264,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         return null;
     }
 
-    // ---------------- layout ----------------
-
     private VisualElement BuildCenter()
     {
         var center = new VisualElement();
@@ -277,14 +271,12 @@ public sealed class KaissaBoardController : MonoBehaviour
         center.style.alignItems = Align.Center;
         UiKit.Pad(center, 18, 24, 18, 24);
 
-        // top: title + mode picker
         var head = UiKit.Row();
         head.style.width = 480; head.style.justifyContent = Justify.SpaceBetween; head.style.marginBottom = 10;
         head.Add(UiKit.Text_("Puzzles", 24, UiKit.Text, bold: true));
         head.Add(BuildModeBar());
         center.Add(head);
 
-        // side-to-move badge
         var sideRow = UiKit.Row();
         sideRow.style.width = 480; sideRow.style.justifyContent = Justify.SpaceBetween; sideRow.style.marginBottom = 8;
         _sideBadge = MakeSideBadge();
@@ -293,7 +285,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         sideRow.Add(_puzzleRatingLabel);
         center.Add(sideRow);
 
-        // board + overlay badge
         var boardWrap = new VisualElement();
         boardWrap.style.width = 480; boardWrap.style.height = 480; boardWrap.style.flexShrink = 0;
         _boardHost = new VisualElement();
@@ -371,7 +362,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         rail.style.width = 340;
         UiKit.Pad(rail, 18, 24, 18, 8);
 
-        // progression panel (tier + xp)
         var prog = Panel();
         UiKit.Pad(prog, 14, 16, 14, 16);
         _tierLabel = UiKit.Text_("", 18, UiKit.Gold, bold: true);
@@ -394,13 +384,11 @@ public sealed class KaissaBoardController : MonoBehaviour
         prog.Add(chips);
         rail.Add(prog);
 
-        // ratings
         var rate = Panel(); rate.style.marginTop = 14; UiKit.Pad(rate, 14, 16, 14, 16);
         _playerRatingLabel = UiKit.Text_("", 15, UiKit.Text, bold: true);
         rate.Add(_playerRatingLabel);
         rail.Add(rate);
 
-        // themes
         var themes = Panel(); themes.style.marginTop = 14; UiKit.Pad(themes, 12, 14, 12, 14);
         themes.Add(UiKit.Text_("Themes", 12, UiKit.Mute, bold: true));
         _themeChips = new VisualElement();
@@ -408,7 +396,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         themes.Add(_themeChips);
         rail.Add(themes);
 
-        // mastery map
         var mastery = Panel(); mastery.style.marginTop = 14; UiKit.Pad(mastery, 12, 14, 12, 14);
         var mh = UiKit.Text_("Pattern mastery", 12, UiKit.Mute, bold: true);
         mastery.Add(mh);
@@ -436,8 +423,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         UiKit.Radius(p, 12);
         return p;
     }
-
-    // ---------------- feeds ----------------
 
     private void SwitchMode(Mode m, string patternId = null, string label = null)
     {
@@ -556,15 +541,14 @@ public sealed class KaissaBoardController : MonoBehaviour
                 break;
         }
 
-        // reset per-puzzle state
         _hintUsed = false; _hintStage = 0; _wrongThisPuzzle = false; _graded = false;
         _solutionShown = false; _concluded = false; _busy = false;
         _elapsed = 0f; _timing = true;
         SetFeedback("", UiKit.Dim);
-        // Orient to the SOLVER's side (their colour at the bottom). The setup move is one ply that flips
-        // the side, so the solver is White iff StartFen's side XOR (a setup move exists) is White.
-        bool solverWhite = IsWhiteToMove(_session.StartFen) ^ (_session.SetupMove != null);
-        _whiteBottom = !KaissaSettings.Flip || solverWhite;
+        // Always orient to the solver's side (their colour at the bottom), like a chess.com puzzle
+        // and like Play. StartFen is already the solver-to-move position; the setup move only led
+        // into it and is not applied on top. The Flip control still lets the player flip by hand.
+        _whiteBottom = IsWhiteToMove(_session.StartFen);
 
         UpdateSideBadge();
         UpdateThemeChips();
@@ -574,8 +558,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         // Render with the opponent's setup move animating in, chess.com-style.
         _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
     }
-
-    // ---------------- solving ----------------
 
     private void OnPlayerMove(string uci)
     {
@@ -625,7 +607,9 @@ public sealed class KaissaBoardController : MonoBehaviour
         _audio.PlayVictory();
         BoardCelebrate.Burst(_boardHost);
         _timing = false; _concluded = true;
-        _answered++; _correct++;
+        // A wrong attempt in Rated mode already counted this puzzle via GradeRated; don't count it twice.
+        if (!_graded) _answered++;
+        _correct++;
         _solveStreak++;
         if (_solveStreak > KaissaSettings.PuzzleBestStreak) KaissaSettings.PuzzleBestStreak = _solveStreak;
         KaissaStreak.RecordToday();
@@ -671,8 +655,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _trainer.Answer(correct ? _card.Line[0] : playedMove, TimeSpan.FromSeconds(_elapsed), _hintUsed);
         KaissaProgress.Save(_trainer.ExportProgress());
     }
-
-    // ---------------- controls ----------------
 
     private void ShowHint()
     {
@@ -723,10 +705,8 @@ public sealed class KaissaBoardController : MonoBehaviour
         _hintUsed = false; _hintStage = 0; _wrongThisPuzzle = false; _solutionShown = false;
         _concluded = false; _busy = false; _elapsed = 0f; _timing = true;
         SetFeedback("", UiKit.Dim);
-        // Orient to the SOLVER's side (their colour at the bottom). The setup move is one ply that flips
-        // the side, so the solver is White iff StartFen's side XOR (a setup move exists) is White.
-        bool solverWhite = IsWhiteToMove(_session.StartFen) ^ (_session.SetupMove != null);
-        _whiteBottom = !KaissaSettings.Flip || solverWhite;
+        // Always orient to the solver's side; StartFen is already the solver-to-move position.
+        _whiteBottom = IsWhiteToMove(_session.StartFen);
         UpdateSideBadge();
         SetControlsSolving();
         _board.Render(_session.StartFen, canMove: true, lastMove: _session.SetupMove, whiteBottom: _whiteBottom);
@@ -757,8 +737,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         b.SetEnabled(on);
         b.style.opacity = on ? 1f : 0.45f;
     }
-
-    // ---------------- pickers ----------------
 
     private void ToggleThemePicker()
     {
@@ -832,8 +810,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _pickerHost = null;
     }
 
-    // ---------------- info / progression ----------------
-
     private void UpdateSideBadge()
     {
         bool white = IsWhiteToMove(_session.Fen);
@@ -899,8 +875,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         _ => UiKit.Mute,
     };
 
-    // ---------------- badge / tint helpers ----------------
-
     private void SetFeedback(string text, Color color)
     {
         _feedbackLabel.text = text;
@@ -933,8 +907,6 @@ public sealed class KaissaBoardController : MonoBehaviour
         }
         return sb.ToString();
     }
-
-    // ---------------- input / lifecycle ----------------
 
     private void Update()
     {

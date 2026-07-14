@@ -103,8 +103,6 @@ public sealed class SettingsController : MonoBehaviour
             StartCoroutine(AutoDemo());
     }
 
-    // ---------------- preview + swatches ----------------
-
     private void RefreshPreview()
     {
         _preview.ShowCoordinates = KaissaSettings.Coordinates;
@@ -208,8 +206,6 @@ public sealed class SettingsController : MonoBehaviour
         parent.Add(cell);
     }
 
-    // ---------------- grouped settings ----------------
-
     private void RefreshGroups()
     {
         _groups.Clear();
@@ -222,8 +218,6 @@ public sealed class SettingsController : MonoBehaviour
             () => KaissaSettings.UseModels = !KaissaSettings.UseModels);
         Toggle(board, "Coordinates", KaissaSettings.Coordinates ? "On" : "Off",
             () => { KaissaSettings.Coordinates = !KaissaSettings.Coordinates; RefreshPreview(); });
-        Toggle(board, "Flip to side to move", KaissaSettings.Flip ? "On" : "Off",
-            () => KaissaSettings.Flip = !KaissaSettings.Flip);
         Toggle(board, "Highlight last move", KaissaSettings.HighlightMove ? "On" : "Off",
             () => KaissaSettings.HighlightMove = !KaissaSettings.HighlightMove);
         Toggle(board, "Piece animation", new[] { "Fast", "Normal", "Slow" }[Mathf.Clamp(KaissaSettings.AnimSpeed, 0, 2)],
@@ -329,8 +323,6 @@ public sealed class SettingsController : MonoBehaviour
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             SceneTransition.Go("Menu");
     }
-
-    // ---------------- self-test ----------------
 
     private IEnumerator AutoDemo()
     {
