@@ -30,8 +30,13 @@ public sealed class SceneTransition : MonoBehaviour
     }
 
     // Navigate to a scene with a fade-out; falls back to a direct load if the transitioner is absent.
+    // A page can install a guard (e.g. a live game) that intercepts navigation away. If it returns
+    // false the navigation is cancelled; the guard is then responsible for confirming and retrying.
+    public static System.Func<string, bool> LeaveGuard;
+
     public static void Go(string scene)
     {
+        if (LeaveGuard != null && !LeaveGuard(scene)) return;
         if (_inst == null) { SceneManager.LoadScene(scene); return; }
         _inst.StartCoroutine(_inst.FadeOutAndLoad(scene));
     }

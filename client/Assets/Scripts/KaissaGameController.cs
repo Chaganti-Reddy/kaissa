@@ -67,6 +67,9 @@ public sealed class KaissaGameController : MonoBehaviour
     private VisualElement _evalFill;
     private KaissaAnalysis _analysis;
     private CancellationTokenSource _evalCts;
+    private OpeningBook _book;
+    private readonly System.Random _rng = new();
+    private bool _newArmed; // "press New again to abandon" guard while a game is live
 
     private void Start()
     {
@@ -75,6 +78,7 @@ public sealed class KaissaGameController : MonoBehaviour
         if (cam != null) { cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = UiKit.Bg; }
 
         _audio = PieceAudio.Attach(gameObject);
+        SceneTransition.LeaveGuard = TryLeave; // ask before navigating away from a live game
 
         var doc = gameObject.AddComponent<UIDocument>();
         doc.panelSettings = Resources.Load<PanelSettings>("KaissaPanel");
@@ -358,6 +362,33 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private static int BotThinkMs() => KaissaSettings.BotSpeed switch { 0 => 250, 2 => 1200, _ => 600 };
 
+    // How long the bot should appear to think about this reply (and, in a timed game, spend from its
+    // clock). Derived from cheap position features via MoveTimeModel: book moves and recaptures are
+    // quick, complex positions slow, with jitter so it is never metronomic.
+    private double BotThinkSeconds(string fenBeforeBot, string playerUci, string botUci)
+    {
+        if (string.IsNullOrEmpty(botUci)) return 0.3;
+        _book ??= OpeningBook.LoadDefault();
+
+        int legal = 20;
+        bool book = false;
+        try
+        {
+            legal = ChessGame.FromFen(fenBeforeBot).LegalUciMoves().Count;
+            book = _book.Continuations(fenBeforeBot)
+                .Any(c => string.Equals(c.Uci, botUci, StringComparison.OrdinalIgnoreCase));
+        }
+        catch { /* fall back to the defaults above */ }
+
+        bool forced = legal <= 1;
+        bool recapture = botUci.Length >= 4 && !string.IsNullOrEmpty(playerUci) && playerUci.Length >= 4
+            && botUci.Substring(2, 2) == playerUci.Substring(2, 2);
+        double? remaining = _timed ? (_playerWhite ? _clockBlack : _clockWhite) : (double?)null;
+
+        var ctx = new MoveTimeContext(book, recapture, forced, legal, remaining, _increment, KaissaSettings.BotSpeed);
+        return MoveTimeModel.ThinkSeconds(ctx, _rng.NextDouble());
+    }
+
     private bool _starting; // guards against concurrent engine ops from rapid New/Rematch clicks
 
     private async void StartGame(string label, int? fixedElo)
@@ -501,7 +532,7 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (_busy || _game == null)
             return;
-        _resignArmed = false; // making a move cancels a pending resign confirmation
+        _resignArmed = false; _newArmed = false; // a move cancels a pending resign/new confirmation
         _busy = true;
 
         if (_timed && _flagged) { _busy = false; return; }
@@ -517,7 +548,9 @@ public sealed class KaissaGameController : MonoBehaviour
 
         try
         {
+            var searchTimer = System.Diagnostics.Stopwatch.StartNew();
             var outcome = await _game.PlayAsync(uci);
+            searchTimer.Stop();
             if (!outcome.Accepted)
             {
                 _statusLabel.text = "Illegal move - try again.";
@@ -526,29 +559,62 @@ public sealed class KaissaGameController : MonoBehaviour
                 return;
             }
 
-            _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove;
-            RenderBoard(outcome.Board.Fen, canMove: !outcome.IsGameOver);
-            UpdateMoveList();
-
             if (outcome.IsGameOver)
             {
+                // The player's move (or the bot's forced reply) ended the game; reveal at once.
+                _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove;
+                RenderBoard(outcome.Board.Fen, canMove: false);
+                UpdateMoveList();
                 PlayResultCue(outcome.Result);
                 _statusLabel.text = $"Game over: {outcome.Result}. Rating {_game.PlayerRating:0}. Reviewing...";
                 var review = await _game.ReviewAsync();
                 _statusLabel.text = $"Game over: {outcome.Result}. {review.Accuracy:0.0}% accuracy, " +
                                     $"{review.Mistakes.Count} mistake(s); {review.Practice.Count} to practice.  N: new game";
                 EnterReview(review, ResultForPlayer(outcome.Result));
+                UpdateClockLabels();
             }
             else
             {
-                if (_timed) // bot moved (increment), your clock runs
+                // Human-like reply: the bot "thinks" for a while (book/recaptures fast, hard positions
+                // slow), spends that time from its own clock in a timed game, and can even flag.
+                double think = BotThinkSeconds(interFen, uci, outcome.BotMove);
+                if (_timed)
+                {
+                    double botClock = _playerWhite ? _clockBlack : _clockWhite;
+                    if (botClock - think <= 0)
+                    {
+                        if (_playerWhite) _clockBlack = 0; else _clockWhite = 0;
+                        UpdateClockLabels();
+                        _flagged = true;
+                        _lastMove = outcome.BotMove;
+                        RenderBoard(outcome.Board.Fen, canMove: false);
+                        UpdateMoveList();
+                        OnFlag(playerLost: false); // the bot ran out of time
+                        _busy = false;
+                        return;
+                    }
+                    if (_playerWhite) _clockBlack -= think; else _clockWhite -= think;
+                    UpdateClockLabels();
+                }
+
+                _statusLabel.text = "Bot is thinking...";
+                // Wait out the human-like think, minus the time the search already spent, capped so a
+                // long simulated think does not bore the player.
+                double waitMore = Mathf.Min((float)think, 4f) - searchTimer.Elapsed.TotalSeconds;
+                if (waitMore > 0) await System.Threading.Tasks.Task.Delay((int)(waitMore * 1000));
+                if (_reviewMode || _game == null) { _busy = false; return; } // guard against New during the think
+
+                _lastMove = string.IsNullOrEmpty(outcome.BotMove) ? uci : outcome.BotMove;
+                RenderBoard(outcome.Board.Fen, canMove: true);
+                UpdateMoveList();
+                if (_timed) // bot's move done: add its increment, hand the clock back to you
                 {
                     if (_playerWhite) _clockBlack += _increment; else _clockWhite += _increment;
                     _activeWhite = _playerWhite;
                 }
                 _statusLabel.text = $"Bot played {outcome.BotMove}. Your move.";
+                UpdateClockLabels();
             }
-            UpdateClockLabels();
         }
         catch (Exception e)
         {
@@ -598,11 +664,49 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private void NewGame()
     {
+        // Abandoning a live game needs a confirm (press New again); a finished/review game does not.
+        if (InLiveGame() && !_newArmed)
+        {
+            _newArmed = true;
+            _statusLabel.text = "Press New again to abandon this game.";
+            return;
+        }
+        _newArmed = false;
         // Keep the engine process alive so StartGame can reuse it (instant start, no respawn).
         _reviewMode = false;
         _busy = false;
         _lastMove = null;
         ShowPicker();
+    }
+
+    // A game the player has started and not yet finished or resigned.
+    private bool InLiveGame() =>
+        _game != null && !_game.IsGameOver && !_reviewMode && _game.MoveHistory is { Count: > 0 };
+
+    // Guard installed on SceneTransition: navigating away from a live game asks first.
+    private bool TryLeave(string scene)
+    {
+        if (!InLiveGame()) return true;
+        ShowLeaveConfirm(scene);
+        return false;
+    }
+
+    private void ShowLeaveConfirm(string scene)
+    {
+        var dim = Overlay();
+        var panel = OverlayPanel(); panel.style.width = 380;
+        panel.Add(UiKit.Text_("Leave this game?", 22, UiKit.Text, bold: true));
+        var msg = UiKit.Text_("Your game against the bot will be abandoned.", 14, UiKit.Dim);
+        msg.style.whiteSpace = WhiteSpace.Normal; msg.style.marginTop = 8; msg.style.marginBottom = 16;
+        msg.style.unityTextAlign = TextAnchor.MiddleCenter;
+        panel.Add(msg);
+        var row = UiKit.Row();
+        var stay = UiKit.Ghost("Stay", () => dim.RemoveFromHierarchy(), 14); stay.style.marginRight = 10;
+        var leave = UiKit.Primary("Leave", () => { SceneTransition.LeaveGuard = null; SceneTransition.Go(scene); }, 14);
+        row.Add(stay); row.Add(leave);
+        panel.Add(row);
+        dim.Add(panel);
+        _root.Add(dim);
     }
 
     // Rematch: play the same opponent + time control again without the picker.
@@ -930,15 +1034,20 @@ public sealed class KaissaGameController : MonoBehaviour
     private void TickClock()
     {
         if (!_timed || _flagged || _game == null || _game.IsGameOver || _reviewMode) return;
+        // Only the player's clock ticks in real time; the bot spends its clock through the think-time
+        // model (see OnMove), so it is not double-counted here.
+        if (_activeWhite != _playerWhite) return;
         double dt = Time.deltaTime;
-        if (_activeWhite) _clockWhite -= dt; else _clockBlack -= dt;
-        // Warn once when the player's own clock (whichever colour) runs low on their turn.
+        if (_playerWhite) _clockWhite -= dt; else _clockBlack -= dt;
         double playerClock = _playerWhite ? _clockWhite : _clockBlack;
-        if (KaissaSettings.LowTimeWarning && !_lowTimeWarned && _activeWhite == _playerWhite && playerClock <= 10 && playerClock > 0)
+        if (KaissaSettings.LowTimeWarning && !_lowTimeWarned && playerClock <= 10 && playerClock > 0)
         { _lowTimeWarned = true; _audio.PlayLowTime(); }
-        // Flag attribution follows the chosen colour, not a fixed White-player assumption.
-        if (_clockWhite <= 0) { _clockWhite = 0; _flagged = true; OnFlag(playerLost: _playerWhite); }
-        else if (_clockBlack <= 0) { _clockBlack = 0; _flagged = true; OnFlag(playerLost: !_playerWhite); }
+        if (playerClock <= 0)
+        {
+            if (_playerWhite) _clockWhite = 0; else _clockBlack = 0;
+            _flagged = true;
+            OnFlag(playerLost: true);
+        }
         UpdateClockLabels();
     }
 
@@ -1007,6 +1116,7 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private void OnDestroy()
     {
+        SceneTransition.LeaveGuard = null;
         if (_game != null) _ = _game.DisposeAsync();
         _evalCts?.Cancel();
         if (_analysis != null) _ = _analysis.DisposeAsync();
