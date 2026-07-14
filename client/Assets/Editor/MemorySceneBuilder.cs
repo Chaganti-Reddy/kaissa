@@ -10,13 +10,20 @@ using UnityEngine;
 public static class MemorySceneBuilder
 {
     [MenuItem("Kaissa/Create Memory Scene")]
-    public static void Create()
+    public static void Create() => CreateScene<MemoryController>("Memory");
+
+    [MenuItem("Kaissa/Create Captures Scene")]
+    public static void CreateCaptures() => CreateScene<CapturesController>("Captures");
+
+    // Build a single-controller scene (Main Camera + Directional Light from DefaultGameObjects, plus a
+    // GameObject carrying the controller) and register it in the build settings, like the other scenes.
+    private static void CreateScene<T>(string sceneName) where T : Component
     {
-        const string path = "Assets/Scenes/Memory.unity";
+        string path = $"Assets/Scenes/{sceneName}.unity";
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
-        var go = new GameObject("Memory");
-        go.AddComponent<MemoryController>();
+        var go = new GameObject(sceneName);
+        go.AddComponent<T>();
 
         EditorSceneManager.SaveScene(scene, path);
 
@@ -26,7 +33,7 @@ public static class MemorySceneBuilder
             scenes.Add(new EditorBuildSettingsScene(path, true));
             EditorBuildSettings.scenes = scenes.ToArray();
         }
-        Debug.Log("MemorySceneBuilder: Memory.unity created and registered in build settings.");
+        Debug.Log($"MemorySceneBuilder: {sceneName}.unity created and registered in build settings.");
     }
 }
 #endif
