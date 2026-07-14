@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.2.0
+
+- Memory: a new chunk-recall trainer. A position is shown for a few seconds, the board clears, and you rebuild it from memory by stamping pieces from a palette; each solve adds a piece and shortens the look. Trains the pattern recognition the whole app is built around.
+- Puzzle Blitz: a Streak mode alongside the timed and Survival modes. Untimed and progressively harder, a single wrong move ends the run, and your longest streak is kept.
+- Play: type a move in algebraic notation (e4, Nf3, O-O) and press Enter to make it, for keyboard and accessibility use.
+- Board: a High Contrast theme (near-white and deep blue) that stays readable for colour-blind players, alongside the existing themes.
+- Play: premove (queuing a move during the opponent's turn) can now be turned off in Settings; it stays on by default.
+- Game Review: the Brilliant classification now requires a genuine sacrifice in a position you were not already winning, matching the common definition.
+
 ## v1.1.0
 
 - Human-like opponents (Maia): a set of neural-network bots (Maia 1100 through 1900) that play like a human of that rating rather than a strength-capped engine - natural developing moves and human mistakes, not computer lines. They run on Leela Chess Zero (lc0) at a single node and appear in the opponent picker when the engine is installed. Both lc0 and the Maia nets are GPLv3; they are fetched by `scripts/fetch-lc0.ps1` and staged into the build, credited in THIRD-PARTY-NOTICES.md.
