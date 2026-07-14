@@ -143,7 +143,7 @@ public sealed class AnalysisController : MonoBehaviour
 
         var movesP = Panel(); movesP.style.marginTop = 12; UiKit.Pad(movesP, 12, 14, 12, 14);
         movesP.Add(UiKit.Text_("Moves", 12, UiKit.Mute, bold: true));
-        var scroll = new ScrollView(); scroll.style.maxHeight = 200; scroll.style.marginTop = 4;
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 200; scroll.style.marginTop = 4;
         _movesBody = scroll.contentContainer;
         movesP.Add(scroll);
         rail.Add(movesP);
@@ -540,11 +540,16 @@ public sealed class AnalysisController : MonoBehaviour
             var l = lines[i];
             var row = UiKit.Row();
             row.name = "engineline";
+            row.style.alignItems = Align.FlexStart; // score stays top-aligned when the PV wraps
             UiKit.Pad(row, 6, 8, 6, 8); UiKit.Radius(row, 6);
-            var score = UiKit.Text_(l.Score, 13, UiKit.Gold, bold: true); score.style.minWidth = 52;
+            var score = UiKit.Text_(l.Score, 13, UiKit.Gold, bold: true);
+            score.style.minWidth = 52; score.style.flexShrink = 0;
             row.Add(score);
             var moves = UiKit.Text_(LineSan(fen, l.Moves, 8), 13, UiKit.Dim);
-            moves.style.whiteSpace = WhiteSpace.Normal; moves.style.flexGrow = 1;
+            // flexBasis 0 + flexShrink 1 so the PV wraps to the panel width (Yoga defaults flexShrink to
+            // 0, so without this the long move list overflows instead of wrapping).
+            moves.style.whiteSpace = WhiteSpace.Normal;
+            moves.style.flexGrow = 1; moves.style.flexBasis = 0; moves.style.flexShrink = 1;
             row.Add(moves);
             row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
             row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));

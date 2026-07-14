@@ -248,7 +248,7 @@ public sealed class KaissaGameController : MonoBehaviour
         hd.style.borderBottomWidth = 1; hd.style.borderBottomColor = UiKit.Line;
         panel.Add(hd);
 
-        var scroll = new ScrollView();
+        var scroll = UiKit.Scroll();
         scroll.style.maxHeight = 300;
         _movesBody = scroll.contentContainer;
         panel.Add(scroll);

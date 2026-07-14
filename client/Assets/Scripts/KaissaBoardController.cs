@@ -394,7 +394,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         var mastery = Panel(); mastery.style.marginTop = 14; UiKit.Pad(mastery, 12, 14, 12, 14);
         var mh = UiKit.Text_("Pattern mastery", 12, UiKit.Mute, bold: true);
         mastery.Add(mh);
-        var scroll = new ScrollView(); scroll.style.maxHeight = 190; scroll.style.marginTop = 6;
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 190; scroll.style.marginTop = 6;
         _masteryBody = scroll.contentContainer;
         mastery.Add(scroll);
         rail.Add(mastery);
@@ -766,7 +766,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         panel.style.width = 320; UiKit.Pad(panel, 10, 12, 10, 12); panel.style.maxHeight = 620;
         var h = UiKit.Text_(title, 13, UiKit.Mute, bold: true); h.style.marginBottom = 6;
         panel.Add(h);
-        var scroll = new ScrollView(); scroll.style.maxHeight = 560;
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 560;
         panel.Add(scroll);
         return (panel, scroll.contentContainer);
     }

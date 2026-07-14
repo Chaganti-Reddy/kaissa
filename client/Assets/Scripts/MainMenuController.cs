@@ -55,7 +55,7 @@ public sealed class MainMenuController : MonoBehaviour
 
     private VisualElement BuildMain()
     {
-        var scroll = new ScrollView(); scroll.style.flexGrow = 1;
+        var scroll = UiKit.Scroll(); scroll.style.flexGrow = 1;
         var main = scroll.contentContainer;
         UiKit.Pad(main, 26, 34, 40, 34);
 

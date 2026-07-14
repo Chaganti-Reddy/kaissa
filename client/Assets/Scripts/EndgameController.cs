@@ -162,7 +162,7 @@ public sealed class EndgameController : MonoBehaviour
 
         var listPanel = Panel(); listPanel.style.marginTop = 14; UiKit.Pad(listPanel, 12, 14, 12, 14);
         listPanel.Add(UiKit.Text_("All endgames", 12, UiKit.Mute, bold: true));
-        var scroll = new ScrollView(); scroll.style.maxHeight = 520; scroll.style.marginTop = 6;
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 520; scroll.style.marginTop = 6;
         _list = scroll.contentContainer;
         listPanel.Add(scroll);
         rail.Add(listPanel);

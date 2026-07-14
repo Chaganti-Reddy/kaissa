@@ -36,7 +36,7 @@ public sealed class StatsController : MonoBehaviour
         root.style.flexDirection = FlexDirection.Row; root.style.flexGrow = 1; root.style.backgroundColor = UiKit.Bg;
         root.Add(UiKit.NavRail("Stats"));
 
-        var scroll = new ScrollView(); scroll.style.flexGrow = 1; _scroll = scroll;
+        var scroll = UiKit.Scroll(); scroll.style.flexGrow = 1; _scroll = scroll;
         var main = scroll.contentContainer;
         UiKit.Pad(main, 26, 34, 34, 34);
         main.style.maxWidth = 980;

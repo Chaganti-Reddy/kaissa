@@ -312,7 +312,7 @@ public sealed class OpeningController : MonoBehaviour
 
         var book = Panel(); book.style.marginTop = 14; UiKit.Pad(book, 12, 14, 12, 14);
         book.Add(UiKit.Text_("Book moves", 12, UiKit.Mute, bold: true));
-        var scroll = new ScrollView(); scroll.style.maxHeight = 460; scroll.style.marginTop = 6;
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 460; scroll.style.marginTop = 6;
         _bookList = scroll.contentContainer;
         book.Add(scroll);
         _rightRail.Add(book);
@@ -368,7 +368,7 @@ public sealed class OpeningController : MonoBehaviour
         search.style.marginTop = 6; search.style.marginBottom = 6;
         search.RegisterValueChangedCallback(e => PopulateOpenings(e.newValue));
         pick.Add(search);
-        var scroll = new ScrollView(); scroll.style.maxHeight = 420;
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 420;
         _openingList = scroll.contentContainer;
         pick.Add(scroll);
         _rightRail.Add(pick);

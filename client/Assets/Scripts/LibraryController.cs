@@ -113,7 +113,7 @@ public sealed class LibraryController : MonoBehaviour
         rail.style.width = 340; UiKit.Pad(rail, 18, 24, 18, 8);
         var panel = Panel(); UiKit.Pad(panel, 12, 14, 12, 14);
         panel.Add(UiKit.Text_("Lessons", 12, UiKit.Mute, bold: true));
-        var scroll = new ScrollView(); scroll.style.maxHeight = 640; scroll.style.marginTop = 6;
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 640; scroll.style.marginTop = 6;
         _list = scroll.contentContainer;
         panel.Add(scroll);
         rail.Add(panel);

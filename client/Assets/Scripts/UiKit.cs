@@ -64,6 +64,16 @@ public static class UiKit
         return e;
     }
 
+    // Hide a ScrollView's scrollbars while keeping wheel/touch scrolling. The default scrollers are
+    // wide and heavy; content still scrolls with the mouse wheel when they are hidden.
+    public static ScrollView Scroll(ScrollViewMode mode = ScrollViewMode.Vertical)
+    {
+        var sv = new ScrollView(mode);
+        sv.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+        sv.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+        return sv;
+    }
+
     public static Label Text_(string s, int size, Color color, bool bold = false)
     {
         var l = new Label(s);

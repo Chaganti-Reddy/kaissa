@@ -50,10 +50,9 @@ public sealed class SettingsController : MonoBehaviour
 
         // Scrollable so every card is reachable even at short window heights (the pickers used to
         // fall below the fold).
-        var left = new ScrollView(ScrollViewMode.Vertical);
+        var left = UiKit.Scroll();
         left.style.width = 320; left.style.marginRight = 24; left.style.flexShrink = 0;
         left.style.alignSelf = Align.Stretch;
-        left.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
         var prevCard = Panel(); UiKit.Pad(prevCard, 14);
         prevCard.Add(UiKit.Text_("PREVIEW", 11, UiKit.Mute, bold: true));
         _boardHost = new VisualElement();
@@ -85,7 +84,7 @@ public sealed class SettingsController : MonoBehaviour
         left.Add(soundCard);
         cols.Add(left);
 
-        var scroll = new ScrollView(); scroll.style.flexGrow = 1; scroll.style.maxWidth = 620;
+        var scroll = UiKit.Scroll(); scroll.style.flexGrow = 1; scroll.style.maxWidth = 620;
         _groups = scroll.contentContainer;
         cols.Add(scroll);
 
