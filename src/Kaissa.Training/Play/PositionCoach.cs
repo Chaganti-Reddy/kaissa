@@ -6,6 +6,9 @@ namespace Kaissa.Training.Play;
 /// <summary>One engine suggestion handed to the coach: a move in SAN and its already-formatted score.</summary>
 public sealed record CoachLine(string San, string ScoreText);
 
+/// <summary>A board arrow the coach wants drawn, in UCI square coordinates (e.g. from "c4" to "f7").</summary>
+public sealed record CoachArrow(string From, string To);
+
 /// <summary>
 /// A whole-position explanation in five plain-language categories, mirroring the way a coaching tool
 /// breaks a position down: what the opponent threatens, the best moves, the plans the position calls
@@ -17,7 +20,9 @@ public sealed record PositionExplanation(
     IReadOnlyList<string> BestMoves,
     IReadOnlyList<string> Plans,
     IReadOnlyList<string> PieceRoles,
-    IReadOnlyList<string> Concepts);
+    IReadOnlyList<string> Concepts,
+    IReadOnlyList<CoachArrow> ThreatArrows,
+    IReadOnlyList<CoachArrow> RoleArrows);
 
 /// <summary>
 /// Builds a <see cref="PositionExplanation"/> from a FEN (and the engine's top lines, for the best-move
@@ -39,7 +44,47 @@ public static class PositionCoach
             BestMoves(engineLines),
             Plans(board, whiteToMove),
             PieceRoles(board, whiteToMove),
-            Concepts(board, whiteToMove));
+            Concepts(board, whiteToMove),
+            ThreatArrows(board, whiteToMove),
+            RoleArrows(board, whiteToMove));
+    }
+
+    // Red arrows: each enemy attacker pointing at a friendly piece it threatens (undefended or cheaper).
+    private static IReadOnlyList<CoachArrow> ThreatArrows(AttackBoard board, bool weAreWhite)
+    {
+        var arrows = new List<CoachArrow>();
+        foreach (var (f, r, piece) in Pieces(board))
+        {
+            if (board.IsWhite(piece) != weAreWhite || char.ToUpperInvariant(piece) == 'K') continue;
+            if (!board.IsAttackedBy(f, r, byWhite: !weAreWhite)) continue;
+            bool defended = board.IsAttackedBy(f, r, byWhite: weAreWhite);
+            var attacker = CheapestAttackerSquare(board, f, r, byWhite: !weAreWhite);
+            if (attacker is { } a && (!defended || Value(board.PieceAt(a.f, a.r)) < Value(piece)))
+                arrows.Add(new CoachArrow(Sq(a.f, a.r), Sq(f, r)));
+        }
+        return Cap(arrows);
+    }
+
+    // Blue arrows: each developed friendly piece pointing at the most valuable enemy piece it bears on.
+    private static IReadOnlyList<CoachArrow> RoleArrows(AttackBoard board, bool weAreWhite)
+    {
+        var arrows = new List<(int order, CoachArrow arrow)>();
+        foreach (var (f, r, piece) in Pieces(board))
+        {
+            if (board.IsWhite(piece) != weAreWhite) continue;
+            if (char.ToUpperInvariant(piece) is 'P' or 'K') continue;
+
+            int bestVal = 0; (int f, int r)? target = null;
+            foreach (var (af, ar) in board.AttacksFrom(f, r))
+            {
+                char t = board.PieceAt(af, ar);
+                if (t == '\0' || board.IsWhite(t) == weAreWhite) continue;
+                if (Value(t) > bestVal) { bestVal = Value(t); target = (af, ar); }
+            }
+            if (target is { } tg)
+                arrows.Add((Value(piece), new CoachArrow(Sq(f, r), Sq(tg.f, tg.r))));
+        }
+        return Cap(arrows.OrderByDescending(x => x.order).Select(x => x.arrow).ToList());
     }
 
     private static bool SideToMove(string fen)
@@ -189,6 +234,21 @@ public static class PositionCoach
         return best;
     }
 
+    private static (int f, int r)? CheapestAttackerSquare(AttackBoard board, int file, int rank, bool byWhite)
+    {
+        int best = int.MaxValue; (int f, int r)? square = null;
+        foreach (var (f, r, piece) in Pieces(board))
+        {
+            if (board.IsWhite(piece) != byWhite) continue;
+            if (board.AttacksFrom(f, r).Any(sq => sq.file == file && sq.rank == rank) && Value(piece) < best)
+            {
+                best = Value(piece);
+                square = (f, r);
+            }
+        }
+        return square;
+    }
+
     private static IEnumerable<int> OpenAndHalfOpenFiles(AttackBoard board, bool weAreWhite)
     {
         for (int file = 0; file < 8; file++)
@@ -314,5 +374,8 @@ public static class PositionCoach
     }
 
     private static IReadOnlyList<string> Cap(List<string> items) =>
+        items.Count > MaxItems ? items.Take(MaxItems).ToList() : items;
+
+    private static IReadOnlyList<CoachArrow> Cap(List<CoachArrow> items) =>
         items.Count > MaxItems ? items.Take(MaxItems).ToList() : items;
 }

@@ -70,6 +70,29 @@ public class PositionCoachTests
     }
 
     [Fact]
+    public void Start_position_has_no_threat_arrows()
+    {
+        Assert.Empty(PositionCoach.Explain(Start).ThreatArrows);
+    }
+
+    [Fact]
+    public void Threat_arrow_points_from_the_attacker_to_the_hanging_piece()
+    {
+        const string fen = "rnbqkb1r/pppppppp/8/8/3n4/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
+        var e = PositionCoach.Explain(fen);
+        Assert.Contains(e.ThreatArrows, a => a.From == "e3" && a.To == "d4");
+    }
+
+    [Fact]
+    public void Role_arrow_points_from_a_piece_to_the_enemy_it_bears_on()
+    {
+        // Ruy Lopez shape: the bishop on b5 bears on the knight on c6.
+        const string fen = "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1";
+        var e = PositionCoach.Explain(fen);
+        Assert.Contains(e.RoleArrows, a => a.From == "b5" && a.To == "c6");
+    }
+
+    [Fact]
     public void Results_are_capped()
     {
         var e = PositionCoach.Explain(Start);
