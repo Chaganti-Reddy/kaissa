@@ -56,7 +56,7 @@ public sealed class KaissaGameController : MonoBehaviour
     private Label _youClock;
     private double _playerRating;
     private bool _timed, _flagged, _activeWhite = true;
-    private double _clockWhite, _clockBlack, _increment;
+    private double _clockWhite, _clockBlack, _increment, _baseSecs;
     private int _tcIndex;
     private int _pickSide; // 0 White, 1 Black, 2 Random
     private string _lastLabel; private int? _lastElo;
@@ -499,7 +499,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _lastMove = null;
 
         var tc = TimeControls[Mathf.Clamp(_tcIndex, 0, TimeControls.Length - 1)];
-        _timed = tc.secs > 0; _clockWhite = _clockBlack = tc.secs; _increment = tc.inc;
+        _timed = tc.secs > 0; _clockWhite = _clockBlack = _baseSecs = tc.secs; _increment = tc.inc;
         _activeWhite = _playerWhite; _flagged = false; // after any bot opening it is the player's turn
         _resignArmed = false; _lowTimeWarned = false;
         _botClock.style.display = _youClock.style.display = _timed ? DisplayStyle.Flex : DisplayStyle.None;
@@ -916,6 +916,10 @@ public sealed class KaissaGameController : MonoBehaviour
             review.AllMoves.Where(m => m.Side == playerSideName).Select(m => m.Quality),
             review.PhaseAccuracy.Opening, review.PhaseAccuracy.Middlegame, review.PhaseAccuracy.Endgame);
         KaissaGameLog.RecordTactics(review.TacticsFound, review.TacticsMissed);
+        double? clockShare = _timed && _baseSecs > 0
+            ? Mathf.Clamp01((float)((_playerWhite ? _clockWhite : _clockBlack) / _baseSecs))
+            : (double?)null;
+        KaissaGameLog.RecordOutcome(review.EvalSeries, result, clockShare);
 
         _review = review;
         _reviewMoves = _game.MoveHistory;

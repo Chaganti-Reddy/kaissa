@@ -17,6 +17,12 @@ public static class KaissaGameLog
         public List<double> phaseOpen = new(), phaseMid = new(), phaseEnd = new(); // per-game phase accuracies
         public List<int> tacticsFound = new();   // cumulative tactics taken   [fork, pin, mate, hanging]
         public List<int> tacticsMissed = new();  // cumulative tactics missed  [fork, pin, mate, hanging]
+
+        // Outcome signals for the weakness dashboard (see WeaknessDashboard in the core).
+        public int advGames, advConverted;   // reached a winning edge; won it
+        public int losingGames, losingSaved; // reached a losing position; did not lose
+        public int timedGames;               // games played with a clock
+        public double timeShareSum;          // sum of end-of-game clock share (0-1) over timed games
     }
 
     public static readonly string[] QualityNames = { "Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder" };
@@ -89,6 +95,33 @@ public static class KaissaGameLog
     public static IReadOnlyList<int> TacticsMissed { get { Pad(D.tacticsMissed); return D.tacticsMissed; } }
     public static readonly string[] TacticNames = { "Forks", "Pins", "Mates", "Hanging" };
     private static void Pad(List<int> l) { while (l.Count < 4) l.Add(0); }
+
+    // Per-game outcome signals derived from the review eval curve, the result, and (for timed games) the
+    // clock. evalSeries is player-perspective centipawns per ply; result is 0 loss / 1 draw / 2 win;
+    // clockShare is the fraction of base time left at the end (only for timed games), null otherwise.
+    public static void RecordOutcome(IReadOnlyList<int> evalSeries, int result, double? clockShare)
+    {
+        if (evalSeries != null && evalSeries.Count > 0)
+        {
+            int peak = int.MinValue, trough = int.MaxValue;
+            foreach (int cp in evalSeries) { if (cp > peak) peak = cp; if (cp < trough) trough = cp; }
+            if (peak >= 200) { D.advGames++; if (result == 2) D.advConverted++; }
+            if (trough <= -200) { D.losingGames++; if (result != 0) D.losingSaved++; }
+        }
+        if (clockShare is { } share)
+        {
+            D.timedGames++;
+            D.timeShareSum += Math.Clamp(share, 0, 1);
+        }
+        File.WriteAllText(Path, JsonUtility.ToJson(D));
+    }
+
+    public static int AdvantageGames => D.advGames;
+    public static int AdvantageConverted => D.advConverted;
+    public static int LosingGames => D.losingGames;
+    public static int LosingSaved => D.losingSaved;
+    public static int TimedGames => D.timedGames;
+    public static double TimeClockShare => D.timedGames > 0 ? D.timeShareSum / D.timedGames : 0;
 
     public static IReadOnlyList<int> QualityMix => D.quality.Count >= 6 ? D.quality : new List<int> { 0, 0, 0, 0, 0, 0 };
     public static double? PhaseOpen => D.phaseOpen.Count > 0 ? D.phaseOpen.Average() : (double?)null;

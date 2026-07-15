@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Kaissa.Training;
 using Kaissa.Training.Api;
+using Kaissa.Training.Play;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -52,6 +53,7 @@ public sealed class StatsController : MonoBehaviour
 
         BuildTiles(main, stats, standing);
         BuildRatingTrend(main, stats);
+        BuildWeaknessDashboard(main, stats);
         BuildProgression(main, standing);
         BuildSummaryRow(main, stats);
         BuildRecentGames(main);
@@ -73,6 +75,12 @@ public sealed class StatsController : MonoBehaviour
         yield return new WaitForSeconds(1.0f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_top.png"));
         yield return new WaitForSeconds(0.6f);
+
+        // The weakness dashboard sits high (after the rating trend); frame it on its own.
+        _scroll.scrollOffset = new Vector2(0, 320f);
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_weakness.png"));
+        yield return new WaitForSeconds(0.3f);
 
         // Mid-scroll: the move-quality / phase / tactics insight cards (two depths to be sure to frame them).
         _scroll.scrollOffset = new Vector2(0, 700f);
@@ -194,6 +202,82 @@ public sealed class StatsController : MonoBehaviour
             : $"{standing.XpIntoTier:n0} / {standing.XpForNext:n0} XP to {PuzzleProgression.Tiers[standing.Index + 1].Name}";
         body.Add(UiKit.Text_(next, 12, UiKit.Dim));
         main.Add(card);
+    }
+
+    // Six-axis weakness report, benchmarked against a modeled "typical at your level". Computed in the
+    // pure core (WeaknessDashboard) from the player's own game log; the weakest actionable axis links to
+    // its drill. No crowd data - the baseline is a rating-indexed estimate, labelled as such.
+    private void BuildWeaknessDashboard(VisualElement main, PlayerStats stats)
+    {
+        if (KaissaGameLog.Count == 0) return;
+
+        var input = new WeaknessInput
+        {
+            Rating = stats.Rating,
+            OpeningAccuracy = KaissaGameLog.PhaseOpen,
+            EndgameAccuracy = KaissaGameLog.PhaseEnd,
+            TacticsFound = KaissaGameLog.TacticsFound.Sum(),
+            TacticsMissed = KaissaGameLog.TacticsMissed.Sum(),
+            AdvantageGames = KaissaGameLog.AdvantageGames,
+            AdvantageConverted = KaissaGameLog.AdvantageConverted,
+            LosingGames = KaissaGameLog.LosingGames,
+            LosingSaved = KaissaGameLog.LosingSaved,
+            TimedGames = KaissaGameLog.TimedGames,
+            TimeClockShare = KaissaGameLog.TimeClockShare,
+        };
+        var axes = WeaknessDashboard.Compute(input);
+
+        var (card, body) = Card("Improvement areas");
+        body.Add(UiKit.Text_($"vs typical at your level (~{stats.Rating:0}), across your last {KaissaGameLog.Count} games", 11, UiKit.Mute));
+        foreach (var a in axes) body.Add(AxisRow(a));
+
+        var weakest = WeaknessDashboard.WeakestActionable(axes);
+        if (weakest?.DrillRoute != null)
+        {
+            var btn = UiKit.Primary($"Train the weakest: {weakest.Name}", () => SceneTransition.Go(weakest.DrillRoute), 15);
+            btn.name = "trainweakest";
+            btn.style.marginTop = 12; btn.style.alignSelf = Align.FlexStart;
+            body.Add(btn);
+        }
+        main.Add(card);
+    }
+
+    private static VisualElement AxisRow(AxisScore a)
+    {
+        Color color = a.Verdict switch
+        {
+            "ahead" => UiKit.GreenHi,
+            "behind" => UiKit.Danger,
+            "even" => UiKit.Gold,
+            _ => UiKit.Mute,
+        };
+        var wrap = new VisualElement(); wrap.style.marginTop = 10;
+
+        var head = UiKit.Row(); head.style.justifyContent = Justify.SpaceBetween; head.style.alignItems = Align.Center;
+        head.Add(UiKit.Text_(a.Name, 13, UiKit.Text, bold: true));
+        head.Add(UiKit.Text_(a.HasData ? $"{a.Score}" : "-", 15, color, bold: true));
+        wrap.Add(head);
+
+        // Track with the player's score as a filled bar, plus a tick marking the peer baseline.
+        var track = new VisualElement();
+        track.style.height = 10; track.style.marginTop = 4; track.style.backgroundColor = UiKit.Panel3; UiKit.Radius(track, 5);
+        if (a.HasData)
+        {
+            var fill = new VisualElement();
+            fill.style.height = 10; UiKit.Radius(fill, 5); fill.style.backgroundColor = color;
+            fill.style.width = new Length(a.Score, LengthUnit.Percent);
+            track.Add(fill);
+
+            var tick = new VisualElement();
+            tick.style.position = Position.Absolute; tick.style.top = -1; tick.style.height = 12; tick.style.width = 2;
+            tick.style.left = new Length(a.Peer, LengthUnit.Percent);
+            tick.style.backgroundColor = new Color(1, 1, 1, 0.7f);
+            track.Add(tick);
+        }
+        wrap.Add(track);
+
+        wrap.Add(UiKit.Text_(a.Line, 12, UiKit.Dim));
+        return wrap;
     }
 
     private void BuildSummaryRow(VisualElement main, PlayerStats stats)
