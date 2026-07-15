@@ -38,6 +38,7 @@ public sealed class OpeningController : MonoBehaviour
     private RepertoireCard _card;
     private float _shownTime;
     private bool _drillBusy;
+    private Label _drillMeta;
 
     private Mode _mode = Mode.Explore;
 
@@ -470,6 +471,9 @@ public sealed class OpeningController : MonoBehaviour
         panel.Add(sub);
         _statusHint = UiKit.Text_("", 14, UiKit.Gold, bold: true); _statusHint.style.marginTop = 10;
         panel.Add(_statusHint);
+        _drillMeta = UiKit.Text_("", 12, UiKit.Dim); _drillMeta.style.marginTop = 4;
+        _drillMeta.style.whiteSpace = WhiteSpace.Normal;
+        panel.Add(_drillMeta);
         _rightRail.Add(panel);
 
         _drillBusy = false;
@@ -487,7 +491,8 @@ public sealed class OpeningController : MonoBehaviour
         _board.Render(_card.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom);
         _feedback.style.color = UiKit.Dim;
         _feedback.text = $"{_card.LineName} - your move";
-        _statusHint.text = $"{_repertoire.DueCount} due";
+        _statusHint.text = $"{_repertoire.DueCount} due   -   {_repertoire.MasteredCount}/{_repertoire.Total} learned";
+        _drillMeta.text = $"Chunk: {_card.Chunk}   -   Level {_card.Level}/{SrLevel.MaxLevel}";
         UpdateHistory();
     }
 
@@ -500,7 +505,9 @@ public sealed class OpeningController : MonoBehaviour
         var after = ApplyMove(_card.Fen, uci);
         if (after != null) _board.Render(after, false, uci, _whiteBottom);
         _feedback.style.color = result.Correct ? UiKit.GreenHi : UiKit.Danger;
-        _feedback.text = result.Correct ? $"{_card.LineName} - correct" : $"Book move was {result.ExpectedMove}";
+        _feedback.text = result.Correct
+            ? $"{_card.LineName} - correct   -   next in {result.NextLabel} (Level {result.Level}/{SrLevel.MaxLevel})"
+            : $"Book move was {result.ExpectedMove} - back to Level 1";
         if (result.Correct) _audio.PlayCorrect(); else _audio.PlayWrong();
         StartCoroutine(DrillNextAfter(result.Correct ? 0.8f : 1.7f));
     }
