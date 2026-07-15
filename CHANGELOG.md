@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.8.0
+
+- Puzzles: a "From your games" mode that drills the positions where you actually went wrong. Every mistake and blunder found in your post-game reviews is saved, and this feed serves them back as puzzles - you play the position again and look for the move you should have made, with the same hint, solution, retry, and analyze controls as any puzzle, and the motif each mistake was tagged with carried along. It closes the loop with the Improvement areas dashboard and the coach: see where you slip, understand why, then drill your own patterns until they stick.
+
 ## v1.7.0
 
 - Analysis: a Coach panel that explains the position in plain language across five tabs - Threats (what the opponent is threatening against you), Best moves (the engine's top choices with their scores), Plans (open files, outposts, king safety), Piece roles (what each of your pieces attacks or defends), and Concepts (bishop pair, isolated or doubled pawns, open files, outposts, an exposed king). It updates as you move through the game or load a position. The reads are computed from the position and the engine's lines with plain templates - no cloud service and no language model - so the coach works offline and stays free.
