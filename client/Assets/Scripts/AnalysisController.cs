@@ -37,6 +37,11 @@ public sealed class AnalysisController : MonoBehaviour
     private IReadOnlyList<AnalysisLine> _current = Array.Empty<AnalysisLine>();
 
     private VisualElement _root, _evalFill, _linesBody, _movesBody;
+    private VisualElement _coachBody;
+    private Button[] _coachTabBtns;
+    private int _coachTab;
+    private Kaissa.Training.Play.PositionExplanation _explanation;
+    private static readonly string[] CoachTabNames = { "Threats", "Best moves", "Plans", "Piece roles", "Concepts" };
     private Label _evalText, _openingLabel, _depthLabel;
     private TextField _fenField;
     private Button _threatsBtn;
@@ -128,25 +133,32 @@ public sealed class AnalysisController : MonoBehaviour
     private VisualElement BuildRightRail()
     {
         var rail = new VisualElement();
-        rail.style.width = 360; UiKit.Pad(rail, 18, 24, 18, 8);
+        rail.style.width = 360;
+
+        // The rail scrolls: eval + lines + coach + moves + tools together exceed the window height.
+        var railScroll = UiKit.Scroll(); railScroll.style.flexGrow = 1;
+        var col = railScroll.contentContainer;
+        UiKit.Pad(col, 18, 24, 18, 8);
 
         var evalP = Panel(); UiKit.Pad(evalP, 14, 16, 14, 16);
         _evalText = UiKit.Text_("Evaluation -", 22, UiKit.Text, bold: true);
         evalP.Add(_evalText);
-        rail.Add(evalP);
+        col.Add(evalP);
 
         var linesP = Panel(); linesP.style.marginTop = 12; UiKit.Pad(linesP, 12, 14, 12, 14);
         linesP.Add(UiKit.Text_("Engine lines", 12, UiKit.Mute, bold: true));
         _linesBody = new VisualElement(); _linesBody.style.marginTop = 6;
         linesP.Add(_linesBody);
-        rail.Add(linesP);
+        col.Add(linesP);
+
+        col.Add(BuildCoachPanel());
 
         var movesP = Panel(); movesP.style.marginTop = 12; UiKit.Pad(movesP, 12, 14, 12, 14);
         movesP.Add(UiKit.Text_("Moves", 12, UiKit.Mute, bold: true));
         var scroll = UiKit.Scroll(); scroll.style.maxHeight = 200; scroll.style.marginTop = 4;
         _movesBody = scroll.contentContainer;
         movesP.Add(scroll);
-        rail.Add(movesP);
+        col.Add(movesP);
 
         var toolsP = Panel(); toolsP.style.marginTop = 12; UiKit.Pad(toolsP, 12, 14, 12, 14);
         toolsP.Add(UiKit.Text_("Position", 12, UiKit.Mute, bold: true));
@@ -165,12 +177,74 @@ public sealed class AnalysisController : MonoBehaviour
         var row3 = UiKit.Row(); row3.style.marginTop = 6;
         row3.Add(Tool("Edit position", EnterEdit));
         toolsP.Add(row3);
-        rail.Add(toolsP);
+        col.Add(toolsP);
+
+        rail.Add(railScroll);
         _editorHost = new VisualElement();
         _editorHost.style.position = Position.Absolute;
         _editorHost.style.left = 0; _editorHost.style.top = 0; _editorHost.style.right = 0; _editorHost.style.bottom = 0;
         _editorHost.pickingMode = PickingMode.Ignore;
         return rail;
+    }
+
+    // A five-tab plain-language read of the position (Threats / Best moves / Plans / Piece roles /
+    // Concepts), computed by the pure-core PositionCoach after each engine evaluation.
+    private VisualElement BuildCoachPanel()
+    {
+        var p = Panel(); p.style.marginTop = 12; UiKit.Pad(p, 12, 14, 12, 14);
+        p.Add(UiKit.Text_("Coach", 12, UiKit.Mute, bold: true));
+
+        var tabs = UiKit.Row(); tabs.style.marginTop = 6; tabs.style.flexWrap = Wrap.Wrap;
+        _coachTabBtns = new Button[CoachTabNames.Length];
+        for (int i = 0; i < CoachTabNames.Length; i++)
+        {
+            int idx = i;
+            var b = UiKit.Ghost(CoachTabNames[i], () => { _coachTab = idx; RenderCoach(); }, 11);
+            UiKit.Pad(b, 4, 8, 4, 8); b.style.marginRight = 4; b.style.marginBottom = 4;
+            _coachTabBtns[i] = b; tabs.Add(b);
+        }
+        p.Add(tabs);
+
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 170; scroll.style.marginTop = 6;
+        _coachBody = scroll.contentContainer;
+        p.Add(scroll);
+        RenderCoach();
+        return p;
+    }
+
+    private void RenderCoach()
+    {
+        if (_coachBody == null) return;
+        for (int i = 0; i < _coachTabBtns.Length; i++)
+            _coachTabBtns[i].style.color = i == _coachTab ? UiKit.GreenHi : UiKit.Dim;
+
+        _coachBody.Clear();
+        if (_explanation == null)
+        {
+            _coachBody.Add(UiKit.Text_("Make a move or load a position for the coach's read.", 12, UiKit.Mute));
+            return;
+        }
+        var items = _coachTab switch
+        {
+            0 => _explanation.Threats,
+            1 => _explanation.BestMoves,
+            2 => _explanation.Plans,
+            3 => _explanation.PieceRoles,
+            _ => _explanation.Concepts,
+        };
+        foreach (var line in items)
+        {
+            var t = UiKit.Text_("- " + line, 12, UiKit.Dim);
+            t.style.whiteSpace = WhiteSpace.Normal; t.style.marginBottom = 4;
+            _coachBody.Add(t);
+        }
+    }
+
+    private string FirstMoveSan(string fen, AnalysisLine line)
+    {
+        if (line.Moves == null || line.Moves.Count == 0) return line.BestMove ?? "";
+        var san = LineSan(fen, new System.Collections.Generic.List<string> { line.Moves[0] }, 1);
+        return san.Split(' ').Last(); // strip any "1." / "1..." move-number prefix
     }
 
     private Button Tool(string label, Action onClick)
@@ -437,7 +511,16 @@ public sealed class AnalysisController : MonoBehaviour
         _board.Render(_session.CurrentFen, canMove: true, lastMove: _lastMove, whiteBottom: _whiteBottom);
         UpdateOpening();
         RebuildMoves();
+        UpdateCoach(_session.CurrentFen, null); // threats/plans/roles/concepts need no engine; best-moves fill in on eval
         Evaluate();
+    }
+
+    private void UpdateCoach(string fen, IReadOnlyList<AnalysisLine> lines)
+    {
+        var coachLines = (lines ?? System.Array.Empty<AnalysisLine>())
+            .Select(l => new Kaissa.Training.Play.CoachLine(FirstMoveSan(fen, l), l.Score)).ToList();
+        _explanation = Kaissa.Training.Play.PositionCoach.Explain(fen, coachLines);
+        RenderCoach();
     }
 
     private void UpdateOpening()
@@ -511,6 +594,7 @@ public sealed class AnalysisController : MonoBehaviour
             if (ct.IsCancellationRequested) return;
             _current = lines;
             RenderEval(fen, lines);
+            UpdateCoach(fen, lines);
             await UpdateArrowsAsync(fen, lines, ct);
         }
         catch (OperationCanceledException) { }
