@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6.0
+
+- Openings: the repertoire drill now shows a recall level for every move. Each of your moves is scheduled on its own, and its spaced-repetition interval is mapped onto an eight-rung ladder (4 hours, a day, three days, a week, and so on up to six months), so a move you know well sits high and a shaky one drops back to level 1 when you miss it. After each answer the drill tells you the new level and when the move comes back ("next in 2wk"), and the header tracks how many moves are due and how many you have learned.
+- Openings: each repertoire line is tagged with the pawn-structure chunk it belongs to (open games, Sicilian structures, Caro/French pawn chains, Queen's pawn, Indian defences), shown while you drill, so recall is framed as building pattern chunks rather than memorizing move lists. The starter repertoire was widened to cover those families (Caro-Kann, French, and a King's Indian added alongside the existing lines).
+
 ## v1.5.0
 
 - Stats: an Improvement areas panel that scores six sides of your play from your own games - Tactics, Endgame, Advantage capitalization, Resourcefulness, Time management, and Opening. Each is a 0-100 score with a bar and a plain-language read, set against a marker for what is typical at your rating, and the weakest one links straight to a drill. Advantage capitalization tracks how often you convert winning positions into wins; resourcefulness, how often you save losing ones; time management, how much clock you keep in timed games. The scoring is computed in the pure core and unit-tested; the peer marker is a rating-indexed estimate, not crowd data, and is labelled as such.
