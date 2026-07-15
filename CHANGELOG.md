@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.7.0
+
+- Analysis: a Coach panel that explains the position in plain language across five tabs - Threats (what the opponent is threatening against you), Best moves (the engine's top choices with their scores), Plans (open files, outposts, king safety), Piece roles (what each of your pieces attacks or defends), and Concepts (bishop pair, isolated or doubled pawns, open files, outposts, an exposed king). It updates as you move through the game or load a position. The reads are computed from the position and the engine's lines with plain templates - no cloud service and no language model - so the coach works offline and stays free.
+
 ## v1.6.0
 
 - Openings: the repertoire drill now shows a recall level for every move. Each of your moves is scheduled on its own, and its spaced-repetition interval is mapped onto an eight-rung ladder (4 hours, a day, three days, a week, and so on up to six months), so a move you know well sits high and a shaky one drops back to level 1 when you miss it. After each answer the drill tells you the new level and when the move comes back ("next in 2wk"), and the header tracks how many moves are due and how many you have learned.
