@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.9.0
+
+- Analysis: the Coach now draws its read on the board. The active tab colours the arrows the way an analysis coach would - green for the best move, red for the pieces the opponent is threatening (each arrow runs from the attacker to the piece it hits), and blue for what your own pieces bear on (piece roles). The Threats toggle overlays the red threat arrows on any tab. All of it is drawn from the position itself, so the threat and role arrows appear with no engine query.
+
 ## v1.8.0
 
 - Puzzles: a "From your games" mode that drills the positions where you actually went wrong. Every mistake and blunder found in your post-game reviews is saved, and this feed serves them back as puzzles - you play the position again and look for the move you should have made, with the same hint, solution, retry, and analyze controls as any puzzle, and the motif each mistake was tagged with carried along. It closes the loop with the Improvement areas dashboard and the coach: see where you slip, understand why, then drill your own patterns until they stick.
