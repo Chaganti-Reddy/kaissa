@@ -21,7 +21,7 @@ using UnityEngine.UIElements;
 // IBoardView; the correct/incorrect badge is a board-agnostic overlay so both boards get it.
 public sealed class KaissaBoardController : MonoBehaviour
 {
-    private enum Mode { Rated, Theme, Difficulty, Daily, Weakness, Misses }
+    private enum Mode { Rated, Theme, Difficulty, Daily, Weakness, Misses, Games }
 
     private KaissaTrainer _trainer;
     private IBoardView _board;
@@ -195,6 +195,12 @@ public sealed class KaissaBoardController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_weakness.png"));
         yield return new WaitForSeconds(0.3f);
 
+        // From your games: drills the player's own logged game mistakes (or shows the empty-state hint).
+        UiAutomation.Click(UiAutomation.FindButton(_root, "From your games"));
+        yield return new WaitForSeconds(0.9f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_games.png"));
+        yield return new WaitForSeconds(0.3f);
+
         UiAutomation.Click(UiAutomation.FindButton(_root, "Rated"));
         yield return new WaitForSeconds(0.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"pz_{tag}_rated.png"));
@@ -299,11 +305,13 @@ public sealed class KaissaBoardController : MonoBehaviour
     private VisualElement BuildModeBar()
     {
         var bar = UiKit.Row();
+        bar.style.flexWrap = Wrap.Wrap; // six feeds now - wrap rather than overflow the width
         bar.Add(ModeChip("Rated", () => SwitchMode(Mode.Rated)));
         bar.Add(ModeChip("Themes", ToggleThemePicker));
         bar.Add(ModeChip("Difficulty", ToggleDifficultyPicker));
         bar.Add(ModeChip("Weakness", LoadWeaknessFeed));
         bar.Add(ModeChip("Review misses", LoadMissesFeed));
+        bar.Add(ModeChip("From your games", LoadGamesFeed));
         _modeLabel = UiKit.Text_("", 12, UiKit.Mute);
         _modeLabel.style.marginLeft = 8;
         bar.Add(_modeLabel);
@@ -485,10 +493,27 @@ public sealed class KaissaBoardController : MonoBehaviour
         LoadNext();
     }
 
+    // Drill the positions where you blundered in your own games (saved from post-game review). Find the
+    // move you should have played; the motif each mistake was tagged with rides along on the puzzle.
+    private void LoadGamesFeed()
+    {
+        if (_pickerHost != null) HidePicker();
+        var list = KaissaPractice.All().ToList();
+        if (list.Count == 0)
+        {
+            SetFeedback("No game mistakes yet - play a game and they collect here after the review.", UiKit.Dim);
+            return;
+        }
+        _mode = Mode.Games; _patternName = "From your games";
+        _feed = list; _feedAt = 0;
+        _summaryShown = false;
+        LoadNext();
+    }
+
     // Persist the current puzzle as a miss (wrong move or gave up), for the Review-misses feed.
     private void RecordMiss()
     {
-        if (_mode == Mode.Misses) return; // don't re-record while reviewing misses
+        if (_mode is Mode.Misses or Mode.Games) return; // don't re-record while reviewing misses/game blunders
         string fen = _session?.StartFen;
         var line = _card?.Line ?? _scenario?.SolverLine;
         string setup = _card?.Setup ?? _scenario?.Setup;

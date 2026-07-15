@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Kaissa.Training;
 using Kaissa.Training.Api;
 using Kaissa.Training.Play;
@@ -18,6 +19,12 @@ public static class KaissaPractice
         store.AddRange(scenarios);
         store.Save(Path);
     }
+
+    public static int Count => PlayerPracticeStore.Load(Path).Count;
+
+    // Every stored game-mistake position, newest first, for the "From your games" drill.
+    public static IReadOnlyList<Scenario> All() =>
+        PlayerPracticeStore.Load(Path).Scenarios.Reverse().ToList();
 
     // Fold the stored positions into a trainer, grouped by the pattern each mistake was tagged with.
     public static void FoldInto(KaissaTrainer trainer)
