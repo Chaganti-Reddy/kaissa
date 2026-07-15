@@ -4,28 +4,33 @@ using Kaissa.Learning;
 
 namespace Kaissa.Training;
 
-/// <summary>One line in a repertoire: the moves (UCI) from the start, and which side the player takes.
-/// Only the player's moves become drilled cards; the opponent's replies are played automatically.</summary>
-public sealed record RepertoireLine(string Id, string Name, Side PlayerSide, IReadOnlyList<string> Moves);
+/// <summary>One line in a repertoire: the moves (UCI) from the start, the side the player takes, and the
+/// structural chunk it belongs to (used to group recall by pattern family). Only the player's moves
+/// become drilled cards; the opponent's replies are played automatically.</summary>
+public sealed record RepertoireLine(string Id, string Name, Side PlayerSide, IReadOnlyList<string> Moves, string Chunk);
 
-/// <summary>A default starter repertoire (the same openings the book-walk trainer offers, with a side).</summary>
+/// <summary>A default starter repertoire (the same openings the book-walk trainer offers, with a side and chunk).</summary>
 public static class OpeningRepertoire
 {
     public static IReadOnlyList<RepertoireLine> Default { get; } = new[]
     {
-        new RepertoireLine("italian", "Italian Game", Side.White, new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" }),
-        new RepertoireLine("ruy_lopez", "Ruy Lopez", Side.White, new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1b5" }),
-        new RepertoireLine("sicilian", "Sicilian Defence", Side.Black, new[] { "e2e4", "c7c5", "g1f3", "d7d6", "d2d4", "g8f6" }),
-        new RepertoireLine("queens_gambit", "Queen's Gambit", Side.White, new[] { "d2d4", "d7d5", "c2c4" }),
-        new RepertoireLine("london", "London System", Side.White, new[] { "d2d4", "d7d5", "g1f3", "g8f6", "c1f4" }),
+        new RepertoireLine("italian", "Italian Game", Side.White, new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" }, "Open games (1.e4 e5)"),
+        new RepertoireLine("ruy_lopez", "Ruy Lopez", Side.White, new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1b5" }, "Open games (1.e4 e5)"),
+        new RepertoireLine("sicilian", "Sicilian Defence", Side.Black, new[] { "e2e4", "c7c5", "g1f3", "d7d6", "d2d4", "g8f6" }, "Sicilian structures"),
+        new RepertoireLine("caro_kann", "Caro-Kann", Side.Black, new[] { "e2e4", "c7c6", "d2d4", "d7d5" }, "Caro / French pawn chains"),
+        new RepertoireLine("french", "French Defence", Side.Black, new[] { "e2e4", "e7e6", "d2d4", "d7d5" }, "Caro / French pawn chains"),
+        new RepertoireLine("queens_gambit", "Queen's Gambit", Side.White, new[] { "d2d4", "d7d5", "c2c4" }, "Queen's pawn"),
+        new RepertoireLine("london", "London System", Side.White, new[] { "d2d4", "d7d5", "g1f3", "g8f6", "c1f4" }, "Queen's pawn"),
+        new RepertoireLine("kings_indian", "King's Indian", Side.Black, new[] { "d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "f8g7" }, "Indian defences"),
     };
 }
 
-/// <summary>A single thing to recall: the player is to move in this position and must find the book move.</summary>
-public sealed record RepertoireCard(string Key, string LineName, string Fen, bool WhiteToMove, string ExpectedMove);
+/// <summary>A single thing to recall: the player is to move in this position and must find the book move.
+/// Carries the recall <see cref="Level"/> (0-8) and the structural <see cref="Chunk"/> for display.</summary>
+public sealed record RepertoireCard(string Key, string LineName, string Fen, bool WhiteToMove, string ExpectedMove, int Level, string Chunk);
 
-/// <summary>The graded outcome of recalling one repertoire move.</summary>
-public sealed record RepertoireResult(bool Correct, string ExpectedMove, double IntervalDays);
+/// <summary>The graded outcome of recalling one repertoire move, with the new recall level and next-review label.</summary>
+public sealed record RepertoireResult(bool Correct, string ExpectedMove, double IntervalDays, int Level, string NextLabel);
 
 /// <summary>Per-decision spaced-repetition state for a repertoire, keyed "lineId:ply". Serialisable.</summary>
 public sealed class OpeningProgress
@@ -119,6 +124,9 @@ public sealed class RepertoireSession
     public int Total => _decisions.Count;
     public int DueCount => _progress.Due(_clock.UtcNow).Count();
 
+    /// <summary>How many decisions have reached the top of the recall ladder (effectively learned).</summary>
+    public int MasteredCount => _decisions.Count(d => SrLevel.IsMastered(LevelOf(d)));
+
     private void BuildDecisions(IReadOnlyList<RepertoireLine> lines)
     {
         foreach (var line in lines)
@@ -129,11 +137,18 @@ public sealed class RepertoireSession
                 var move = line.Moves[ply];
                 if (game.SideToMove == line.PlayerSide)
                     _decisions.Add(new Decision($"{line.Id}:{ply}", line.Name, game.Fen,
-                        game.SideToMove == Side.White, move));
+                        game.SideToMove == Side.White, move, line.Chunk));
                 if (!game.TryMakeMove(move))
                     break; // a bad line stops here rather than throwing
             }
         }
+    }
+
+    private int LevelOf(Decision d)
+    {
+        if (!IsSeen(d)) return 0;
+        var state = _progress.GetOrCreate(d.Key).State;
+        return state is { } s ? SrLevel.Level(_scheduler.NextIntervalDays(s), seen: true) : 0;
     }
 
     /// <summary>The next decision to recall, or null if the repertoire is empty.</summary>
@@ -149,7 +164,8 @@ public sealed class RepertoireSession
             ?? _decisions.FirstOrDefault(d => !IsSeen(d))
             ?? _decisions.OrderBy(Stability).First();
 
-        return new RepertoireCard(_current.Key, _current.LineName, _current.Fen, _current.WhiteToMove, _current.Expected);
+        return new RepertoireCard(_current.Key, _current.LineName, _current.Fen, _current.WhiteToMove,
+            _current.Expected, LevelOf(_current), _current.Chunk);
     }
 
     /// <summary>Grades the recalled move for the current card and schedules its next review.</summary>
@@ -181,11 +197,12 @@ public sealed class RepertoireSession
             state.Lapses++;
 
         _current = null;
-        return new RepertoireResult(correct, decision.Expected, review.IntervalDays);
+        int level = SrLevel.Level(review.IntervalDays, seen: true);
+        return new RepertoireResult(correct, decision.Expected, review.IntervalDays, level, SrLevel.Friendly(review.IntervalDays));
     }
 
     private bool IsSeen(Decision d) => _progress.Has(d.Key) && _progress.GetOrCreate(d.Key).Seen;
     private double Stability(Decision d) => _progress.Has(d.Key) ? _progress.GetOrCreate(d.Key).State?.Stability ?? 0 : 0;
 
-    private sealed record Decision(string Key, string LineName, string Fen, bool WhiteToMove, string Expected);
+    private sealed record Decision(string Key, string LineName, string Fen, bool WhiteToMove, string Expected, string Chunk);
 }

@@ -11,7 +11,7 @@ public sealed class OpeningRepertoireTests
     private static readonly DateTime Origin = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private static RepertoireLine Italian =>
-        new("italian", "Italian Game", Side.White, new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" });
+        new("italian", "Italian Game", Side.White, new[] { "e2e4", "e7e5", "g1f3", "b8c6", "f1c4" }, "Open games (1.e4 e5)");
 
     [Fact]
     public void Only_the_players_moves_become_decisions()
@@ -20,7 +20,7 @@ public sealed class OpeningRepertoireTests
         Assert.Equal(3, session.Total); // White's moves: e2e4, g1f3, f1c4
 
         var black = new RepertoireLine("sicilian", "Sicilian", Side.Black,
-            new[] { "e2e4", "c7c5", "g1f3", "d7d6" });
+            new[] { "e2e4", "c7c5", "g1f3", "d7d6" }, "Sicilian structures");
         var bsession = new RepertoireSession(new[] { black }, new OpeningProgress(), new ManualClock(Origin));
         Assert.Equal(2, bsession.Total); // Black's moves: c7c5, d7d6
     }
@@ -61,8 +61,28 @@ public sealed class OpeningRepertoireTests
     public void The_default_repertoire_has_the_expected_number_of_decisions()
     {
         var session = new RepertoireSession(OpeningRepertoire.Default, new OpeningProgress(), new ManualClock(Origin));
-        // italian 3 + ruy 3 + sicilian 3 + queen's gambit 2 + london 3
-        Assert.Equal(14, session.Total);
+        // italian 3 + ruy 3 + sicilian 3 + caro 2 + french 2 + queen's gambit 2 + london 3 + king's indian 3
+        Assert.Equal(21, session.Total);
+    }
+
+    [Fact]
+    public void A_new_card_is_level_zero_and_carries_its_chunk()
+    {
+        var session = new RepertoireSession(new[] { Italian }, new OpeningProgress(), new ManualClock(Origin));
+        var card = session.Next()!;
+        Assert.Equal(0, card.Level); // never seen
+        Assert.Equal("Open games (1.e4 e5)", card.Chunk);
+    }
+
+    [Fact]
+    public void A_correct_recall_raises_the_level_and_labels_the_next_review()
+    {
+        var progress = new OpeningProgress();
+        var session = new RepertoireSession(new[] { Italian }, progress, new ManualClock(Origin));
+        session.Next();
+        var result = session.Submit("e2e4", TimeSpan.FromSeconds(2));
+        Assert.True(result.Level >= 1);
+        Assert.False(string.IsNullOrEmpty(result.NextLabel));
     }
 
     [Fact]
