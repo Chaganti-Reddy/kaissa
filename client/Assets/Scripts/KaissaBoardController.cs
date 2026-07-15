@@ -481,13 +481,14 @@ public sealed class KaissaBoardController : MonoBehaviour
     private void LoadMissesFeed()
     {
         if (_pickerHost != null) HidePicker();
+        _mode = Mode.Misses; // set before the empty-check so a move on the stale board is not mis-recorded
         var list = KaissaMisses.AsScenarios();
         if (list.Count == 0)
         {
             SetFeedback("No missed puzzles yet - they collect here when you slip up.", UiKit.Dim);
             return;
         }
-        _mode = Mode.Misses; _patternName = "Your misses";
+        _patternName = "Your misses";
         _feed = list; _feedAt = 0;
         _summaryShown = false;
         LoadNext();
@@ -498,13 +499,14 @@ public sealed class KaissaBoardController : MonoBehaviour
     private void LoadGamesFeed()
     {
         if (_pickerHost != null) HidePicker();
+        _mode = Mode.Games; // set before the empty-check so a move on the stale board is not mis-recorded
         var list = KaissaPractice.All().ToList();
         if (list.Count == 0)
         {
             SetFeedback("No game mistakes yet - play a game and they collect here after the review.", UiKit.Dim);
             return;
         }
-        _mode = Mode.Games; _patternName = "From your games";
+        _patternName = "From your games";
         _feed = list; _feedAt = 0;
         _summaryShown = false;
         LoadNext();
