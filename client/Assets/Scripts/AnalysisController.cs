@@ -54,8 +54,9 @@ public sealed class AnalysisController : MonoBehaviour
     private bool _editWhiteToMove = true;
     private bool _cWK, _cWQ, _cBK, _cBQ;             // castling availability
 
-    private static readonly Color BestArrow = new(0.36f, 0.62f, 0.86f, 0.85f);
-    private static readonly Color ThreatArrow = new(0.86f, 0.30f, 0.28f, 0.85f);
+    private static readonly Color BestArrow = new(0.36f, 0.72f, 0.42f, 0.85f);   // green - best move
+    private static readonly Color ThreatArrow = new(0.86f, 0.30f, 0.28f, 0.85f); // red - threats
+    private static readonly Color RoleArrow = new(0.36f, 0.62f, 0.86f, 0.85f);   // blue - piece roles
 
     private void Start()
     {
@@ -217,6 +218,7 @@ public sealed class AnalysisController : MonoBehaviour
         if (_coachBody == null) return;
         for (int i = 0; i < _coachTabBtns.Length; i++)
             _coachTabBtns[i].style.color = i == _coachTab ? UiKit.GreenHi : UiKit.Dim;
+        ApplyCoachArrows(); // the active tab drives the board arrows
 
         _coachBody.Clear();
         if (_explanation == null)
@@ -494,7 +496,7 @@ public sealed class AnalysisController : MonoBehaviour
     {
         _threatsOn = !_threatsOn;
         _threatsBtn.text = _threatsOn ? "Threats: on" : "Threats: off";
-        Evaluate(force: true); // re-eval the same position to add/remove the threat arrow
+        ApplyCoachArrows(); // overlay/remove the scan's red threat arrows instantly (no engine query)
     }
 
     private void PlayLineFromEngine(int index)
@@ -594,8 +596,7 @@ public sealed class AnalysisController : MonoBehaviour
             if (ct.IsCancellationRequested) return;
             _current = lines;
             RenderEval(fen, lines);
-            UpdateCoach(fen, lines);
-            await UpdateArrowsAsync(fen, lines, ct);
+            UpdateCoach(fen, lines); // recomputes the coach and re-applies the active tab's board arrows
         }
         catch (OperationCanceledException) { }
         catch (Exception e)
@@ -643,43 +644,34 @@ public sealed class AnalysisController : MonoBehaviour
         }
     }
 
-    private async System.Threading.Tasks.Task UpdateArrowsAsync(string fen, IReadOnlyList<AnalysisLine> lines, CancellationToken ct)
+    // The board arrows follow the active Coach tab (DecodeChess-style): green best move, red threats,
+    // blue piece roles. Plans/Concepts carry no arrows. The Threats tool overlays the red threat arrows
+    // on any tab. All arrow data comes from the pure-core PositionCoach scan (plus the engine's best move),
+    // so it needs no separate engine query.
+    private void ApplyCoachArrows()
     {
+        if (_board == null) return;
         var arrows = new List<(string from, string to, Color color)>();
-        var best = lines.Count > 0 ? lines[0].BestMove : null;
-        if (!string.IsNullOrEmpty(best) && best.Length >= 4)
-            arrows.Add((best.Substring(0, 2), best.Substring(2, 2), BestArrow));
 
-        if (_threatsOn)
+        if (_explanation != null)
         {
-            var threat = await ThreatMoveAsync(fen, ct);
-            if (ct.IsCancellationRequested) return;
-            if (!string.IsNullOrEmpty(threat) && threat.Length >= 4)
-                arrows.Add((threat.Substring(0, 2), threat.Substring(2, 2), ThreatArrow));
+            if (_coachTab == 0 || _threatsOn)
+                foreach (var a in _explanation.ThreatArrows)
+                    arrows.Add((a.From, a.To, ThreatArrow));
+
+            if (_coachTab == 3)
+                foreach (var a in _explanation.RoleArrows)
+                    arrows.Add((a.From, a.To, RoleArrow));
         }
+
+        if (_coachTab == 1)
+        {
+            var best = _current is { Count: > 0 } ? _current[0].BestMove : null;
+            if (!string.IsNullOrEmpty(best) && best.Length >= 4)
+                arrows.Add((best.Substring(0, 2), best.Substring(2, 2), BestArrow));
+        }
+
         _board.SetEngineArrows(arrows);
-    }
-
-    // The opponent's best move if it were their turn - a "what are they threatening" hint. Computed by
-    // flipping the side to move (a null move) and asking the engine for the best reply. Best-effort.
-    private async System.Threading.Tasks.Task<string> ThreatMoveAsync(string fen, CancellationToken ct)
-    {
-        try
-        {
-            var flipped = FlipSideToMove(fen);
-            var lines = await _engine.EvaluateLinesAsync(flipped, 14, 1, ct);
-            return lines.Count > 0 ? lines[0].BestMove : null;
-        }
-        catch { return null; }
-    }
-
-    private static string FlipSideToMove(string fen)
-    {
-        var p = fen.Split(' ');
-        if (p.Length < 2) return fen;
-        p[1] = p[1] == "w" ? "b" : "w";
-        if (p.Length > 3) p[3] = "-"; // clear en passant; the null move invalidates it
-        return string.Join(' ', p);
     }
 
     private static string LineSan(string fen, IReadOnlyList<string> uci, int maxPlies)
@@ -777,6 +769,16 @@ public sealed class AnalysisController : MonoBehaviour
         yield return Shot(dir, tag, "threats", 0.8f);
         UiAutomation.Click(_threatsBtn);
         yield return new WaitForSeconds(0.5f);
+
+        // Coach "Piece roles" tab: blue arrows from each piece to what it bears on (no engine needed).
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Piece roles"));
+        yield return new WaitForSeconds(0.6f);
+        yield return Shot(dir, tag, "coach_roles", 0.6f);
+
+        // Coach "Best moves" tab: a green arrow for the engine's top move.
+        UiAutomation.Click(UiAutomation.FindButton(_root, "Best moves"));
+        yield return new WaitForSeconds(0.6f);
+        yield return Shot(dir, tag, "coach_best", 0.6f);
 
         UiAutomation.Click(_root.Q("engineline"));
         yield return new WaitForSeconds(2.0f);
