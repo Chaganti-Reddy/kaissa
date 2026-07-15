@@ -780,6 +780,18 @@ public sealed class AnalysisController : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
         yield return Shot(dir, tag, "coach_best", 0.6f);
 
+        // Coach arrows on a tactical position (engine-independent): White Nf3 is hanging to the e4 pawn
+        // (red threat arrow e4->f3) and the b5 bishop bears on the c6 knight (blue role arrow b5->c6).
+        _fenField.value = "4k3/8/2n5/1B6/4p3/5N2/8/4K3 w - - 0 1";
+        LoadFenFromField();
+        yield return new WaitForSeconds(0.6f);
+        UiAutomation.Click(_coachTabBtns[0]); // Threats
+        yield return new WaitForSeconds(0.5f);
+        yield return Shot(dir, tag, "coach_threat_arrow", 0.5f);
+        UiAutomation.Click(_coachTabBtns[3]); // Piece roles
+        yield return new WaitForSeconds(0.5f);
+        yield return Shot(dir, tag, "coach_role_arrow", 0.5f);
+
         UiAutomation.Click(_root.Q("engineline"));
         yield return new WaitForSeconds(2.0f);
         yield return Shot(dir, tag, "played_line", 0.8f);
