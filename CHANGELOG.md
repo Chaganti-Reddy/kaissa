@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.0
+
+- Stats: an Improvement areas panel that scores six sides of your play from your own games - Tactics, Endgame, Advantage capitalization, Resourcefulness, Time management, and Opening. Each is a 0-100 score with a bar and a plain-language read, set against a marker for what is typical at your rating, and the weakest one links straight to a drill. Advantage capitalization tracks how often you convert winning positions into wins; resourcefulness, how often you save losing ones; time management, how much clock you keep in timed games. The scoring is computed in the pure core and unit-tested; the peer marker is a rating-indexed estimate, not crowd data, and is labelled as such.
+
 ## v1.4.0
 
 - Stats: a Tactics found-vs-missed breakdown. Your games are scanned for tactical chances - forks, pins, mates, and hanging pieces - and the insights dashboard shows how many you took versus let slip in each category, rounding out the rating trend, accuracy-by-phase, and move-quality mix already there. This is the pattern-recognition scoreboard the whole app is built around.
