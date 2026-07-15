@@ -97,8 +97,10 @@ public sealed class StatsController : MonoBehaviour
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_mastery.png"));
         yield return new WaitForSeconds(0.6f);
 
-        // Real click on the "Practice weakest" button (routes to Puzzles); do last.
-        UiAutomation.Click(root.Q<Button>("practice"));
+        // Real click on the "Practice weakest" button (routes to Puzzles); do last. The button only
+        // exists once some patterns have been seen, so guard against a null click on a fresh profile.
+        var practiceBtn = root.Q<Button>("practice");
+        if (practiceBtn != null) UiAutomation.Click(practiceBtn);
         yield return new WaitForSeconds(1.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_practice.png"));
         yield return new WaitForSeconds(0.4f);
