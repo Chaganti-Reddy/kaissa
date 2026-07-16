@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.13.0
+
+- Popups no longer overflow the window. Dialogs - the opponent picker, drill results, confirmations - are now capped to the screen height and scroll inside themselves when their content is tall, instead of spilling off the top and bottom.
+- Scrolling is smoother throughout. The mouse wheel moves a sensible amount per notch with a gentle bounce at the ends, on every scrollable panel and list.
+
 ## v1.12.0
 
 - Play: a "decode as you play" coach. Turn it on and a panel reads the current position in plain language as you play - what the opponent is threatening, the plans the position calls for, what your pieces are doing, and the concepts on the board - refreshing after every move. It deliberately never shows the move to play; it is there to build understanding, not to hand you the answer. Off by default, and since this is a game against your own bot it is a learning aid, not an online-play assist. Uses the same offline, templated coach as the analysis board (no engine, no cloud).
