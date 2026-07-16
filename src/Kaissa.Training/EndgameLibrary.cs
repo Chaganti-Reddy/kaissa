@@ -49,6 +49,12 @@ public static class EndgameLibrary
         new EndgamePosition("mate_kbb", "Checkmates", "Two-bishop mate",
             "4k3/8/8/8/8/8/8/2B1KB2 w - - 0 1", DrillGoal.Win,
             "The bishops build a wall; drive the king into a corner with the king's help."),
+        new EndgamePosition("mate_kbn", "Checkmates", "Bishop and knight mate",
+            "4k3/8/8/8/8/8/8/2BNK3 w - - 0 1", DrillGoal.Win,
+            "The hardest basic mate: force the king to a corner the bishop controls, knight and king herding."),
+        new EndgamePosition("q_vs_r", "Queen", "Queen versus rook",
+            "4k3/3r4/8/8/8/8/8/Q3K3 w - - 0 1", DrillGoal.Win,
+            "Pin or fork the rook away from its king; keep checking until it drops or the king is mated."),
 
         new EndgamePosition("kp_opposition", "King & Pawn", "The opposition",
             "8/8/8/4k3/8/4K3/4P3/8 w - - 0 1", DrillGoal.Win,
