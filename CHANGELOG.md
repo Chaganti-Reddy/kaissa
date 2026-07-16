@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.11.0
+
+- Play: the opponents are now characters on a ladder. Each bot - the Stockfish rungs and the human-like Maia rungs - has a name, a rating, and a playing style drawn from five archetypes (Hunter, Guardian, Savage, Observer, Mediator), shown as a card in the opponent picker ordered weakest to strongest. Beat one and it is marked, and the picker tracks how far up the ladder you have climbed. Same engines underneath; the ladder is progression only and never gates training.
+
 ## v1.10.0
 
 - Visualization: a new blindfold trainer. Solve a short tactic while the pieces are faded, and each solve fades them further - 50%, then 30%, then almost nothing, then fully blind - so you learn to hold the position in your mind's eye and calculate without seeing it. The board and its coordinates stay, only the pieces fade. One wrong move ends the run and marks the move you needed; your best run is kept. Trains the same pattern-chunk recall the rest of the app is built around.
