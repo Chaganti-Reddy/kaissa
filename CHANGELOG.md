@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.0
+
+- Solo Chess: a new single-player puzzle. Every move must capture, no piece may capture more than twice (it darkens and is stuck), and a king can never be taken, so it is forced to be the last piece - clear the board down to one piece to level up. More pieces each level, a king from level six, and the boards are generated to always be solvable. A wrong capture can dead-end a board; reset and try it again.
+- Coach in Game Review: stepping through a finished game now shows the same plain-language coach read - threats, plans, piece roles, concepts - for each position, alongside the move-quality and commentary already there.
+- Achievements: a set of milestone badges on the Stats page, earned from your own play - first win, beating a strong bot, climbing the bot ladder, puzzle streaks and centuries, and reaching levels in the Memory, Captures, Visualization and Solo Chess trainers. Cosmetic only; they never gate training.
+- The daily training streak now counts every kind of practice - playing a game, any of the drills, Puzzle Blitz, Solo Chess - not only puzzles.
+
 ## v1.13.0
 
 - Popups no longer overflow the window. Dialogs - the opponent picker, drill results, confirmations - are now capped to the screen height and scroll inside themselves when their content is tall, instead of spilling off the top and bottom.
