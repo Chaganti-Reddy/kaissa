@@ -39,6 +39,7 @@ public static class KaissaSettings
         public int capturesBest;      // best "captures and threats" board-vision drill score (30s)
         public int visualizationBest; // best visualization/blindfold run (tactics solved with faded pieces)
         public string botsBeaten = ""; // comma-joined bot ids the player has beaten (the bot ladder)
+        public int soloBest;           // highest Solo Chess level (piece count) cleared
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
         public string soundTheme = "sfx"; // sound set (folder under Resources/Sounds); empty = Classic procedural
         public bool closeToTray; // Windows: closing the window hides to a system-tray icon instead of quitting
@@ -95,6 +96,7 @@ public static class KaissaSettings
     public static bool Premove { get => D.premove; set { D.premove = value; Save(); } }
     public static int CapturesBest { get => D.capturesBest; set { D.capturesBest = value; Save(); } }
     public static int VisualizationBest { get => D.visualizationBest; set { D.visualizationBest = value; Save(); } }
+    public static int SoloBest { get => D.soloBest; set { D.soloBest = value; Save(); } }
     public static string BotsBeaten { get => D.botsBeaten ?? ""; set { D.botsBeaten = value; Save(); } }
     public static bool IsBotBeaten(string id) =>
         !string.IsNullOrEmpty(id) && ("," + BotsBeaten + ",").Contains("," + id + ",");
