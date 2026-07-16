@@ -54,6 +54,7 @@ public sealed class StatsController : MonoBehaviour
         BuildTiles(main, stats, standing);
         BuildRatingTrend(main, stats);
         BuildWeaknessDashboard(main, stats);
+        BuildStudyPlan(main, stats, trainer);
         BuildProgression(main, standing);
         BuildSummaryRow(main, stats);
         BuildRecentGames(main);
@@ -224,21 +225,7 @@ public sealed class StatsController : MonoBehaviour
     {
         if (KaissaGameLog.Count == 0) return;
 
-        var input = new WeaknessInput
-        {
-            Rating = stats.Rating,
-            OpeningAccuracy = KaissaGameLog.PhaseOpen,
-            EndgameAccuracy = KaissaGameLog.PhaseEnd,
-            TacticsFound = KaissaGameLog.TacticsFound.Sum(),
-            TacticsMissed = KaissaGameLog.TacticsMissed.Sum(),
-            AdvantageGames = KaissaGameLog.AdvantageGames,
-            AdvantageConverted = KaissaGameLog.AdvantageConverted,
-            LosingGames = KaissaGameLog.LosingGames,
-            LosingSaved = KaissaGameLog.LosingSaved,
-            TimedGames = KaissaGameLog.TimedGames,
-            TimeClockShare = KaissaGameLog.TimeClockShare,
-        };
-        var axes = WeaknessDashboard.Compute(input);
+        var axes = WeaknessDashboard.Compute(WeaknessInputFrom(stats));
 
         var (card, body) = Card("Improvement areas");
         body.Add(UiKit.Text_($"vs typical at your level (~{stats.Rating:0}), across your last {KaissaGameLog.Count} games", 11, UiKit.Mute));
@@ -254,6 +241,43 @@ public sealed class StatsController : MonoBehaviour
         }
         main.Add(card);
     }
+
+    // A short, prioritized week's plan generated from the weakness axes + weakest patterns (pure core).
+    private void BuildStudyPlan(VisualElement main, PlayerStats stats, KaissaTrainer trainer)
+    {
+        if (KaissaGameLog.Count == 0) return;
+        var input = WeaknessInputFrom(stats);
+        var axes = WeaknessDashboard.Compute(input);
+        var weakest = trainer.Progress().Where(r => r.Seen)
+            .OrderBy(r => PuzzleProgression.MasteryFor(r)).Select(r => r.PatternName).Take(2).ToList();
+        var plan = StudyPlan.Generate(axes, weakest);
+
+        var (card, body) = Card("This week");
+        foreach (var p in plan)
+        {
+            var wrap = new VisualElement(); wrap.style.marginTop = 6;
+            wrap.Add(UiKit.Text_(p.Title, 13, UiKit.Text, bold: true));
+            var why = UiKit.Text_(p.Reason, 11, UiKit.Dim); why.style.whiteSpace = WhiteSpace.Normal;
+            wrap.Add(why);
+            body.Add(wrap);
+        }
+        main.Add(card);
+    }
+
+    private WeaknessInput WeaknessInputFrom(PlayerStats stats) => new()
+    {
+        Rating = stats.Rating,
+        OpeningAccuracy = KaissaGameLog.PhaseOpen,
+        EndgameAccuracy = KaissaGameLog.PhaseEnd,
+        TacticsFound = KaissaGameLog.TacticsFound.Sum(),
+        TacticsMissed = KaissaGameLog.TacticsMissed.Sum(),
+        AdvantageGames = KaissaGameLog.AdvantageGames,
+        AdvantageConverted = KaissaGameLog.AdvantageConverted,
+        LosingGames = KaissaGameLog.LosingGames,
+        LosingSaved = KaissaGameLog.LosingSaved,
+        TimedGames = KaissaGameLog.TimedGames,
+        TimeClockShare = KaissaGameLog.TimeClockShare,
+    };
 
     private static VisualElement AxisRow(AxisScore a)
     {
