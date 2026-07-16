@@ -58,6 +58,7 @@ public sealed class StatsController : MonoBehaviour
         BuildSummaryRow(main, stats);
         BuildRecentGames(main);
         BuildInsights(main);
+        BuildAchievements(main, stats);
         BuildMastery(main, trainer, stats);
 
         root.Add(scroll);
@@ -91,6 +92,16 @@ public sealed class StatsController : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_insights2.png"));
         yield return new WaitForSeconds(0.4f);
+
+        // Achievements panel (sits between the insight cards and the mastery map).
+        _scroll.scrollOffset = new Vector2(0, 1650f);
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_achievements1.png"));
+        yield return new WaitForSeconds(0.3f);
+        _scroll.scrollOffset = new Vector2(0, 2100f);
+        yield return new WaitForSeconds(0.5f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "stats_achievements2.png"));
+        yield return new WaitForSeconds(0.3f);
 
         _scroll.scrollOffset = new Vector2(0, 10000f);
         yield return new WaitForSeconds(0.6f);
@@ -416,6 +427,31 @@ public sealed class StatsController : MonoBehaviour
         r.Add(UiKit.Text_(label, 13, UiKit.Dim));
         r.Add(UiKit.Text_(value, 13, UiKit.Text, bold: true));
         body.Add(r);
+    }
+
+    private void BuildAchievements(VisualElement main, PlayerStats stats)
+    {
+        var all = KaissaAchievements.All(stats);
+        int earned = all.Count(a => a.Earned);
+        var (card, body) = Card("Achievements");
+        body.Add(UiKit.Text_($"{earned} / {all.Count} earned", 11, UiKit.Mute));
+        foreach (var a in all)
+        {
+            var r = UiKit.Row(); r.style.alignItems = Align.Center; r.style.marginTop = 6;
+            var dot = new VisualElement();
+            dot.style.width = 10; dot.style.height = 10; dot.style.marginRight = 10; dot.style.flexShrink = 0;
+            UiKit.Radius(dot, 5);
+            dot.style.backgroundColor = a.Earned ? UiKit.Gold : UiKit.Panel3;
+            r.Add(dot);
+            var col = new VisualElement(); col.style.flexGrow = 1;
+            col.Add(UiKit.Text_(a.Name, 13, a.Earned ? UiKit.Text : UiKit.Mute, bold: true));
+            var d = UiKit.Text_(a.Description, 11, UiKit.Dim); d.style.whiteSpace = WhiteSpace.Normal;
+            col.Add(d);
+            r.Add(col);
+            if (a.Earned) r.Add(UiKit.Text_("earned", 10, UiKit.Gold, bold: true));
+            body.Add(r);
+        }
+        main.Add(card);
     }
 
     private void BuildMastery(VisualElement main, KaissaTrainer trainer, PlayerStats stats)
