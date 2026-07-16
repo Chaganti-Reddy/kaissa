@@ -37,6 +37,7 @@ public static class KaissaSettings
         public int memoryBest;        // best memory-reconstruction level reached
         public bool premove = true;   // queue a move during the opponent's turn (timed play)
         public int capturesBest;      // best "captures and threats" board-vision drill score (30s)
+        public int visualizationBest; // best visualization/blindfold run (tactics solved with faded pieces)
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
         public string soundTheme = "sfx"; // sound set (folder under Resources/Sounds); empty = Classic procedural
         public bool closeToTray; // Windows: closing the window hides to a system-tray icon instead of quitting
@@ -92,6 +93,7 @@ public static class KaissaSettings
     public static int MemoryBest { get => D.memoryBest; set { D.memoryBest = value; Save(); } }
     public static bool Premove { get => D.premove; set { D.premove = value; Save(); } }
     public static int CapturesBest { get => D.capturesBest; set { D.capturesBest = value; Save(); } }
+    public static int VisualizationBest { get => D.visualizationBest; set { D.visualizationBest = value; Save(); } }
     public static string PieceSet { get => string.IsNullOrEmpty(D.pieceSet) ? "cburnett" : D.pieceSet; set { D.pieceSet = value; Save(); } }
     public static string SoundTheme { get => D.soundTheme ?? ""; set { D.soundTheme = value; Save(); } }
     public static bool CloseToTray { get => D.closeToTray; set { D.closeToTray = value; Save(); } }

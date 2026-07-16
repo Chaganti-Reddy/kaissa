@@ -396,6 +396,20 @@ public sealed class Board2D : IBoardView
         return l;
     }
 
+    // Fade every piece to the given opacity (1 = normal, 0 = fully blind) for the visualization trainer.
+    // Squares, coordinates and highlights stay fully visible - only the piece art/glyph layers fade.
+    // Call after Render (Render repaints the piece layers); the board grid itself is unaffected.
+    public void SetPieceOpacity(float opacity)
+    {
+        float o = Mathf.Clamp01(opacity);
+        for (int row = 0; row < 8; row++)
+        for (int col = 0; col < 8; col++)
+        {
+            if (_rowArt[row, col] != null) _rowArt[row, col].style.opacity = o;
+            if (_rowPieces[row, col] != null) _rowPieces[row, col].style.opacity = o;
+        }
+    }
+
     // Highlight a square by name (e.g. a hint's from-square, or a solution) on top of the current render.
     public void HighlightSquare(string sq, Color c)
     {

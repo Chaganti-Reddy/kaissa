@@ -15,6 +15,9 @@ public static class MemorySceneBuilder
     [MenuItem("Kaissa/Create Captures Scene")]
     public static void CreateCaptures() => CreateScene<CapturesController>("Captures");
 
+    [MenuItem("Kaissa/Create Visualization Scene")]
+    public static void CreateVisualization() => CreateScene<VisualizationController>("Visualization");
+
     // Build a single-controller scene (Main Camera + Directional Light from DefaultGameObjects, plus a
     // GameObject carrying the controller) and register it in the build settings, like the other scenes.
     private static void CreateScene<T>(string sceneName) where T : Component
