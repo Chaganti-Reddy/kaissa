@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.10.0
+
+- Visualization: a new blindfold trainer. Solve a short tactic while the pieces are faded, and each solve fades them further - 50%, then 30%, then almost nothing, then fully blind - so you learn to hold the position in your mind's eye and calculate without seeing it. The board and its coordinates stay, only the pieces fade. One wrong move ends the run and marks the move you needed; your best run is kept. Trains the same pattern-chunk recall the rest of the app is built around.
+
 ## v1.9.0
 
 - Analysis: the Coach now draws its read on the board. The active tab colours the arrows the way an analysis coach would - green for the best move, red for the pieces the opponent is threatening (each arrow runs from the attacker to the piece it hits), and blue for what your own pieces bear on (piece roles). The Threats toggle overlays the red threat arrows on any tab. All of it is drawn from the position itself, so the threat and role arrows appear with no engine query.
