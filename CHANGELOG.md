@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.12.0
+
+- Play: a "decode as you play" coach. Turn it on and a panel reads the current position in plain language as you play - what the opponent is threatening, the plans the position calls for, what your pieces are doing, and the concepts on the board - refreshing after every move. It deliberately never shows the move to play; it is there to build understanding, not to hand you the answer. Off by default, and since this is a game against your own bot it is a learning aid, not an online-play assist. Uses the same offline, templated coach as the analysis board (no engine, no cloud).
+
 ## v1.11.0
 
 - Play: the opponents are now characters on a ladder. Each bot - the Stockfish rungs and the human-like Maia rungs - has a name, a rating, and a playing style drawn from five archetypes (Hunter, Guardian, Savage, Observer, Mediator), shown as a card in the opponent picker ordered weakest to strongest. Beat one and it is marked, and the picker tracks how far up the ladder you have climbed. Same engines underneath; the ladder is progression only and never gates training.
