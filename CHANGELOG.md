@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.0.0
+
+- Guess the Move: play through a famous, out-of-copyright game as one side and predict each move. You score when you find the move the master played, and the real move is shown either way so you follow the whole game. Ships with the Opera Game, a Legal's Mate miniature, and a short illustrative game; every game is validated move-by-move by the test suite.
+- Stats: a weekly study plan. From your own improvement-areas and weakest patterns it suggests a short, prioritized list of what to work on and where, worst gap first.
+- Endgames: added the bishop-and-knight mate (the hardest basic mate) and a queen-versus-rook position, alongside the existing Lucena, opposition, king-and-pawn, minor-piece and rook endings.
+
 ## v2.0.0
 
 - Solo Chess: a new single-player puzzle. Every move must capture, no piece may capture more than twice (it darkens and is stuck), and a king can never be taken, so it is forced to be the last piece - clear the board down to one piece to level up. More pieces each level, a king from level six, and the boards are generated to always be solvable. A wrong capture can dead-end a board; reset and try it again.

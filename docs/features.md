@@ -54,9 +54,9 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 ## Endgames
 
 - [x] Drill trainer: play instructive endgames against the engine toward a goal (win / draw / promote) with a pass/fail result - `EndgameLibrary` / `DrillEvaluator`
-- [x] Categories (Checkmates, King & Pawn, Queen); Hint, Retry, Next, Flip
+- [x] Categories (Checkmates including the bishop-and-knight mate, King & Pawn, Minor Piece, Rook including Lucena, Queen including queen-vs-rook); Hint, Retry, Next, Flip
 - [x] Play from any position against the engine - `KaissaGame(fen)`
-- [ ] Expand the set (Lucena, Philidor, minor-piece and rook endings, KBN mate)
+- [ ] Deeper theory positions (Philidor defence, more rook endings) and DTZ-perfect tablebase play
 
 ## Learn
 
@@ -72,6 +72,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Captures & Threats: a 30-second drill - click every enemy piece the side to move can capture, then submit; trains the instant "what is hanging" read
 - [x] Visualization: solve a short tactic while the pieces are faded, fading further each solve (50% to fully blind); the board and its coordinates stay, only the pieces fade - `Board2D.SetPieceOpacity`
 - [x] Solo Chess: the single-player capture puzzle - every move must capture, no piece captures more than twice, a king can never be taken, clear the board to one piece; generated to always be solvable - `SoloChess`
+- [x] Guess the Move: play a famous out-of-copyright game as one side and predict each move, scored against the master's move - `MasterGames` / `GuessMoveSession`
 - [x] Tactics found vs missed: your games are scanned for forks, pins, mates and hanging pieces, and the insights dashboard shows how many you took versus let slip
 
 ## Progression and motivation
@@ -79,6 +80,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Insights dashboard: headline stat tiles, a rating-over-time chart, tier/XP progression, per-mode summaries, move-quality mix, accuracy by phase, tactics found-vs-missed, and the pattern-mastery map, with a one-tap drill of the weakest motif
 - [x] Improvement areas: six sides of your play (Tactics, Endgame, Advantage capitalization, Resourcefulness, Time management, Opening) each scored 0-100 from your own games against a rating-indexed baseline, with a plain-language read and a link to the matching drill - `WeaknessDashboard`
 - [x] Achievements: milestone badges earned from your own play (first win, climbing the bot ladder, puzzle streaks and centuries, reaching levels in the drills) - `KaissaAchievements`
+- [x] Weekly study plan: a short, prioritized list generated from your weakest axes and patterns, worst gap first, each pointing at a drill - `StudyPlan`
 - [x] Player rating with history, streaks, and accuracy - `KaissaTrainer.GetStats()`
 - [x] Per-pattern mastery map derived from the spaced-repetition schedule - the pattern library made visible - `PuzzleProgression`
 - [x] Hybrid XP and named tiers (Wood through Grandmaster) alongside the rating - `PuzzleProgression`
