@@ -121,6 +121,7 @@ public sealed class CapturesController : MonoBehaviour
     private void StartRun()
     {
         _overlayHost.Clear();
+        KaissaStreak.RecordToday(); // captures drill counts toward the daily training streak
         _score = 0; _scoreLabel.text = "0";
         _running = true; _busy = false;
         _timeLeft = RunSeconds;

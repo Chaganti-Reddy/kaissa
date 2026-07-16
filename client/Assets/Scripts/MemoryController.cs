@@ -121,6 +121,7 @@ public sealed class MemoryController : MonoBehaviour
     private void StartRun()
     {
         _overlayHost.Clear();
+        KaissaStreak.RecordToday(); // memory drill counts toward the daily training streak
         _level = 1;
         NextPosition();
     }

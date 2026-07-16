@@ -230,6 +230,7 @@ public sealed class RushController : MonoBehaviour
 
     private void StartRun(RushMode mode)
     {
+        KaissaStreak.RecordToday(); // Puzzle Blitz counts toward the daily training streak
         _mode = mode;
         _timeLimit = mode switch { RushMode.ThreeMin => 180f, RushMode.FiveMin => 300f, _ => 0f };
         _timeLeft = _timeLimit; _elapsed = 0f;

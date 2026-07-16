@@ -562,6 +562,7 @@ public sealed class KaissaGameController : MonoBehaviour
         }
 
         _lastLabel = label; _lastElo = fixedElo;
+        KaissaStreak.RecordToday(); // playing a game counts toward the daily training streak
         _titleLabel.text = $"Play vs {label}";
         _statusLabel.text = "Starting engine...";
         double playerRating = KaissaTrainer.CreateDefault(KaissaProgress.Load()).PlayerRating;

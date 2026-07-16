@@ -137,6 +137,7 @@ public sealed class VisualizationController : MonoBehaviour
     private void StartRun()
     {
         _overlayHost.Clear();
+        KaissaStreak.RecordToday(); // visualization counts toward the daily training streak
         if (_pool.Count == 0) { SetFeedback("No puzzles available.", UiKit.Danger); return; }
         _score = 0;
         NextTactic();
