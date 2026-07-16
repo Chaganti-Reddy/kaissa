@@ -352,20 +352,22 @@ public sealed class KaissaGameController : MonoBehaviour
         panel.Add(colorRow);
 
         panel.Add(PickBtn("Adaptive - matches your level", () => { _root.Remove(dim); StartGame("Adaptive", null); }));
-        foreach (var bot in BotRoster.All)
+
+        // The bot ladder: personas ordered by rating, each with an archetype, a style and a beaten badge.
+        // Maia (human) rungs appear only when lc0 + the nets are installed.
+        var ladder = BotRoster.Ladder.Where(b => b.Weights == null || EngineHub.MaiaAvailable).ToList();
+        int beaten = ladder.Count(b => KaissaSettings.IsBotBeaten(b.Id));
+        var ladderHead = UiKit.Text_($"Bot ladder - {beaten} / {ladder.Count} beaten", 12, UiKit.Mute, bold: true);
+        ladderHead.style.marginTop = 6; ladderHead.style.marginBottom = 6; ladderHead.style.alignSelf = Align.FlexStart;
+        panel.Add(ladderHead);
+
+        var listScroll = UiKit.Scroll(); listScroll.style.maxHeight = 300; listScroll.style.width = 380;
+        foreach (var bot in ladder)
         {
             var b = bot;
-            panel.Add(PickBtn($"{b.Name}  ({b.Elo})", () => { _root.Remove(dim); StartGame(b.Name, b.Elo); }));
+            listScroll.contentContainer.Add(PersonaCard(b, () => { _root.Remove(dim); StartGame(b.Name, b.Elo, b.Weights, b.Id); }));
         }
-        // Human-like Maia opponents, only when lc0 + the nets were staged.
-        if (EngineHub.MaiaAvailable)
-        {
-            foreach (var bot in BotRoster.Maia)
-            {
-                var b = bot;
-                panel.Add(PickBtn($"{b.Name}  (human)", () => { _root.Remove(dim); StartGame(b.Name, b.Elo, b.Weights); }));
-            }
-        }
+        panel.Add(listScroll);
         var back = UiKit.Ghost("Back to menu", () => SceneTransition.Go("Menu"));
         back.style.marginTop = 8; back.style.width = 360;
         panel.Add(back);
@@ -381,6 +383,50 @@ public sealed class KaissaGameController : MonoBehaviour
         b.style.width = 360; b.style.marginBottom = 8;
         return b;
     }
+
+    // One rung of the bot ladder: an archetype chip, the persona's name + rating, its style, and a
+    // "beaten" badge once the player has won against it.
+    private VisualElement PersonaCard(BotProfile b, Action onClick)
+    {
+        var card = new VisualElement { name = "pickopp" };
+        card.style.flexDirection = FlexDirection.Row; card.style.alignItems = Align.Center;
+        card.style.width = 360; card.style.marginBottom = 6;
+        card.style.backgroundColor = UiKit.Panel2; UiKit.Radius(card, 10); UiKit.Pad(card, 8, 12, 8, 12);
+
+        var chip = UiKit.Text_(b.Archetype, 10, UiKit.Bg, bold: true);
+        chip.style.backgroundColor = ArchetypeColor(b.Archetype); UiKit.Pad(chip, 2, 7, 2, 7); UiKit.Radius(chip, 8);
+        chip.style.marginRight = 10; chip.style.flexShrink = 0;
+        card.Add(chip);
+
+        var col = new VisualElement(); col.style.flexGrow = 1;
+        var top = UiKit.Row(); top.style.justifyContent = Justify.SpaceBetween;
+        top.Add(UiKit.Text_(b.Name, 15, UiKit.Text, bold: true));
+        top.Add(UiKit.Text_(b.Weights != null ? $"{b.Elo} human" : b.Elo.ToString(), 12, UiKit.Dim, bold: true));
+        col.Add(top);
+        var style = UiKit.Text_(b.Style, 11, UiKit.Mute); style.style.whiteSpace = WhiteSpace.Normal;
+        col.Add(style);
+        card.Add(col);
+
+        if (KaissaSettings.IsBotBeaten(b.Id))
+        {
+            var badge = UiKit.Text_("beaten", 10, UiKit.GreenHi, bold: true);
+            badge.style.marginLeft = 8; badge.style.flexShrink = 0;
+            card.Add(badge);
+        }
+
+        card.RegisterCallback<ClickEvent>(_ => onClick());
+        UiKit.Interactive(card, 1.02f);
+        return card;
+    }
+
+    private static Color ArchetypeColor(string archetype) => archetype switch
+    {
+        "Hunter" => UiKit.Danger,
+        "Savage" => UiKit.Hex(0xb0, 0x5c, 0xd6),
+        "Guardian" => UiKit.Hex(0x3a, 0x82, 0xd6),
+        "Observer" => UiKit.GreenHi,
+        _ => UiKit.Gold,
+    };
 
     private VisualElement Overlay()
     {
@@ -432,10 +478,13 @@ public sealed class KaissaGameController : MonoBehaviour
 
     private bool _starting; // guards against concurrent engine ops from rapid New/Rematch clicks
 
-    private async void StartGame(string label, int? fixedElo, string maiaWeights = null)
+    private string _botId; // ladder bot currently being played (null for Adaptive/endgame), for beaten-tracking
+
+    private async void StartGame(string label, int? fixedElo, string maiaWeights = null, string botId = null)
     {
         if (_starting) return;
         _starting = true;
+        _botId = botId;
         try { await StartGameCore(label, fixedElo, maiaWeights); }
         finally { _starting = false; }
     }
@@ -909,6 +958,7 @@ public sealed class KaissaGameController : MonoBehaviour
     private void EnterReview(GameReviewResult review, int result = 1)
     {
         if (review.Practice.Count > 0) KaissaPractice.Add(review.Practice);
+        if (result == 2 && _botId != null) KaissaSettings.MarkBotBeaten(_botId); // climbed a rung of the ladder
         SaveRating();
         KaissaGameLog.Record(review.Accuracy, result);
         string playerSideName = _playerWhite ? "White" : "Black";

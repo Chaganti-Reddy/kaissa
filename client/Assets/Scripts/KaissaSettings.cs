@@ -38,6 +38,7 @@ public static class KaissaSettings
         public bool premove = true;   // queue a move during the opponent's turn (timed play)
         public int capturesBest;      // best "captures and threats" board-vision drill score (30s)
         public int visualizationBest; // best visualization/blindfold run (tactics solved with faded pieces)
+        public string botsBeaten = ""; // comma-joined bot ids the player has beaten (the bot ladder)
         public string pieceSet = "cburnett"; // 2D piece art set (folder under Resources/Pieces2D)
         public string soundTheme = "sfx"; // sound set (folder under Resources/Sounds); empty = Classic procedural
         public bool closeToTray; // Windows: closing the window hides to a system-tray icon instead of quitting
@@ -94,6 +95,14 @@ public static class KaissaSettings
     public static bool Premove { get => D.premove; set { D.premove = value; Save(); } }
     public static int CapturesBest { get => D.capturesBest; set { D.capturesBest = value; Save(); } }
     public static int VisualizationBest { get => D.visualizationBest; set { D.visualizationBest = value; Save(); } }
+    public static string BotsBeaten { get => D.botsBeaten ?? ""; set { D.botsBeaten = value; Save(); } }
+    public static bool IsBotBeaten(string id) =>
+        !string.IsNullOrEmpty(id) && ("," + BotsBeaten + ",").Contains("," + id + ",");
+    public static void MarkBotBeaten(string id)
+    {
+        if (string.IsNullOrEmpty(id) || IsBotBeaten(id)) return;
+        BotsBeaten = string.IsNullOrEmpty(BotsBeaten) ? id : BotsBeaten + "," + id;
+    }
     public static string PieceSet { get => string.IsNullOrEmpty(D.pieceSet) ? "cburnett" : D.pieceSet; set { D.pieceSet = value; Save(); } }
     public static string SoundTheme { get => D.soundTheme ?? ""; set { D.soundTheme = value; Save(); } }
     public static bool CloseToTray { get => D.closeToTray; set { D.closeToTray = value; Save(); } }
