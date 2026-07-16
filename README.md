@@ -8,7 +8,7 @@ The name is a placeholder and may change.
 
 ## Status
 
-Alpha. The learning core is complete and tested, and there is a playable Unity client on desktop covering training, puzzle blitz, daily puzzle, themed practice, play-vs-bot, endgames, openings, an analysis board, post-game review, stats, board-vision and coordinate drills, and calibration. The interface was rebuilt in Unity UI Toolkit with a consistent nav-rail/board/panel layout, and the board can be shown flat (2D) or in 3D. A real modelled piece set and further polish are still pending. See [`docs/`](docs/).
+Alpha, and shipping regularly. The learning core is complete and tested (200-plus tests), and there is a playable Unity client on desktop covering: rated and custom puzzles (including a "from your games" feed), Puzzle Blitz, the daily puzzle, play against adaptive Stockfish and human-like Maia opponents on a bot ladder, endgames, an openings explorer and repertoire drill with per-move recall levels, an analysis board with a plain-language position coach, ten-class game review, a six-axis improvement dashboard and achievements, the board-vision, coordinates, memory, captures, visualization and Solo Chess drills, and calibration. The interface is Unity UI Toolkit with a consistent nav-rail/board/panel layout, and the board can be shown flat (2D) or in 3D. See [`docs/`](docs/) and [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Build and run
 
