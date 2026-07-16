@@ -288,7 +288,75 @@ public sealed class KaissaGameController : MonoBehaviour
         _graphHost = new VisualElement();
         _graphHost.style.marginTop = 12;
         rail.Add(_graphHost);
+
+        rail.Add(BuildCoachPanel());
         return rail;
+    }
+
+    // An opt-in "decode as you play" coach: a plain-language read of the CURRENT position (threats, plans,
+    // piece roles, concepts) that refreshes each move. It deliberately does NOT show the best move - this is
+    // for understanding the position, not being handed the move. Off by default.
+    private VisualElement BuildCoachPanel()
+    {
+        var p = new VisualElement();
+        p.style.marginTop = 12;
+        p.style.backgroundColor = UiKit.Panel;
+        p.style.borderTopWidth = p.style.borderBottomWidth = p.style.borderLeftWidth = p.style.borderRightWidth = 1;
+        p.style.borderTopColor = p.style.borderBottomColor = p.style.borderLeftColor = p.style.borderRightColor = UiKit.Line;
+        UiKit.Radius(p, 12);
+
+        var hd = UiKit.Row(UiKit.Text_("Coach", 15, UiKit.Text, bold: true));
+        hd.style.justifyContent = Justify.SpaceBetween; hd.style.alignItems = Align.Center;
+        UiKit.Pad(hd, 12, 16, 12, 16);
+        _coachBtn = UiKit.Ghost("Coach: off", ToggleCoach, 12);
+        hd.Add(_coachBtn);
+        p.Add(hd);
+
+        var scroll = UiKit.Scroll(); scroll.style.maxHeight = 176;
+        _coachBody = scroll.contentContainer;
+        UiKit.Pad(_coachBody, 4, 16, 12, 16);
+        p.Add(scroll);
+        RefreshCoach(_currentFen);
+        return p;
+    }
+
+    private void ToggleCoach()
+    {
+        _coachOn = !_coachOn;
+        _coachBtn.text = _coachOn ? "Coach: on" : "Coach: off";
+        RefreshCoach(_currentFen);
+    }
+
+    private void RefreshCoach(string fen)
+    {
+        if (_coachBody == null) return;
+        _coachBody.Clear();
+        if (!_coachOn)
+        {
+            var hint = UiKit.Text_("Turn on for a read of each position as you play. No move is given.", 11, UiKit.Mute);
+            hint.style.whiteSpace = WhiteSpace.Normal;
+            _coachBody.Add(hint);
+            return;
+        }
+        if (string.IsNullOrEmpty(fen)) return;
+        var e = Kaissa.Training.Play.PositionCoach.Explain(fen); // no engine lines -> no best-move tab
+        AddCoachSection("Threats", e.Threats);
+        AddCoachSection("Plans", e.Plans);
+        AddCoachSection("Piece roles", e.PieceRoles);
+        AddCoachSection("Concepts", e.Concepts);
+    }
+
+    private void AddCoachSection(string title, System.Collections.Generic.IReadOnlyList<string> items)
+    {
+        if (items == null || items.Count == 0) return;
+        var h = UiKit.Text_(title, 10, UiKit.Mute, bold: true); h.style.marginTop = 5;
+        _coachBody.Add(h);
+        foreach (var line in items.Take(2))
+        {
+            var t = UiKit.Text_("- " + line, 11, UiKit.Dim);
+            t.style.whiteSpace = WhiteSpace.Normal;
+            _coachBody.Add(t);
+        }
     }
 
     // Resolve a typed move (SAN or UCI) against the current position and play it if it is legal and
@@ -479,6 +547,9 @@ public sealed class KaissaGameController : MonoBehaviour
     private bool _starting; // guards against concurrent engine ops from rapid New/Rematch clicks
 
     private string _botId; // ladder bot currently being played (null for Adaptive/endgame), for beaten-tracking
+    private bool _coachOn;         // "decode as you play" coach panel (opt-in, off by default)
+    private VisualElement _coachBody;
+    private Button _coachBtn;
 
     private async void StartGame(string label, int? fixedElo, string maiaWeights = null, string botId = null)
     {
@@ -581,6 +652,12 @@ public sealed class KaissaGameController : MonoBehaviour
         if (_game != null && !_busy && !_game.IsGameOver) _board.DebugClickMove("g1", "f3");
         yield return new WaitForSeconds(2.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_midgame.png"));
+
+        // "Decode as you play" coach: toggle it on and capture the live read of the current position.
+        ToggleCoach();
+        yield return new WaitForSeconds(0.6f);
+        ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_coach.png"));
+        yield return new WaitForSeconds(0.3f);
 
         UiAutomation.Click(UiAutomation.FindButton(_root, "Flip")); yield return new WaitForSeconds(0.8f);
         ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"play_{tag}_flip.png"));
@@ -830,6 +907,7 @@ public sealed class KaissaGameController : MonoBehaviour
         _canMove = canMove;
         _board.Render(fen, canMove, _lastMove, _whiteBottom);
         if (_analysis != null) EvaluateEval(fen);
+        if (_coachOn) RefreshCoach(fen);
     }
 
     private System.Collections.IEnumerator StartAnalysis()
