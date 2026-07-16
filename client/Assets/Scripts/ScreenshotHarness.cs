@@ -15,7 +15,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
     private static readonly string[] Scenes =
     {
         "Menu", "Play", "SampleScene", "Rush", "Opening", "Library",
-        "Endgame", "Vision", "Coordinate", "Memory", "Captures", "Visualization", "SoloChess", "Stats", "Settings", "Calibrate", "Analysis",
+        "Endgame", "Vision", "Coordinate", "Memory", "Captures", "Visualization", "SoloChess", "GuessMove", "Stats", "Settings", "Calibrate", "Analysis",
     };
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -31,6 +31,7 @@ public sealed class ScreenshotHarness : MonoBehaviour
             && !args.Contains("-kaissa-visiontest") && !args.Contains("-kaissa-coordtest")
             && !args.Contains("-kaissa-memorytest") && !args.Contains("-kaissa-capturestest")
             && !args.Contains("-kaissa-visualizationtest") && !args.Contains("-kaissa-solotest")
+            && !args.Contains("-kaissa-guesstest")
             && !args.Contains("-kaissa-settingstest") && !args.Contains("-kaissa-calibratetest")
             && !args.Contains("-kaissa-transition") && !args.Contains("-kaissa-startup")
             && !args.Contains("-kaissa-hometest"))
@@ -173,6 +174,14 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (args.Contains("-kaissa-solotest"))
         {
             SceneManager.LoadScene("SoloChess");
+            yield return new WaitForSeconds(18f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-guesstest"))
+        {
+            SceneManager.LoadScene("GuessMove");
             yield return new WaitForSeconds(18f);
             Application.Quit();
             yield break;

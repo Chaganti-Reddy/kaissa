@@ -194,6 +194,7 @@ public static class UiKit
         rail.Add(NavItem("Captures", "Captures", activeScene));
         rail.Add(NavItem("Visualization", "Visualization", activeScene));
         rail.Add(NavItem("Solo Chess", "SoloChess", activeScene));
+        rail.Add(NavItem("Guess Move", "GuessMove", activeScene));
         rail.Add(NavItem("Stats", "Stats", activeScene));
 
         var spacer = new VisualElement();

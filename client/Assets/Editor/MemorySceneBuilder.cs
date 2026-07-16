@@ -21,6 +21,9 @@ public static class MemorySceneBuilder
     [MenuItem("Kaissa/Create Solo Chess Scene")]
     public static void CreateSolo() => CreateScene<SoloChessController>("SoloChess");
 
+    [MenuItem("Kaissa/Create Guess Move Scene")]
+    public static void CreateGuess() => CreateScene<GuessMoveController>("GuessMove");
+
     // Build a single-controller scene (Main Camera + Directional Light from DefaultGameObjects, plus a
     // GameObject carrying the controller) and register it in the build settings, like the other scenes.
     private static void CreateScene<T>(string sceneName) where T : Component
