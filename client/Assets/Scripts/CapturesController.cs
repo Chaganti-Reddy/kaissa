@@ -303,14 +303,7 @@ public sealed class CapturesController : MonoBehaviour
         return dim;
     }
 
-    private VisualElement OverlayPanel()
-    {
-        var p = new VisualElement();
-        p.style.backgroundColor = UiKit.Panel;
-        UiKit.Pad(p, 28); UiKit.Radius(p, 14);
-        p.style.alignItems = Align.Center;
-        return p;
-    }
+    private VisualElement OverlayPanel() => UiKit.OverlayCard(); // scrolling, height-capped modal card
 
     private IEnumerator AutoDemo()
     {

@@ -65,12 +65,30 @@ public static class UiKit
     }
 
     // Hide a ScrollView's scrollbars while keeping wheel/touch scrolling. The default scrollers are
-    // wide and heavy; content still scrolls with the mouse wheel when they are hidden.
+    // wide and heavy; content still scrolls with the mouse wheel when they are hidden. A larger
+    // mouse-wheel step makes the wheel feel smooth rather than crawling a few pixels per notch.
     public static ScrollView Scroll(ScrollViewMode mode = ScrollViewMode.Vertical)
     {
         var sv = new ScrollView(mode);
         sv.verticalScrollerVisibility = ScrollerVisibility.Hidden;
         sv.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+        sv.mouseWheelScrollSize = 42f;      // smoother/faster wheel (default is a tiny step)
+        sv.elasticity = 0.08f;              // gentle bounce at the ends
+        return sv;
+    }
+
+    // A modal card that never overflows the window: a scrolling, padded, centered panel capped to most
+    // of the viewport height, so a tall popup scrolls inside itself instead of spilling off-screen.
+    // Callers add content with card.Add(...) exactly as before (it goes to the scroll's content).
+    public static ScrollView OverlayCard(float maxHeightPercent = 88f)
+    {
+        var sv = Scroll();
+        sv.style.maxHeight = Length.Percent(maxHeightPercent);
+        sv.style.flexShrink = 1;
+        sv.style.backgroundColor = Panel;
+        Radius(sv, 14);
+        Pad(sv.contentContainer, 28);
+        sv.contentContainer.style.alignItems = Align.Center;
         return sv;
     }
 
