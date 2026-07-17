@@ -294,11 +294,22 @@ public sealed class RushController : MonoBehaviour
         _busy = false;
     }
 
+    // Timed solving feeds the separate "blitz" puzzle rating (kept apart from the standard rating).
+    private void UpdateBlitzRating(bool solved)
+    {
+        if (_scenario == null) return;
+        var saved = KaissaProgress.Load();
+        var model = saved != null ? SkillModel.FromJson(saved) : new SkillModel();
+        model.UpdateBlitz(_scenario.Rating, solved);
+        KaissaProgress.Save(model.ToJson());
+    }
+
     private void RecordSolve()
     {
         if (_graded) return;
         _graded = true;
         _rush.Submit(_scenario.Solutions[0], TimeSpan.Zero);
+        UpdateBlitzRating(solved: true);
         _combo++;
         // Storm-style combo: consecutive solves in a timed run add bonus time that grows with the combo.
         if (_timeLimit > 0f)
@@ -317,6 +328,7 @@ public sealed class RushController : MonoBehaviour
         _graded = true;
         _combo = 0; // a wrong move breaks the combo
         _rush.Submit(wrongMove, TimeSpan.Zero); // grades as a miss -> costs a life
+        UpdateBlitzRating(solved: false);
         _board.Render(_session.Fen, canMove: false, lastMove: null, whiteBottom: _whiteBottom); // snap back
         TintMove(wrongMove, Bad);
         var sol = _session.ExpectedMove;
