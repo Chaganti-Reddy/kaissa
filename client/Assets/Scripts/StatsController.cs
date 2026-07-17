@@ -59,6 +59,7 @@ public sealed class StatsController : MonoBehaviour
         BuildSummaryRow(main, stats);
         BuildRecentGames(main);
         BuildInsights(main);
+        BuildQuests(main, stats);
         BuildAchievements(main, stats);
         BuildMastery(main, trainer, stats);
 
@@ -334,6 +335,9 @@ public sealed class StatsController : MonoBehaviour
         StatLine(blitzB, "3 minutes", $"{KaissaSettings.RushBest3}");
         StatLine(blitzB, "5 minutes", $"{KaissaSettings.RushBest5}");
         StatLine(blitzB, "Survival", $"{KaissaSettings.RushBestSurvival}");
+        var savedForBlitz = KaissaProgress.Load();
+        double blitzRating = savedForBlitz != null ? SkillModel.FromJson(savedForBlitz).BlitzRating : RatingEstimator.Default;
+        StatLine(blitzB, "Blitz rating", $"{blitzRating:0}");
         row.Add(blitz);
 
         var (play, playB) = Card("Play vs bot");
@@ -451,6 +455,46 @@ public sealed class StatsController : MonoBehaviour
         r.Add(UiKit.Text_(label, 13, UiKit.Dim));
         r.Add(UiKit.Text_(value, 13, UiKit.Text, bold: true));
         body.Add(r);
+    }
+
+    // A client snapshot of progress for the quest board, gathered from the local stores.
+    private static QuestSnapshot QuestSnapshotFrom(PlayerStats stats) => new(
+        PuzzlesSolved: stats.TotalCorrect,
+        GamesWon: KaissaGameLog.Wins,
+        BestPuzzleStreak: Math.Max(stats.BestStreak, KaissaSettings.PuzzleBestStreak),
+        DayStreak: KaissaStreak.CurrentDays(),
+        BotsBeaten: KaissaSettings.BotsBeaten.Split(',', StringSplitOptions.RemoveEmptyEntries).Length,
+        MemoryBest: KaissaSettings.MemoryBest,
+        VisualizationBest: KaissaSettings.VisualizationBest,
+        SoloBest: KaissaSettings.SoloBest);
+
+    // Graduated quests + a rank ladder (Pawn..King), driven by the pure-core QuestBoard.
+    private void BuildQuests(VisualElement main, PlayerStats stats)
+    {
+        var snap = QuestSnapshotFrom(stats);
+        var quests = QuestBoard.For(snap);
+        var (rankName, _) = QuestBoard.Rank(snap);
+
+        var (card, body) = Card("Quests");
+        body.Add(UiKit.Text_($"Rank: {rankName}   -   {QuestBoard.CompletedCount(snap)} / {quests.Count} complete", 11, UiKit.Mute));
+        foreach (var q in quests)
+        {
+            var wrap = new VisualElement(); wrap.style.marginTop = 7;
+            var head = UiKit.Row(); head.style.justifyContent = Justify.SpaceBetween;
+            head.Add(UiKit.Text_(q.Title, 13, q.Done ? UiKit.GreenHi : UiKit.Text, bold: true));
+            head.Add(UiKit.Text_($"{Math.Min(q.Current, q.Target)}/{q.Target}", 12, UiKit.Dim, bold: true));
+            wrap.Add(head);
+            var track = new VisualElement();
+            track.style.height = 7; track.style.marginTop = 3; track.style.backgroundColor = UiKit.Panel3; UiKit.Radius(track, 4);
+            var fill = new VisualElement();
+            fill.style.height = 7; UiKit.Radius(fill, 4); fill.style.backgroundColor = q.Done ? UiKit.GreenHi : UiKit.Gold;
+            fill.style.width = new Length((float)(q.Fraction * 100), LengthUnit.Percent);
+            track.Add(fill); wrap.Add(track);
+            var d = UiKit.Text_(q.Description, 11, UiKit.Dim); d.style.whiteSpace = WhiteSpace.Normal;
+            wrap.Add(d);
+            body.Add(wrap);
+        }
+        main.Add(card);
     }
 
     private void BuildAchievements(VisualElement main, PlayerStats stats)
