@@ -60,7 +60,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - [`docs/architecture.md`](docs/architecture.md) - system structure and data flow
 - [`docs/learning-engine.md`](docs/learning-engine.md) - how the training loop works
 - [`docs/client.md`](docs/client.md) - the Unity client and UI design, and how to set up to build it
-- [`docs/features.md`](docs/features.md) - the feature set and roadmap
+- [`docs/features.md`](docs/features.md) - the feature set
+- [`docs/roadmap.md`](docs/roadmap.md) - what is shipped, in progress, planned, and deferred
 - [`docs/mobile.md`](docs/mobile.md) - plan for the engine on Android/iOS
 - [`docs/release.md`](docs/release.md) - building a desktop build and cutting a release
 - [`CHANGELOG.md`](CHANGELOG.md) - release notes
