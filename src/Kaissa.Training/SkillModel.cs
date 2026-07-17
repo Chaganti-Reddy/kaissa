@@ -33,6 +33,14 @@ public sealed class SkillModel
     /// <summary>Live estimate of the player's overall strength on the puzzle-rating scale.</summary>
     public double RatingEstimate { get; set; } = RatingEstimator.Default;
 
+    /// <summary>A separate rating for timed solving (Puzzle Blitz), so fast and slow strength are tracked
+    /// apart - a puzzle can be easy-slow but hard-fast, as the dual-rating trainers show.</summary>
+    public double BlitzRating { get; set; } = RatingEstimator.Default;
+
+    /// <summary>Updates the timed (blitz) rating after a timed attempt against a puzzle's rating.</summary>
+    public void UpdateBlitz(int puzzleRating, bool solved) =>
+        BlitzRating = RatingEstimator.Update(BlitzRating, puzzleRating, solved);
+
     /// <summary>Consecutive correct answers, current and best.</summary>
     public int CurrentStreak { get; private set; }
     public int BestStreak { get; private set; }
@@ -80,6 +88,7 @@ public sealed class SkillModel
         var dto = new ModelDto
         {
             RatingEstimate = RatingEstimate,
+            BlitzRating = BlitzRating,
             CurrentStreak = CurrentStreak,
             BestStreak = BestStreak,
             RatingHistory = _ratingHistory.ToList(),
@@ -104,6 +113,7 @@ public sealed class SkillModel
         var model = new SkillModel();
         var dto = JsonSerializer.Deserialize<ModelDto>(json) ?? new ModelDto();
         model.RatingEstimate = dto.RatingEstimate;
+        model.BlitzRating = dto.BlitzRating ?? dto.RatingEstimate; // old saves fall back to the overall rating
         model.CurrentStreak = dto.CurrentStreak;
         model.BestStreak = dto.BestStreak;
         model._ratingHistory.AddRange(dto.RatingHistory);
@@ -131,6 +141,7 @@ public sealed class SkillModel
     private sealed class ModelDto
     {
         public double RatingEstimate { get; init; } = RatingEstimator.Default;
+        public double? BlitzRating { get; init; } // nullable so pre-existing saves fall back to the overall rating
         public int CurrentStreak { get; init; }
         public int BestStreak { get; init; }
         public List<double> RatingHistory { get; init; } = new();
