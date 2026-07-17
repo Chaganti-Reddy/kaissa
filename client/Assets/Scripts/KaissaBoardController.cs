@@ -21,7 +21,7 @@ using UnityEngine.UIElements;
 // IBoardView; the correct/incorrect badge is a board-agnostic overlay so both boards get it.
 public sealed class KaissaBoardController : MonoBehaviour
 {
-    private enum Mode { Rated, Theme, Difficulty, Daily, Weakness, Misses, Games }
+    private enum Mode { Rated, Theme, Difficulty, Daily, Weakness, Misses, Games, Custom }
 
     private KaissaTrainer _trainer;
     private IBoardView _board;
@@ -312,6 +312,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         bar.Add(ModeChip("Weakness", LoadWeaknessFeed));
         bar.Add(ModeChip("Review misses", LoadMissesFeed));
         bar.Add(ModeChip("From your games", LoadGamesFeed));
+        bar.Add(ModeChip("Custom set", LoadCustomFeed));
         _modeLabel = UiKit.Text_("", 12, UiKit.Mute);
         _modeLabel.style.marginLeft = 8;
         bar.Add(_modeLabel);
@@ -507,6 +508,26 @@ public sealed class KaissaBoardController : MonoBehaviour
             return;
         }
         _patternName = "From your games";
+        _feed = list; _feedAt = 0;
+        _summaryShown = false;
+        LoadNext();
+    }
+
+    // A custom set built from filters (rating band around your level, single-move) via the core builder.
+    // The full filter UI (themes, mate-in-N) is a later addition; this loads a clean tactical set now.
+    private void LoadCustomFeed()
+    {
+        if (_pickerHost != null) HidePicker();
+        int r = (int)_trainer.PlayerRating;
+        var spec = new PuzzleSetSpec { MinRating = r - 200, MaxRating = r + 200, SingleMoveOnly = true, Max = 30 };
+        var list = PuzzleSetBuilder.Build(_trainer.Library, spec).ToList();
+        if (list.Count == 0)
+        {
+            SetFeedback("No puzzles match that filter.", UiKit.Dim);
+            return;
+        }
+        Shuffle(list);
+        _mode = Mode.Custom; _patternName = "Custom set";
         _feed = list; _feedAt = 0;
         _summaryShown = false;
         LoadNext();
