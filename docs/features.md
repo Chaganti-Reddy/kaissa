@@ -61,6 +61,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Browse and learn: 3,790 named openings grouped by first move, searchable, with mainline stepping
 - [x] Repertoire drill: recall your own book moves, scheduled per decision, each move on a Chessable-style recall ladder (Level 0-8, "next in ...") and tagged with the pawn-structure chunk it belongs to - `RepertoireSession` / `SrLevel`
 - [x] Analyze or open any position in the analysis board
+- [x] Expeditions: master an opening by winning a set number of games against a bot from its position; per-expedition record kept - `Expeditions` / `ExpeditionRun`
 - [ ] Per-move popularity and result statistics (needs a games database, not yet shipped)
 
 ## Endgames
@@ -108,6 +109,7 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Shared board on every screen: drag or click, legal-move dots, highlights, sounds, premove, glide, promotion picker; a 2D or 3D board (toggle)
 - [x] Board feel: capture pop, ease-out glide, piece lift on grab, and a solve/win celebration flourish; sampled sound with selectable themes (Sfx, Piano, NES, Futuristic, Classic)
 - [x] Right-click annotations (arrows and square highlights) on both boards
+- [x] Accessibility: optional shape markers on highlighted squares (ring for check, bracket for last move) so highlights do not rely on colour alone - `Board2D` / Settings toggle
 - [x] Home dashboard: a snapshot (rating, tier, day streak, patterns due) and cards that launch every mode, with a first-run calibration prompt
 - [x] Consistent nav-rail / board / panel layout; springy hover and press feedback on clickable elements; fade transitions between screens; a branded startup animation
 - [x] Fast content load: opening and puzzle indexes are precomputed offline, parsed once per run, and warmed on a background thread at launch, so pages open near-instantly

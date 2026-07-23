@@ -32,8 +32,13 @@ Code complete and tested; client build pending.
 - Named practice drills generated from the shared content: Time Trainer, Intuition, Defender, Advantage
   Capitalization, Blunder Preventer, Checkmate Patterns, Opening Improver.
 - Puzzle Storm: a running clock with a difficulty ramp and a combo that adds time.
+- Expeditions: campaigns to master an opening by beating a bot from it repeatedly.
 - Analysis: hover an engine line to preview it without changing the board; keyboard move entry.
 - An earned-cosmetic shop (cosmetics only; coins come from play and never buy strength).
+- Accessibility: shape markers on highlighted squares (ring for check, bracket for last move) so
+  highlights do not rely on colour alone.
+- Chunk tagging: a core routine that labels a position by its structural chunks (pawn structure,
+  piece placement, king safety) - groundwork for organising training around chunk recognition.
 - A weekly study plan generated from your weakest areas.
 - Additional endgames (bishop-and-knight mate, queen versus rook).
 
@@ -42,9 +47,9 @@ Code complete and tested; client build pending.
 Buildable in the pure-C# core and the existing client.
 
 - More insights: additional breakdowns on the Stats page from data already collected.
-- Accessibility: shape-based (not colour-only) move and check highlights; deeper keyboard navigation.
-- Bot ladder and opening expeditions surfaced in Play (the progression is in the core; it needs a
-  game-versus-bot front end).
+- Accessibility: deeper keyboard navigation and a screen-reader-friendly linear board mode.
+- The bot ladder's shrinking tutor-hint budget wired into Play (the ladder itself is already the
+  opponent picker; the per-rung hint budget lives in the core and is not yet surfaced).
 - Per-move partial credit on puzzles for a winning-but-not-best move (needs an engine evaluation).
 - More guided lessons and studies authored as PGN with commentary.
 
