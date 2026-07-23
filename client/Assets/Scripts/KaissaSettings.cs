@@ -52,6 +52,7 @@ public static class KaissaSettings
         public int lastTc;                // its time-control index
         public int endgameChallengeBestMs; // best time (ms) for the 5-drill Endgame Challenge; 0 = none
         public bool shapeHighlights;       // draw shape markers on highlighted squares (colour-blind aid)
+        public string chunkStats = "";     // chunk-recognition tallies, "name;seen;correct" joined by '|'
         public string expeditions = "";    // per-expedition record, "id:wins:losses" comma-joined
         public int stormBest;              // best solved count in a Puzzle Storm run
         public int stormBestCombo;         // best combo reached in Puzzle Storm
@@ -153,6 +154,7 @@ public static class KaissaSettings
     }
 
     public static bool ShapeHighlights { get => D.shapeHighlights; set { D.shapeHighlights = value; Save(); } }
+    public static string ChunkStats { get => D.chunkStats ?? ""; set { D.chunkStats = value; Save(); } }
     public static int StormBest { get => D.stormBest; set { D.stormBest = value; Save(); } }
     public static int StormBestCombo { get => D.stormBestCombo; set { D.stormBestCombo = value; Save(); } }
 

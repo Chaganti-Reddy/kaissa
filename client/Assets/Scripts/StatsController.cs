@@ -61,6 +61,7 @@ public sealed class StatsController : MonoBehaviour
         BuildInsights(main);
         BuildQuests(main, stats);
         BuildAchievements(main, stats);
+        BuildChunkRecognition(main);
         BuildMastery(main, trainer, stats);
 
         root.Add(scroll);
@@ -586,6 +587,26 @@ public sealed class StatsController : MonoBehaviour
         PuzzleProgression.Mastery.Learning => UiKit.Mute,
         _ => UiKit.Mute,
     };
+
+    // Chunk recognition: from the chunk tagger + scheduler, which structural patterns the player reads
+    // well and which slip past. Only shows once some puzzles have been attempted.
+    private void BuildChunkRecognition(VisualElement main)
+    {
+        var stats = KaissaChunks.Snapshot();
+        if (stats.Count == 0) return;
+        var (card, body) = Card("Chunk recognition");
+        body.Add(UiKit.Text_("How often you spot each structural pattern in your puzzles.", 11, UiKit.Mute));
+        foreach (var s in stats.OrderBy(s => s.Accuracy).ThenByDescending(s => s.Seen).Take(6))
+        {
+            var r = UiKit.Row(); r.style.alignItems = Align.Center; r.style.marginTop = 6;
+            r.style.justifyContent = Justify.SpaceBetween;
+            r.Add(UiKit.Text_(s.Chunk, 13, UiKit.Dim));
+            r.Add(UiKit.Text_($"{s.Accuracy * 100:0}%  ({s.Correct}/{s.Seen})", 13,
+                s.Accuracy >= 0.6 ? UiKit.GreenHi : UiKit.Gold, bold: true));
+            body.Add(r);
+        }
+        main.Add(card);
+    }
 
     private static (VisualElement card, VisualElement body) Card(string title)
     {

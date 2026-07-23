@@ -615,7 +615,13 @@ public sealed class KaissaBoardController : MonoBehaviour
             _board.Render(_session.Fen, canMove: true, lastMove: null, whiteBottom: _whiteBottom); // snap back
             TintMove(uci, Bad);
             _audio.PlayWrong();
-            SetFeedback("Not the move - try again.", UiKit.Danger);
+            // Partial credit (CT-ART style): a winning-but-not-best move gets a softer nudge, still wrong.
+            var expected = _session.ExpectedMove;
+            var grade = expected != null ? PartialCredit.Assess(_session.Fen, uci, new[] { expected }) : PuzzleGrade.Wrong;
+            SetFeedback(grade == PuzzleGrade.Partial
+                    ? "That wins material too - but there's a sharper move. Try again."
+                    : "Not the move - try again.",
+                grade == PuzzleGrade.Partial ? UiKit.Gold : UiKit.Danger);
             if (_mode == Mode.Rated && !_graded) GradeRated(correct: false, playedMove: uci);
             return;
         }
@@ -649,6 +655,7 @@ public sealed class KaissaBoardController : MonoBehaviour
         _audio.PlayVictory();
         BoardCelebrate.Burst(_boardHost);
         _timing = false; _concluded = true;
+        KaissaChunks.Record(_session.StartFen, solved: true); // chunk recognition, for the Stats read
         // A wrong attempt in Rated mode already counted this puzzle via GradeRated; don't count it twice.
         if (!_graded) _answered++;
         _correct++;
@@ -735,6 +742,7 @@ public sealed class KaissaBoardController : MonoBehaviour
             }
         }
         _busy = false; _concluded = true;
+        KaissaChunks.Record(_session.StartFen, solved: false); // gave up: the chunk went unrecognised
         SetFeedback("Solution shown.", UiKit.Dim);
         SetControlsConcluded();
     }
