@@ -218,6 +218,8 @@ public sealed class SettingsController : MonoBehaviour
             () => { KaissaSettings.Coordinates = !KaissaSettings.Coordinates; RefreshPreview(); });
         Toggle(board, "Highlight last move", KaissaSettings.HighlightMove ? "On" : "Off",
             () => KaissaSettings.HighlightMove = !KaissaSettings.HighlightMove);
+        Toggle(board, "Shape highlights (colour-blind aid)", KaissaSettings.ShapeHighlights ? "On" : "Off",
+            () => { KaissaSettings.ShapeHighlights = !KaissaSettings.ShapeHighlights; RefreshPreview(); });
         Toggle(board, "Piece animation", new[] { "Fast", "Normal", "Slow" }[Mathf.Clamp(KaissaSettings.AnimSpeed, 0, 2)],
             () => KaissaSettings.AnimSpeed = (KaissaSettings.AnimSpeed + 1) % 3);
 

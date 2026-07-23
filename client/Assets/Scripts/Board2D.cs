@@ -298,6 +298,8 @@ public sealed class Board2D : IBoardView
         {
             Highlight(Sq(lastMove.Substring(0, 2)), Sel);
             Highlight(Sq(lastMove.Substring(2, 2)), Sel);
+            ShapeMark(Sq(lastMove.Substring(0, 2)), ring: false);
+            ShapeMark(Sq(lastMove.Substring(2, 2)), ring: false);
         }
 
         // check highlight (red on the side-to-move king if in check) + a one-shot pulse when the check
@@ -310,6 +312,7 @@ public sealed class Board2D : IBoardView
             if (kf >= 0)
             {
                 Highlight((kf, kr), Check);
+                ShapeMark((kf, kr), ring: true);
                 if (fen != _lastPulsedCheck) { PulseCheck(kf, kr); _lastPulsedCheck = fen; }
             }
         }
@@ -423,6 +426,43 @@ public sealed class Board2D : IBoardView
         for (int col = 0; col < 8; col++)
             if (ToBoard(row, col) == sq)
                 _rowOverlays[row, col].style.backgroundColor = c;
+    }
+
+    // Accessibility: a shape marker on a highlighted square so it reads without relying on colour.
+    // A ring means "check"; a corner bracket means "last move / premove". Gated by a setting and drawn
+    // on top of the existing colour tint, so it changes nothing when off.
+    private void ShapeMark((int f, int r) sq, bool ring)
+    {
+        if (!KaissaSettings.ShapeHighlights) return;
+        for (int row = 0; row < 8; row++)
+        for (int col = 0; col < 8; col++)
+            if (ToBoard(row, col) == sq)
+            {
+                var m = new VisualElement { pickingMode = PickingMode.Ignore };
+                m.style.position = Position.Absolute;
+                var edge = new Color(0.05f, 0.05f, 0.05f, 0.85f);
+                if (ring)
+                {
+                    m.style.left = Length.Percent(16); m.style.top = Length.Percent(16);
+                    m.style.width = Length.Percent(68); m.style.height = Length.Percent(68);
+                    UiKit.Radius(m, 999);
+                    SetBorder(m, 3, edge, true, true, true, true);
+                }
+                else
+                {
+                    m.style.left = Length.Percent(6); m.style.top = Length.Percent(6);
+                    m.style.width = Length.Percent(30); m.style.height = Length.Percent(30);
+                    SetBorder(m, 3, edge, true, true, false, false); // top+left only = a corner bracket
+                }
+                _rowOverlays[row, col].Add(m);
+            }
+    }
+
+    private static void SetBorder(VisualElement e, float w, Color c, bool top, bool left, bool bottom, bool right)
+    {
+        e.style.borderTopWidth = top ? w : 0; e.style.borderLeftWidth = left ? w : 0;
+        e.style.borderBottomWidth = bottom ? w : 0; e.style.borderRightWidth = right ? w : 0;
+        e.style.borderTopColor = e.style.borderLeftColor = e.style.borderBottomColor = e.style.borderRightColor = c;
     }
 
     private void Dot((int f, int r) sq)
