@@ -25,6 +25,13 @@ public sealed class StudiesController : MonoBehaviour
     private Label _title, _counter, _comment, _movePair;
     private Button _prev, _next;
 
+    // Per-move recall mode (MoveTrainer): replay the line from memory; missed moves come back until they stick.
+    private bool _recall;
+    private MoveTrainer _mt;
+    private int _recallDay, _recallPly, _recallGuard;
+    private string _from;
+    private static readonly Color RecallSel = new(0.36f, 0.72f, 0.42f, 0.55f);
+
     private static readonly Color LastMoveTint = new(0.36f, 0.72f, 0.42f, 0.35f);
 
     private void Start()
@@ -70,6 +77,7 @@ public sealed class StudiesController : MonoBehaviour
         _prev = UiKit.Ghost("< Prev", () => Step(-1), 14);
         _next = UiKit.Primary("Next >", () => Step(1), 14); _next.style.width = 140;
         ctrls.Add(_prev); ctrls.Add(_next);
+        ctrls.Add(UiKit.Ghost("Recall", StartRecall, 14));
         ctrls.Add(UiKit.Ghost("Next study", NextChapter, 14));
         center.Add(ctrls);
 
@@ -96,6 +104,8 @@ public sealed class StudiesController : MonoBehaviour
     private void LoadChapter(int index)
     {
         if (_chapters == null || _chapters.Count == 0) return;
+        _recall = false;
+        if (_board != null) _board.SquareClickHandler = null;
         _chapterIndex = ((index % _chapters.Count) + _chapters.Count) % _chapters.Count;
         _chapter = _chapters[_chapterIndex];
         _ply = 0;
@@ -106,9 +116,78 @@ public sealed class StudiesController : MonoBehaviour
 
     private void Step(int delta)
     {
+        if (_recall) return; // navigation is disabled while recalling
         int max = _chapter?.Moves.Count ?? 0;
         _ply = Math.Clamp(_ply + delta, 0, max);
         Render();
+    }
+
+    // -- recall mode (per-move spaced repetition) ---------------------------
+
+    private void StartRecall()
+    {
+        if (_chapter == null || _chapter.Moves.Count == 0) return;
+        _recall = true; _recallDay = 0; _recallGuard = 0; _from = null;
+        _mt = new MoveTrainer();
+        _mt.Add(_chapter.Title, _chapter.Moves.Select(m => m.Uci).ToList());
+        _prev.SetEnabled(false); _next.SetEnabled(false);
+        NextRecall();
+    }
+
+    private void NextRecall()
+    {
+        if (!_recall) return;
+        var item = _mt.NextDue(_recallDay);
+        if (item == null || _recallGuard++ > 300) { EndRecall(); return; }
+
+        _recallPly = item.MoveIndex;
+        var game = ChessGame.Start();
+        for (int i = 0; i < _recallPly; i++) game.TryMakeMove(_chapter.Moves[i].Uci);
+        _from = null;
+
+        _title.text = _chapter.Title + " - recall";
+        _counter.text = $"Move {_recallPly + 1} / {_chapter.Moves.Count}";
+        _movePair.text = $"Play {(_recallPly % 2 == 0 ? "White" : "Black")}'s move";
+        _comment.style.color = UiKit.Text;
+        _comment.text = "Recall the move by playing it. Missed moves come back until they stick.";
+        _board.SquareClickHandler = OnRecallPick;
+        _board.Render(game.Fen, canMove: false, lastMove: null, whiteBottom: true);
+    }
+
+    private void OnRecallPick(string sq)
+    {
+        if (!_recall || string.IsNullOrEmpty(sq)) return;
+        if (_from == null) { _from = sq; _board.HighlightSquare(sq, RecallSel); return; }
+        if (sq == _from) { _from = null; NextRecall(); return; }
+
+        string want = _chapter.Moves[_recallPly].Uci;
+        string got = _from + sq;
+        bool correct = string.Equals(got, want, StringComparison.OrdinalIgnoreCase)
+                       || string.Equals(got + "q", want, StringComparison.OrdinalIgnoreCase);
+        _mt.Review(_chapter.Title, _recallPly, correct, _recallDay);
+        _recallDay++;
+        _from = null;
+
+        _comment.style.color = correct ? UiKit.GreenHi : UiKit.Danger;
+        _comment.text = correct ? $"Correct - {SanAt(_recallPly)}" : $"That was {SanAt(_recallPly)}";
+        NextRecall();
+    }
+
+    private string SanAt(int ply)
+    {
+        var game = ChessGame.Start();
+        for (int i = 0; i < ply; i++) game.TryMakeMove(_chapter.Moves[i].Uci);
+        return game.SanForUci(_chapter.Moves[ply].Uci) ?? _chapter.Moves[ply].San;
+    }
+
+    private void EndRecall()
+    {
+        _recall = false;
+        _board.SquareClickHandler = null;
+        _comment.style.color = UiKit.Text;
+        _ply = _chapter.Moves.Count;
+        Render();
+        _comment.text = "Recall complete - the whole line remembered.";
     }
 
     // Replay the mainline up to _ply and render the resulting position.
