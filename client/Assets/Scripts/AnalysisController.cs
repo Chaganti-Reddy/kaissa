@@ -44,6 +44,7 @@ public sealed class AnalysisController : MonoBehaviour
     private static readonly string[] CoachTabNames = { "Threats", "Best moves", "Plans", "Piece roles", "Concepts" };
     private Label _evalText, _openingLabel, _depthLabel;
     private TextField _fenField;
+    private TextField _moveField;
     private Button _threatsBtn;
 
     private VisualElement _editorHost;
@@ -57,6 +58,7 @@ public sealed class AnalysisController : MonoBehaviour
     private static readonly Color BestArrow = new(0.36f, 0.72f, 0.42f, 0.85f);   // green - best move
     private static readonly Color ThreatArrow = new(0.86f, 0.30f, 0.28f, 0.85f); // red - threats
     private static readonly Color RoleArrow = new(0.36f, 0.62f, 0.86f, 0.85f);   // blue - piece roles
+    private static readonly Color PreviewArrow = new(0.82f, 0.70f, 0.30f, 0.80f); // gold - hovered-line preview
 
     private void Start()
     {
@@ -167,6 +169,12 @@ public sealed class AnalysisController : MonoBehaviour
         _fenField.style.marginTop = 6; _fenField.style.marginBottom = 6;
         _fenField.RegisterCallback<KeyDownEvent>(e => { if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) LoadFenFromField(); });
         toolsP.Add(_fenField);
+        // Keyboard move entry (accessibility + power users): type a move in SAN or UCI to play it.
+        toolsP.Add(UiKit.Text_("Type a move  (e4, Nf3, e2e4)", 11, UiKit.Mute));
+        _moveField = new TextField { value = "" };
+        _moveField.style.marginTop = 2; _moveField.style.marginBottom = 6;
+        _moveField.RegisterCallback<KeyDownEvent>(e => { if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) PlayTypedMove(); });
+        toolsP.Add(_moveField);
         var row1 = UiKit.Row(Tool("Load FEN", LoadFenFromField), Tool("Copy FEN", CopyFen), Tool("Copy PGN", CopyPgn));
         toolsP.Add(row1);
         var row2 = UiKit.Row();
@@ -276,6 +284,16 @@ public sealed class AnalysisController : MonoBehaviour
     private void OnMove(string uci)
     {
         if (_session.Play(uci)) { _lastMove = uci; RenderCurrent(); }
+    }
+
+    // Parse the typed text against the current position (MoveEntry, pure core) and play it if legal.
+    private void PlayTypedMove()
+    {
+        if (_moveField == null || string.IsNullOrWhiteSpace(_moveField.value)) return;
+        ChessGame g;
+        try { g = ChessGame.FromFen(_session.CurrentFen); } catch { return; }
+        var uci = MoveEntry.Parse(g, _moveField.value);
+        if (uci != null) { _moveField.value = ""; OnMove(uci); }
     }
 
     private void Reset()
@@ -636,8 +654,8 @@ public sealed class AnalysisController : MonoBehaviour
             moves.style.whiteSpace = WhiteSpace.Normal;
             moves.style.flexGrow = 1; moves.style.flexBasis = 0; moves.style.flexShrink = 1;
             row.Add(moves);
-            row.RegisterCallback<MouseEnterEvent>(_ => row.style.backgroundColor = UiKit.Panel2);
-            row.RegisterCallback<MouseLeaveEvent>(_ => row.style.backgroundColor = new Color(0, 0, 0, 0));
+            row.RegisterCallback<MouseEnterEvent>(_ => { row.style.backgroundColor = UiKit.Panel2; PreviewLine(l); });
+            row.RegisterCallback<MouseLeaveEvent>(_ => { row.style.backgroundColor = new Color(0, 0, 0, 0); ApplyCoachArrows(); });
             row.RegisterCallback<ClickEvent>(_ => PlayLineFromEngine(idx));
             UiKit.Interactive(row, 1.02f);
             _linesBody.Add(row);
@@ -671,6 +689,23 @@ public sealed class AnalysisController : MonoBehaviour
                 arrows.Add((best.Substring(0, 2), best.Substring(2, 2), BestArrow));
         }
 
+        _board.SetEngineArrows(arrows);
+    }
+
+    // Hover-over PV preview (Nibbler's idea): while the pointer is on an engine line, draw its first
+    // couple of moves as arrows on the current board - without playing them - so you can scan the lines
+    // without losing your place. MouseLeave restores the active tab's arrows via ApplyCoachArrows().
+    private void PreviewLine(AnalysisLine line)
+    {
+        if (_board == null || _editing || line?.Moves == null || line.Moves.Count == 0) return;
+        var arrows = new List<(string from, string to, Color color)>();
+        int n = Math.Min(2, line.Moves.Count);
+        for (int i = 0; i < n; i++)
+        {
+            var m = line.Moves[i];
+            if (!string.IsNullOrEmpty(m) && m.Length >= 4)
+                arrows.Add((m.Substring(0, 2), m.Substring(2, 2), PreviewArrow));
+        }
         _board.SetEngineArrows(arrows);
     }
 
