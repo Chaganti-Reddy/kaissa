@@ -3,6 +3,11 @@
 ## v3.0.0
 
 - Guess the Move: play through a famous, out-of-copyright game as one side and predict each move. You score when you find the move the master played, and the real move is shown either way so you follow the whole game. Ships with the Opera Game, a Legal's Mate miniature, and a short illustrative game; every game is validated move-by-move by the test suite.
+- Studies: step through an annotated master line move by move, with a short teaching note on each move. Lessons are authored as PGN, so more can be added as data. Ships with the Italian Game, the Ruy Lopez, and Legal's Mate.
+- Drills: seven named practice modes generated from the shared puzzle content - Time Trainer, Intuition, Defender, Advantage Capitalization, Blunder Preventer, Checkmate Patterns, and Opening Improver. Blunder Preventer shows two candidate moves and asks for the stronger; the rest are solve-on-the-board. Each is a filter over the same content, so they grow as the content does.
+- Puzzle Storm: a running clock with a difficulty ramp and a combo that tops the clock up at each milestone. A miss costs time and breaks the combo, but the run continues - distinct from Puzzle Blitz's three strikes. Best run and best combo are kept.
+- Analysis: hover an engine line to preview its first moves on the board without playing them; and keyboard move entry - type a move in algebraic ("Nf3") or long ("e2e4") notation to play it, for accessibility and quick input.
+- Shop: spend coins earned from play - solving puzzles, winning games, keeping a streak - on cosmetic board and piece-tint unlocks. Coins come only from activity, and nothing here affects rating or gates training.
 - Stats: a weekly study plan. From your own improvement-areas and weakest patterns it suggests a short, prioritized list of what to work on and where, worst gap first.
 - Endgames: added the bishop-and-knight mate (the hardest basic mate) and a queen-versus-rook position, alongside the existing Lucena, opposition, king-and-pawn, minor-piece and rook endings.
 

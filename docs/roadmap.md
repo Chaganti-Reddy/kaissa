@@ -28,6 +28,12 @@ The core is a single adaptive, spaced training loop that runs through every mode
 Code complete and tested; client build pending.
 
 - Guess the Move over bundled public-domain master games.
+- Studies: annotated master lines authored as PGN, stepped through with a note on each move.
+- Named practice drills generated from the shared content: Time Trainer, Intuition, Defender, Advantage
+  Capitalization, Blunder Preventer, Checkmate Patterns, Opening Improver.
+- Puzzle Storm: a running clock with a difficulty ramp and a combo that adds time.
+- Analysis: hover an engine line to preview it without changing the board; keyboard move entry.
+- An earned-cosmetic shop (cosmetics only; coins come from play and never buy strength).
 - A weekly study plan generated from your weakest areas.
 - Additional endgames (bishop-and-knight mate, queen versus rook).
 
@@ -37,13 +43,10 @@ Buildable in the pure-C# core and the existing client.
 
 - More insights: additional breakdowns on the Stats page from data already collected.
 - Accessibility: shape-based (not colour-only) move and check highlights; deeper keyboard navigation.
-- Analysis: hover an engine line to preview the resulting position without changing the board.
-- Dual puzzle rating: separate untimed and timed ratings, as some trainers do.
-- A custom problem-set builder: filter by rating, theme, and your own mistake history.
-- Named practice modes generated from your play: time management, intuition, defence, checkmate-pattern
-  flashcards, opening-error fixing. Several are the same solve loop with a different filter or timer.
+- Bot ladder and opening expeditions surfaced in Play (the progression is in the core; it needs a
+  game-versus-bot front end).
+- Per-move partial credit on puzzles for a winning-but-not-best move (needs an engine evaluation).
 - More guided lessons and studies authored as PGN with commentary.
-- A quest and rank curriculum, and an earned-cosmetic layer (cosmetics only; never strength).
 
 ## Deferred (needs infrastructure, data, or a platform)
 

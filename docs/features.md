@@ -25,6 +25,16 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Three strikes ends the timed runs; difficulty ramps each solve; the timed modes reward consecutive solves with combo bonus time - `RushSession`
 - [x] Countdown/count-up timer, strike indicator, score, in-run streak, per-mode personal best
 
+## Puzzle Storm
+
+- [x] A running clock with a difficulty ramp; a combo of consecutive solves tops the clock up at each milestone - `StormScoring`
+- [x] A miss costs time and resets the combo, but the run continues (unlike Puzzle Blitz's three strikes); best run and best combo kept
+
+## Drills
+
+- [x] Seven named practice modes generated from the shared puzzle content, each a filter over the same library so they grow with it - `DrillFactory`
+- [x] Time Trainer, Intuition, Defender, Advantage Capitalization, Checkmate Patterns, Opening Improver (solve on the board); Blunder Preventer (pick the stronger of two candidate moves)
+
 ## Play
 
 - [x] Play against an adaptive bot (engine capped to your level) - `KaissaGame`
@@ -41,6 +51,8 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Mistakes routed automatically to spaced practice, tagged by motif; drill them back as a "From your games" puzzle feed - `GamePractice`
 - [x] Position coach: a five-tab plain-language read - Threats, Best moves, Plans, Piece roles, Concepts - templated from the position and the engine's lines (no cloud, no language model). Also draws the read on the board: green best move, red threats, blue piece roles. Works on the analysis board and while stepping through a game review - `PositionCoach`
 - [x] Analysis board: play and branch any line with an evaluation bar, several engine lines at once (click one to play it out), a clickable move list, the opening name, load-a-FEN and copy FEN/PGN, and play-vs-computer from the position - `AnalysisSession` / `KaissaAnalysis`
+- [x] Hover an engine line to preview its first moves on the board without playing them; type a move in algebraic or long notation to play it - `MoveEntry`
+- [x] Studies: step through an annotated master line move by move with a note on each move; lessons authored as PGN, so more can be added as data - `PgnStudy` / `StudyLibrary`
 - [x] Drag-piece board editor (2D): piece palette, click-to-place, eraser, side-to-move and castling toggles, clear/reset, apply to load; FEN paste also works
 
 ## Openings
@@ -85,6 +97,8 @@ Status: `[x]` built (core + client) - `[~]` core built, client UI pending - `[ ]
 - [x] Per-pattern mastery map derived from the spaced-repetition schedule - the pattern library made visible - `PuzzleProgression`
 - [x] Hybrid XP and named tiers (Wood through Grandmaster) alongside the rating - `PuzzleProgression`
 - [x] Daily streak that counts every kind of practice - play, drills, Puzzle Blitz, Solo Chess - not only puzzles - `KaissaStreak`
+- [x] Quests and a rank ladder (Pawn to King) driven by your own progress snapshot - `QuestBoard`
+- [x] Shop: coins earned from play unlock cosmetic board and piece tints; cosmetics only, never strength or gated training - `CosmeticShop`
 - [ ] Goals, reminders, and leagues
 
 ## Platform and UX
