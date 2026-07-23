@@ -51,6 +51,8 @@ public static class KaissaSettings
         public int lastOpponentElo = -1;  // its fixed Elo, or -1 for Adaptive
         public int lastTc;                // its time-control index
         public int endgameChallengeBestMs; // best time (ms) for the 5-drill Endgame Challenge; 0 = none
+        public int stormBest;              // best solved count in a Puzzle Storm run
+        public int stormBestCombo;         // best combo reached in Puzzle Storm
         public int coinsSpent;             // cosmetic coins spent (balance = CosmeticShop.CoinsEarned - this)
         public string ownedCosmetics = ""; // comma-joined ids of purchased cosmetics (never affects strength)
         public string equippedBoardCosmetic = "";  // equipped cosmetic board id, or empty
@@ -120,6 +122,9 @@ public static class KaissaSettings
     public static int LastOpponentElo { get => D.lastOpponentElo; set { D.lastOpponentElo = value; Save(); } }
     public static int LastTc { get => D.lastTc; set { D.lastTc = value; Save(); } }
     public static int EndgameChallengeBestMs { get => D.endgameChallengeBestMs; set { D.endgameChallengeBestMs = value; Save(); } }
+
+    public static int StormBest { get => D.stormBest; set { D.stormBest = value; Save(); } }
+    public static int StormBestCombo { get => D.stormBestCombo; set { D.stormBestCombo = value; Save(); } }
 
     // Cosmetic wallet. Coins are earned from play (CosmeticShop.CoinsEarned); this tracks what's been
     // spent and owned. Cosmetics never affect strength or gate training.
