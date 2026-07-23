@@ -52,6 +52,9 @@ Buildable in the pure-C# core and the existing client.
   opponent picker; the per-rung hint budget lives in the core and is not yet surfaced).
 - Per-move partial credit on puzzles for a winning-but-not-best move (needs an engine evaluation).
 - More guided lessons and studies authored as PGN with commentary.
+- Surfacing the spaced-repetition and grading core that is built and tested but not yet on screen:
+  per-move scheduling (Chessable-style), chunk-based scheduling keyed to the chunk tagger, and
+  partial credit for a winning-but-not-best puzzle move.
 
 ## Deferred (needs infrastructure, data, or a platform)
 
