@@ -26,6 +26,11 @@ public static class MasterGames
         {
             "e2e4","e7e5","f1c4","b8c6","d1h5","g8f6","h5f7",
         }),
+        new MasterGame("reti_tartakower", "Reti", "Tartakower", "Vienna", 1910, Side.White, new[]
+        {
+            "e2e4","c7c6","d2d4","d7d5","b1c3","d5e4","c3e4","g8f6","d1d3","e7e5","d4e5","d8a5",
+            "c1d2","a5e5","e1c1","f6e4","d3d8","e8d8","d2g5","d8e8","d1d8",
+        }),
     };
 
     public static MasterGame? ById(string id)

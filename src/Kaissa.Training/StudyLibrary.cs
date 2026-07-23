@@ -32,6 +32,23 @@ public static class StudyLibrary
         "Bg4 {Pinning the knight - but here the pin is an illusion.} " +
         "5. Nxe5 {The point: a temporary queen sacrifice.} " +
         "Bxd1 6. Bxf7+ Ke7 7. Nd5# {Checkmate - three minor pieces do the work.} *",
+
+        "[Event \"Sicilian Defence: the Najdorf\"]\n[White \"Study\"]\n[Black \"Study\"]\n\n" +
+        "1. e4 c5 {The Sicilian - Black fights for the centre asymmetrically.} " +
+        "2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 " +
+        "a6 {The Najdorf: a waiting move that takes b5 from White's pieces and prepares ...e5 or ...b5.} *",
+
+        "[Event \"French Defence: the Winawer\"]\n[White \"Study\"]\n[Black \"Study\"]\n\n" +
+        "1. e4 e6 {The French - solid, with a plan to strike the centre with ...d5.} " +
+        "2. d4 d5 3. Nc3 " +
+        "Bb4 {The Winawer: pin the knight and pressure e4.} " +
+        "4. e5 {White claims space and closes the centre.} c5 5. a3 Bxc3+ 6. bxc3 {a sharp, imbalanced middlegame} *",
+
+        "[Event \"Caro-Kann Defence\"]\n[White \"Study\"]\n[Black \"Study\"]\n\n" +
+        "1. e4 c6 {The Caro-Kann - like the French, but the light-squared bishop stays free.} " +
+        "2. d4 d5 3. Nc3 dxe4 4. Nxe4 " +
+        "Bf5 {Developing the bishop outside the pawn chain before ...e6.} " +
+        "5. Ng3 Bg6 6. h4 h6 {the main-line tussle over the bishop} *",
     };
 
     /// <summary>The parsed chapters, ready to step through.</summary>
