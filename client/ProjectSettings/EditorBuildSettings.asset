@@ -71,5 +71,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Storm.unity
     guid: d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0
+  - enabled: 1
+    path: Assets/Scenes/Expeditions.unity
+    guid: a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

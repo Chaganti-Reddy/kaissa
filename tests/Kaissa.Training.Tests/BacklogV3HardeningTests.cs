@@ -94,6 +94,19 @@ public class BacklogV3HardeningTests
     }
 
     [Fact]
+    public void Every_expedition_maps_to_an_opening_that_replays_legally()
+    {
+        foreach (var e in Expeditions.Catalog)
+        {
+            var line = OpeningLibrary.ById(e.OpeningId);
+            Assert.NotNull(line);
+            var game = ChessGame.Start();
+            foreach (var uci in line!.Moves)
+                Assert.True(game.TryMakeMove(uci), $"illegal {uci} in {e.OpeningId}");
+        }
+    }
+
+    [Fact]
     public void Leitner_due_list_is_empty_when_nothing_is_due()
     {
         var sch = new LeitnerScheduler();

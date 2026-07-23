@@ -366,7 +366,7 @@ public sealed class KaissaGameController : MonoBehaviour
         if (_game == null || _busy || _reviewMode || _game.IsGameOver || string.IsNullOrWhiteSpace(text))
             return;
         string uci = null;
-        try { uci = ChessGame.FromFen(_currentFen).ResolveToUci(text.Trim()); } catch { }
+        try { uci = MoveEntry.Parse(ChessGame.FromFen(_currentFen), text); } catch { }
         if (string.IsNullOrEmpty(uci)) { _statusLabel.text = $"Could not read move: {text.Trim()}"; return; }
         OnMove(uci);
     }
@@ -1031,6 +1031,11 @@ public sealed class KaissaGameController : MonoBehaviour
     {
         if (review.Practice.Count > 0) KaissaPractice.Add(review.Practice);
         if (result == 2 && _botId != null) KaissaSettings.MarkBotBeaten(_botId); // climbed a rung of the ladder
+        if (ExpeditionRoute.Active) // this game was one leg of an opening expedition
+        {
+            KaissaSettings.RecordExpeditionResult(ExpeditionRoute.ExpeditionId, result == 2);
+            ExpeditionRoute.Active = false;
+        }
         SaveRating();
         KaissaGameLog.Record(review.Accuracy, result);
         string playerSideName = _playerWhite ? "White" : "Black";

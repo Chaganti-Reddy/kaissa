@@ -51,6 +51,8 @@ public static class KaissaSettings
         public int lastOpponentElo = -1;  // its fixed Elo, or -1 for Adaptive
         public int lastTc;                // its time-control index
         public int endgameChallengeBestMs; // best time (ms) for the 5-drill Endgame Challenge; 0 = none
+        public bool shapeHighlights;       // draw shape markers on highlighted squares (colour-blind aid)
+        public string expeditions = "";    // per-expedition record, "id:wins:losses" comma-joined
         public int stormBest;              // best solved count in a Puzzle Storm run
         public int stormBestCombo;         // best combo reached in Puzzle Storm
         public int coinsSpent;             // cosmetic coins spent (balance = CosmeticShop.CoinsEarned - this)
@@ -123,6 +125,34 @@ public static class KaissaSettings
     public static int LastTc { get => D.lastTc; set { D.lastTc = value; Save(); } }
     public static int EndgameChallengeBestMs { get => D.endgameChallengeBestMs; set { D.endgameChallengeBestMs = value; Save(); } }
 
+    // Opening expeditions: wins/losses per expedition id, so progress survives across sessions.
+    public static (int wins, int losses) ExpeditionProgress(string id)
+    {
+        if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(D.expeditions)) return (0, 0);
+        foreach (var e in D.expeditions.Split(','))
+        {
+            var kv = e.Split(':');
+            if (kv.Length == 3 && kv[0] == id && int.TryParse(kv[1], out int w) && int.TryParse(kv[2], out int l))
+                return (w, l);
+        }
+        return (0, 0);
+    }
+
+    public static void RecordExpeditionResult(string id, bool won)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        var (w, l) = ExpeditionProgress(id);
+        if (won) w++; else l++;
+        var parts = string.IsNullOrEmpty(D.expeditions)
+            ? new System.Collections.Generic.List<string>()
+            : new System.Collections.Generic.List<string>(D.expeditions.Split(','));
+        parts.RemoveAll(e => e.StartsWith(id + ":"));
+        parts.Add($"{id}:{w}:{l}");
+        D.expeditions = string.Join(",", parts);
+        Save();
+    }
+
+    public static bool ShapeHighlights { get => D.shapeHighlights; set { D.shapeHighlights = value; Save(); } }
     public static int StormBest { get => D.stormBest; set { D.stormBest = value; Save(); } }
     public static int StormBestCombo { get => D.stormBestCombo; set { D.stormBestCombo = value; Save(); } }
 

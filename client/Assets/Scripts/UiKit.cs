@@ -185,6 +185,7 @@ public static class UiKit
         rail.Add(NavItem("Puzzle Blitz", "Rush", activeScene));
         rail.Add(NavItem("Puzzle Storm", "Storm", activeScene));
         rail.Add(NavItem("Openings", "Opening", activeScene));
+        rail.Add(NavItem("Expeditions", "Expeditions", activeScene));
         rail.Add(NavItem("Learn", "Library", activeScene));
         rail.Add(NavItem("Endgames", "Endgame", activeScene));
         rail.Add(GroupLabel("Tools"));
