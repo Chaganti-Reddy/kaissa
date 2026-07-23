@@ -51,6 +51,10 @@ public static class KaissaSettings
         public int lastOpponentElo = -1;  // its fixed Elo, or -1 for Adaptive
         public int lastTc;                // its time-control index
         public int endgameChallengeBestMs; // best time (ms) for the 5-drill Endgame Challenge; 0 = none
+        public int coinsSpent;             // cosmetic coins spent (balance = CosmeticShop.CoinsEarned - this)
+        public string ownedCosmetics = ""; // comma-joined ids of purchased cosmetics (never affects strength)
+        public string equippedBoardCosmetic = "";  // equipped cosmetic board id, or empty
+        public string equippedPiecesCosmetic = ""; // equipped cosmetic piece-tint id, or empty
     }
 
     private static Data _data;
@@ -116,6 +120,21 @@ public static class KaissaSettings
     public static int LastOpponentElo { get => D.lastOpponentElo; set { D.lastOpponentElo = value; Save(); } }
     public static int LastTc { get => D.lastTc; set { D.lastTc = value; Save(); } }
     public static int EndgameChallengeBestMs { get => D.endgameChallengeBestMs; set { D.endgameChallengeBestMs = value; Save(); } }
+
+    // Cosmetic wallet. Coins are earned from play (CosmeticShop.CoinsEarned); this tracks what's been
+    // spent and owned. Cosmetics never affect strength or gate training.
+    public static int CoinsSpent { get => D.coinsSpent; set { D.coinsSpent = value; Save(); } }
+    public static string OwnedCosmetics { get => D.ownedCosmetics ?? ""; set { D.ownedCosmetics = value; Save(); } }
+    public static string EquippedBoardCosmetic { get => D.equippedBoardCosmetic ?? ""; set { D.equippedBoardCosmetic = value; Save(); } }
+    public static string EquippedPiecesCosmetic { get => D.equippedPiecesCosmetic ?? ""; set { D.equippedPiecesCosmetic = value; Save(); } }
+    public static bool OwnsCosmetic(string id) =>
+        !string.IsNullOrEmpty(id) && ("," + OwnedCosmetics + ",").Contains("," + id + ",");
+    public static void MarkCosmeticOwned(string id)
+    {
+        if (string.IsNullOrEmpty(id) || OwnsCosmetic(id)) return;
+        OwnedCosmetics = string.IsNullOrEmpty(OwnedCosmetics) ? id : OwnedCosmetics + "," + id;
+    }
+
     // Glide duration (ms) from the AnimSpeed preset, shared by the 2D and 3D boards.
     public static int GlideMs => AnimSpeed switch { 0 => 70, 2 => 200, _ => 120 };
 

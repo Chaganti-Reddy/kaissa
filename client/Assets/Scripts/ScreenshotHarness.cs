@@ -31,7 +31,8 @@ public sealed class ScreenshotHarness : MonoBehaviour
             && !args.Contains("-kaissa-visiontest") && !args.Contains("-kaissa-coordtest")
             && !args.Contains("-kaissa-memorytest") && !args.Contains("-kaissa-capturestest")
             && !args.Contains("-kaissa-visualizationtest") && !args.Contains("-kaissa-solotest")
-            && !args.Contains("-kaissa-guesstest")
+            && !args.Contains("-kaissa-guesstest") && !args.Contains("-kaissa-studytest")
+            && !args.Contains("-kaissa-drilltest") && !args.Contains("-kaissa-shoptest")
             && !args.Contains("-kaissa-settingstest") && !args.Contains("-kaissa-calibratetest")
             && !args.Contains("-kaissa-transition") && !args.Contains("-kaissa-startup")
             && !args.Contains("-kaissa-hometest"))
@@ -182,6 +183,30 @@ public sealed class ScreenshotHarness : MonoBehaviour
         if (args.Contains("-kaissa-guesstest"))
         {
             SceneManager.LoadScene("GuessMove");
+            yield return new WaitForSeconds(18f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-studytest"))
+        {
+            SceneManager.LoadScene("Studies");
+            yield return new WaitForSeconds(18f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-drilltest"))
+        {
+            SceneManager.LoadScene("Drills");
+            yield return new WaitForSeconds(18f);
+            Application.Quit();
+            yield break;
+        }
+
+        if (args.Contains("-kaissa-shoptest"))
+        {
+            SceneManager.LoadScene("Shop");
             yield return new WaitForSeconds(18f);
             Application.Quit();
             yield break;
